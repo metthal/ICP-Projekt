@@ -1,0 +1,17 @@
+# Binary & object files
+bin
+
+# Temporarily GUI files
+bludiste2014
+build
+
+# Doxydoc
+doxydoc
+
+# Hidden files
+.*
+!.gitignore
+!.gitattributes
+
+# packed file
+xmilko01.tar.gz
