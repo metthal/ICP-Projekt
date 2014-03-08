@@ -1,7 +1,7 @@
 # Variables
 PROJECT = bludiste2014
-CLIENT = $(PROJECT)
-SERVER = $(PROJECT)-server
+BIN_CLIENT = $(PROJECT)
+BIN_SERVER = $(PROJECT)-server
 
 CC = g++
 RM = rm -rf
@@ -20,18 +20,18 @@ PACKED_FILES = $(SRC_FOLDER) $(HEADER_FOLDER) Makefile $(DOXYFILE)
 DOXYFILE = doxyconfig
 DOXY_DIR = doc
 
-CLIENT_INCLUDES = -Iinc/client -Iinc/common
-SERVER_INCLUDES = -Iinc/common -Iinc/server
+COMMON_INCLUDES = -Iinc/common
+CLIENT_INCLUDES = $(COMMON_INCLUDES) -Iinc/client
+SERVER_INCLUDES = $(COMMON_INCLUDES) -Iinc/server
 
-S_SOURCES = $(wildcard $(SRC_FOLDER)/server/*.cpp)
-S_OBJECTS = $(addprefix $(OBJ_FOLDER)/, $(notdir $(patsubst %.cpp, %.s.o, $(S_SOURCES))))
+SERVER_SRCS = $(wildcard $(SRC_FOLDER)/server/*.cpp)
+SERVER_OBJS = $(addprefix $(OBJ_FOLDER)/server/, $(notdir $(patsubst %.cpp, %.o, $(SERVER_SRCS))))
 
-C_SOURCES = $(wildcard $(SRC_FOLDER)/client/*.cpp)
-C_OBJECTS = $(addprefix $(OBJ_FOLDER)/, $(notdir $(patsubst %.cpp, %.c.o, $(C_SOURCES))))
+CLIENT_SRCS = $(wildcard $(SRC_FOLDER)/client/*.cpp)
+CLIENT_OBJS = $(addprefix $(OBJ_FOLDER)/client/, $(notdir $(patsubst %.cpp, %.o, $(CLIENT_SRCS))))
 
-X_SOURCES = $(wildcard $(SRC_FOLDER)/common/*.cpp)
-S_OBJECTS += $(addprefix $(OBJ_FOLDER)/, $(notdir $(patsubst %.cpp, %.xs.o, $(X_SOURCES))))
-C_OBJECTS += $(addprefix $(OBJ_FOLDER)/, $(notdir $(patsubst %.cpp, %.xc.o, $(X_SOURCES))))
+COMMON_SRCS = $(wildcard $(SRC_FOLDER)/common/*.cpp)
+COMMON_OBJS = $(addprefix $(OBJ_FOLDER)/common/, $(notdir $(patsubst %.cpp, %.o, $(COMMON_SRCS))))
 
 # Targets
 release: CFLAGS += $(CFLAGS_RELEASE)
@@ -42,27 +42,26 @@ debug: build
 
 build: server client
 
-server: $(S_OBJECTS)
-	$(CC) $^ -o $(BIN_FOLDER)/$(SERVER)
+server: $(COMMON_OBJS) $(SERVER_OBJS)
+	$(CC) $^ -o $(BIN_FOLDER)/$(BIN_SERVER)
 
-client: $(C_OBJECTS)
-	$(CC) $^ -o $(BIN_FOLDER)/$(CLIENT)
-	
-$(OBJ_FOLDER)/%.s.o: $(SRC_FOLDER)/server/%.cpp
-	@mkdir -p $(BIN_FOLDER) $(OBJ_FOLDER)
+client: $(COMMON_OBJS) $(CLIENT_OBJS)
+	$(CC) $^ -o $(BIN_FOLDER)/$(BIN_CLIENT)
+
+client-cli: $(COMMON_OBJS) $(CLIENT_OBJS)
+	$(CC) $^ -o $(BIN_FOLDER)/$(BIN_CLI)
+
+$(OBJ_FOLDER)/server/%.o: $(SRC_FOLDER)/server/%.cpp
+	@mkdir -p $(BIN_FOLDER) $(OBJ_FOLDER)/server
 	$(CC) $(SERVER_INCLUDES) $(CFLAGS) $< -o $@
 
-$(OBJ_FOLDER)/%.xs.o: $(SRC_FOLDER)/common/%.cpp
-	@mkdir -p $(BIN_FOLDER) $(OBJ_FOLDER)
-	$(CC) $(SERVER_INCLUDES) $(CFLAGS) $< -o $@
-
-$(OBJ_FOLDER)/%.c.o: $(SRC_FOLDER)/client/%.cpp
-	@mkdir -p $(BIN_FOLDER) $(OBJ_FOLDER)
+$(OBJ_FOLDER)/client/%.o: $(SRC_FOLDER)/client/%.cpp
+	@mkdir -p $(BIN_FOLDER) $(OBJ_FOLDER)/client
 	$(CC) $(CLIENT_INCLUDES) $(CFLAGS) $< -o $@
 
-$(OBJ_FOLDER)/%.xc.o: $(SRC_FOLDER)/common/%.cpp
-	@mkdir -p $(BIN_FOLDER) $(OBJ_FOLDER)
-	$(CC) $(CLIENT_INCLUDES) $(CFLAGS) $< -o $@
+$(OBJ_FOLDER)/common/%.o: $(SRC_FOLDER)/common/%.cpp
+	@mkdir -p $(BIN_FOLDER) $(OBJ_FOLDER)/common
+	$(CC) $(COMMON_INCLUDES) $(CFLAGS) $< -o $@
 
 clean:
 	$(RM) $(BIN_FOLDER) $(OBJ_FOLDER) $(TAR_FILE) $(DOXY_DIR)
