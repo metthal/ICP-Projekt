@@ -11,6 +11,8 @@ CFLAGS = -Wall -Wextra -c --std=c++11
 CFLAGS_RELEASE = -O2 -s
 CFLAGS_DEBUG = -O0 -g -DDEBUG
 
+LFLAGS = -lpthread -lboost_system
+
 SRC_FOLDER = src
 BIN_FOLDER = bin
 OBJ_FOLDER = obj
@@ -43,13 +45,10 @@ debug: build
 build: server client
 
 server: $(COMMON_OBJS) $(SERVER_OBJS)
-	$(CC) $^ -o $(BIN_FOLDER)/$(BIN_SERVER)
+	$(CC) $^ -o $(BIN_FOLDER)/$(BIN_SERVER) $(LFLAGS)
 
 client: $(COMMON_OBJS) $(CLIENT_OBJS)
-	$(CC) $^ -o $(BIN_FOLDER)/$(BIN_CLIENT)
-
-client-cli: $(COMMON_OBJS) $(CLIENT_OBJS)
-	$(CC) $^ -o $(BIN_FOLDER)/$(BIN_CLI)
+	$(CC) $^ -o $(BIN_FOLDER)/$(BIN_CLIENT) $(LFLAGS)
 
 $(OBJ_FOLDER)/server/%.o: $(SRC_FOLDER)/server/%.cpp
 	@mkdir -p $(BIN_FOLDER) $(OBJ_FOLDER)/server

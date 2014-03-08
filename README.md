@@ -28,7 +28,7 @@ open - player opens gate in front of him (if he has a key).
 
 
 Libraries used:
-Boost (v. 1.53.TODO)
+Boost (v. 1.48.0)
 QT (v. 5.2)
 
 Compilation:
