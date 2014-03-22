@@ -8,10 +8,10 @@ RM = rm -rf
 TAR = tar -czf
 
 CFLAGS = -Wall -Wextra -c --std=c++11
-CFLAGS_RELEASE = -O2 -s
+CFLAGS_RELEASE = -O2
 CFLAGS_DEBUG = -O0 -g -DDEBUG
 
-LFLAGS = -lpthread -lboost_system
+LFLAGS = -lpthread -lboost_system -lboost_thread-mt
 
 SRC_FOLDER = src
 BIN_FOLDER = bin
