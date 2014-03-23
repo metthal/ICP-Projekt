@@ -1,5 +1,6 @@
 # Binary & object files
 bin
+obj
 
 # Temporarily GUI files
 build

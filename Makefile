@@ -1,40 +1,39 @@
 # Variables
 PROJECT = bludiste2014
-CLIENT = $(PROJECT)
-SERVER = $(PROJECT)-server
+BIN_CLIENT = $(PROJECT)
+BIN_SERVER = $(PROJECT)-server
 
 CC = g++
 RM = rm -rf
 TAR = tar -czf
 
-STD_CPP11 = -std=c++11
-
-CFLAGS = -Wall -Wextra -c
-CFLAGS_RELEASE = -O3 -s
+CFLAGS = -Wall -Wextra -c --std=c++11
+CFLAGS_RELEASE = -O2
 CFLAGS_DEBUG = -O0 -g -DDEBUG
+
+LFLAGS = -lpthread -lboost_system -lboost_thread-mt
 
 SRC_FOLDER = src
 BIN_FOLDER = bin
+OBJ_FOLDER = obj
 
 TAR_FILE = xmilko01.tgz
 PACKED_FILES = $(SRC_FOLDER) $(HEADER_FOLDER) Makefile $(DOXYFILE)
 DOXYFILE = doxyconfig
 DOXY_DIR = doc
 
-SHELL = /bin/bash
+COMMON_INCLUDES = -Iinc/common
+CLIENT_INCLUDES = $(COMMON_INCLUDES) -Iinc/client
+SERVER_INCLUDES = $(COMMON_INCLUDES) -Iinc/server
 
-CLIENT_INCLUDES = -Iinc/client -Iinc/common
-SERVER_INCLUDES = -Iinc/common -Iinc/server
+SERVER_SRCS = $(wildcard $(SRC_FOLDER)/server/*.cpp)
+SERVER_OBJS = $(addprefix $(OBJ_FOLDER)/server/, $(notdir $(patsubst %.cpp, %.o, $(SERVER_SRCS))))
 
-S_SOURCES = $(wildcard $(SRC_FOLDER)/server/*.cpp)
-S_OBJECTS = $(notdir $(patsubst %.cpp, %.s.o, $(S_SOURCES)))
+CLIENT_SRCS = $(wildcard $(SRC_FOLDER)/client/*.cpp)
+CLIENT_OBJS = $(addprefix $(OBJ_FOLDER)/client/, $(notdir $(patsubst %.cpp, %.o, $(CLIENT_SRCS))))
 
-C_SOURCES = $(wildcard $(SRC_FOLDER)/client/*.cpp)
-C_OBJECTS = $(notdir $(patsubst %.cpp, %.c.o, $(C_SOURCES)))
-
-X_SOURCES = $(wildcard $(SRC_FOLDER)/common/*.cpp)
-S_OBJECTS += $(notdir $(patsubst %.cpp, %.xs.o, $(X_SOURCES)))
-C_OBJECTS += $(notdir $(patsubst %.cpp, %.xc.o, $(X_SOURCES)))
+COMMON_SRCS = $(wildcard $(SRC_FOLDER)/common/*.cpp)
+COMMON_OBJS = $(addprefix $(OBJ_FOLDER)/common/, $(notdir $(patsubst %.cpp, %.o, $(COMMON_SRCS))))
 
 # Targets
 release: CFLAGS += $(CFLAGS_RELEASE)
@@ -43,53 +42,39 @@ release: build
 debug: CFLAGS += $(CFLAGS_DEBUG)
 debug: build
 
-build: CFLAGS += $(STD_CPP11)
 build: server client
 
-server: $(S_OBJECTS)
-	@echo $(S_OBJECTS)
-	$(CC) $(addprefix $(BIN_FOLDER)/server/, $(S_OBJECTS)) -o $(BIN_FOLDER)/server/$(SERVER)
+server: $(COMMON_OBJS) $(SERVER_OBJS)
+	$(CC) $^ -o $(BIN_FOLDER)/$(BIN_SERVER) $(LFLAGS)
 
-client: $(C_OBJECTS)
-	@echo $(C_OBJECTS)
-	$(CC) $(addprefix $(BIN_FOLDER)/client/, $(C_OBJECTS)) -o $(BIN_FOLDER)/client/$(CLIENT)
-	
-%.s.o: $(SRC_FOLDER)/server/%.cpp
-	@mkdir -p bin/server
-	$(CC) $(SERVER_INCLUDES) $(CFLAGS) $< -o $(BIN_FOLDER)/server/$@
+client: $(COMMON_OBJS) $(CLIENT_OBJS)
+	$(CC) $^ -o $(BIN_FOLDER)/$(BIN_CLIENT) $(LFLAGS)
 
-%.xs.o: $(SRC_FOLDER)/common/%.cpp
-	@mkdir -p bin/server
-	$(CC) $(SERVER_INCLUDES) $(CFLAGS) $< -o $(BIN_FOLDER)/server/$@
+$(OBJ_FOLDER)/server/%.o: $(SRC_FOLDER)/server/%.cpp
+	@mkdir -p $(BIN_FOLDER) $(OBJ_FOLDER)/server
+	$(CC) $(SERVER_INCLUDES) $(CFLAGS) $< -o $@
 
-%.c.o: $(SRC_FOLDER)/client/%.cpp
-	@mkdir -p bin/client
-	$(CC) $(CLIENT_INCLUDES) $(CFLAGS) $< -o $(BIN_FOLDER)/client/$@
+$(OBJ_FOLDER)/client/%.o: $(SRC_FOLDER)/client/%.cpp
+	@mkdir -p $(BIN_FOLDER) $(OBJ_FOLDER)/client
+	$(CC) $(CLIENT_INCLUDES) $(CFLAGS) $< -o $@
 
-%.xc.o: $(SRC_FOLDER)/common/%.cpp
-	@mkdir -p bin/client
-	$(CC) $(CLIENT_INCLUDES) $(CFLAGS) $< -o $(BIN_FOLDER)/client/$@
+$(OBJ_FOLDER)/common/%.o: $(SRC_FOLDER)/common/%.cpp
+	@mkdir -p $(BIN_FOLDER) $(OBJ_FOLDER)/common
+	$(CC) $(COMMON_INCLUDES) $(CFLAGS) $< -o $@
 
 clean:
-	$(RM) $(BIN_FOLDER) $(TAR_FILE) $(DOXY_DIR)
+	$(RM) $(BIN_FOLDER) $(OBJ_FOLDER) $(TAR_FILE) $(DOXY_DIR)
 
 pack:
 	$(TAR) $(TAR_FILE) $(PACKED_FILES)
 
 run:
-	./$(BIN_FOLDER)/server/$(SERVER) &
-	./$(BIN_FOLDER)/client/$(CLIENT)
+	@./$(BIN_FOLDER)/$(SERVER) &
+	@./$(BIN_FOLDER)/$(CLIENT)
 
 doxygen:
 	@command -v doxygen >/dev/null 2>&1 \
 		&& { doxygen $(DOXYFILE); true; } \
 		|| echo "icp-make: Doxygen not installed."
 
-statistics:
-	@echo -n "Lines of code: " && wc -l $(SRC_FILES) $(HEADER_FILES) | tail -n 1 | sed -r "s/[ ]*([0-9]+).*/\1/g"
-	@echo -n "Size of code: " && du -hsc $(SRC_FILES) $(HEADER_FILES) | tail -n 1 | cut -f 1
-	@echo -n "Lines of code (with tests): " && wc -l $(SRC_FILES) $(TEST_SRC_FILES) $(HEADER_FILES) $(TEST_HEADER_FILES) | tail -n 1 | sed -r "s/[ ]*([0-9]+).*/\1/g"
-	@echo -n "Size of code (with tests): " && du -hsc $(SRC_FILES) $(TEST_SRC_FILES) $(HEADER_FILES) $(TEST_HEADER_FILES) | tail -n 1 | cut -f 1
-	@test -e ini && echo -n "Size of executable: " && du -hs ini | cut -f 1 || echo "ini-make: Executable not found."
-
-.PHONY: build release debug clean pack doxygen statistics
+.PHONY: build release debug server client run clean pack doxygen
