@@ -6,8 +6,11 @@
 #include <QStandardItemModel>
 #include <QLabel>
 #include <QGraphicsScene>
+#include <QGraphicsPixmapItem>
+#include "common/game.h"
 
 namespace Ui {
+
 class MainWindow;
 }
 
@@ -77,6 +80,8 @@ private:
 
     void sendCommand();
 
+    void redrawScene();
+
     std::vector<QWidget*> pages;
 
     QStandardItemModel *ModelLevelSelection;
@@ -87,6 +92,17 @@ private:
     PlayerLabel *playerLabels[maxPlayers];
 
     QGraphicsScene *gameScene;
+
+    const int tileTextureSize = 64;
+    const int playerTextureHeight = 48;
+    const int playerTextureWidth = 32;
+    const int margin = 20;
+
+    QPixmap tileTextures[(int)LevelMap::Tile::Count];
+    QPixmap plankTexture;
+    QPixmap playerTexture[(int)Direction::Count];
+
+    Game game;
 };
 
 #endif // MAINWINDOW_H

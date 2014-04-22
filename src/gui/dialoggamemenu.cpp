@@ -1,6 +1,6 @@
-#include "dialoggamemenu.h"
+#include "gui/dialoggamemenu.h"
 #include "ui_dialoggamemenu.h"
-#include "mainwindow.h"
+#include "gui/mainwindow.h"
 
 DialogGameMenu::DialogGameMenu(QWidget *parent) :
     QDialog(parent),

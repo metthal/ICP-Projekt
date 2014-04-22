@@ -1,14 +1,14 @@
-#include "mainwindow.h"
+#include "gui/mainwindow.h"
 #include "ui_mainwindow.h"
-#include "dialoggamemenu.h"
+#include "gui/dialoggamemenu.h"
 #include <QDateTime>
 #include <QHeaderView>
-#include <QGraphicsPixmapItem>
 #include <QScrollBar>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    game()
 {
     ui->setupUi(this);
 
@@ -54,6 +54,19 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->PageTableView->addAction(ui->actionMenuEsc);
     ui->PageLobby->addAction(ui->actionMenuEsc);
+
+    tileTextures[(int)LevelMap::Tile::Forest] = QPixmap(QString("../../art/forest1.png"));
+    tileTextures[(int)LevelMap::Tile::Water] = QPixmap(QString("../../art/water2.png"));
+    tileTextures[(int)LevelMap::Tile::Bridge] = QPixmap(QString("../../art/bridge1.png"));
+    tileTextures[(int)LevelMap::Tile::Grass] = QPixmap(QString("../../art/dirt1.png"));
+    tileTextures[(int)LevelMap::Tile::Path] = QPixmap(QString("../../art/dirt1.png"));
+    plankTexture = QPixmap(QString("../../art/plank1.png"));
+
+    QPixmap playerTextureAll(QString("../../art/brian.png"));
+    playerTexture[(int)Direction::Down] = playerTextureAll.copy(0, 0, playerTextureWidth, playerTextureHeight);
+    playerTexture[(int)Direction::Left] = playerTextureAll.copy(0, playerTextureHeight, playerTextureWidth, playerTextureHeight);
+    playerTexture[(int)Direction::Right] = playerTextureAll.copy(0, 2 * playerTextureHeight, playerTextureWidth, playerTextureHeight);
+    playerTexture[(int)Direction::Up] = playerTextureAll.copy(0, 3 * playerTextureHeight, playerTextureWidth, playerTextureHeight);
 }
 
 MainWindow::~MainWindow()
@@ -167,36 +180,52 @@ void MainWindow::loadTable(QStandardItemModel *table)
 
 void MainWindow::loadGame()
 {
-    QPixmap pixmap(QString("forest.png"));
-    QGraphicsPixmapItem *item = nullptr;
-
-    int rows = 50;
-    int columns = 50;
-    double margin = 20;
-    double w = pixmap.width();
-    double h = pixmap.height();
-
+    const LevelMap &map = game.getMap();
     gameScene = new QGraphicsScene(ui->GameView);
-    gameScene->setSceneRect(0, 0, columns * w + 2 * margin, rows * h + 2 * margin);
-    ui->GameView->setScene(gameScene);
+    gameScene->setSceneRect(0, 0, map.getWidth() * tileTextureSize + 2 * margin, map.getHeight() * tileTextureSize + 2 * margin);
 
-    for (int dx = 0; dx < columns; dx++)
-    {
-        for (int dy = 0; dy < rows; dy++)
-        {
-            item = new QGraphicsPixmapItem();
-            item->setPixmap(pixmap);
-            item->setPos(margin + dx * w, margin + dy * h);
-            gameScene->addItem(item);
-        }
-    }
+    ui->GameView->setScene(gameScene);
     ui->GameView->centerOn(100, 100);
+    redrawScene();
 }
 
 void MainWindow::sendCommand()
 {
     //TODO send this
     ui->CommandInput->text();
+}
+
+void MainWindow::redrawScene()
+{
+    QGraphicsPixmapItem *item = nullptr;
+    const LevelMap &map = game.getMap();
+    int rows = map.getHeight();
+    int columns = map.getWidth();
+    LevelMap::Tile tile;
+
+    for (int dx = 0; dx < columns; dx++)
+    {
+        for (int dy = 0; dy < rows; dy++)
+        {
+            Position pos = Position(dx, dy);
+            item = new QGraphicsPixmapItem();
+            tile = map.getTileAt(pos);
+            item->setPixmap(tileTextures[(int)tile]);
+            item->pixmap().scaled(tileTextureSize, tileTextureSize, Qt::KeepAspectRatio);
+            item->setPos(margin + dx * tileTextureSize, margin + dy * tileTextureSize);
+            gameScene->addItem(item);
+        }
+    }
+
+    const std::list<Player> &players = game.getPlayers();
+    for (auto it = players.begin(); it != players.end(); it++)
+    {
+        item = new QGraphicsPixmapItem();
+        item->setPixmap(playerTexture[(int)it->getDirection()]);
+        Position pos = it->getPosition();
+        item->setPos(margin + pos.x * tileTextureSize, margin + pos.y * tileTextureSize);
+        gameScene->addItem(item);
+    }
 }
 
 void MainWindow::on_TableViewGeneral_doubleClicked(const QModelIndex &index)
