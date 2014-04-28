@@ -1,4 +1,4 @@
-#include "serverplayer.h"
+#include "server/serverplayer.h"
 
 void ServerPlayer::heartbeat()
 {

@@ -20,7 +20,7 @@ public:
     void setDirection(Direction dir);
     void setPosition(Position pos);
 
-private:
+protected:
 	Direction _faceDir;
 	Position _pos;
 	bool _hasPlank;

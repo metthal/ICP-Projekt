@@ -8,7 +8,8 @@
 #ifndef SERVERPLAYER_H_
 #define SERVERPLAYER_H_
 
-#include "session.h"
+#include "server/session.h"
+#include "common/player.h"
 
 class ServerPlayer : public Player
 {
@@ -24,6 +25,6 @@ private:
 
 	Session _session;
 	//TODO Connection _con;
-}
+};
 
 #endif /* SERVERPLAYER_H_ */

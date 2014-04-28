@@ -4,9 +4,9 @@
 #include <list>
 #include <mutex>
 
-#include "levelmap.h"
-#include "position.h"
-#include "serverplayer.h"
+#include "common/levelmap.h"
+#include "common/position.h"
+#include "server/serverplayer.h"
 
 class Session
 {

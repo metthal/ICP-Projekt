@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include "position.h"
+#include "common/position.h"
 
 class LevelMap
 {

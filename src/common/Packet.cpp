@@ -1,5 +1,5 @@
 #include <cstring>
-#include "Packet.h"
+#include "common/Packet.h"
 
 Packet::Packet(uint8_t opcode, uint16_t length) : m_writePos(PACKET_HEADER_SIZE), m_readPos(PACKET_HEADER_SIZE)
 {

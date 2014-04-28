@@ -22,9 +22,7 @@ PACKED_FILES = $(SRC_FOLDER) $(HEADER_FOLDER) Makefile $(DOXYFILE)
 DOXYFILE = doxyconfig
 DOXY_DIR = doc
 
-COMMON_INCLUDES = -Iinc/common
-CLIENT_INCLUDES = $(COMMON_INCLUDES) -Iinc/client
-SERVER_INCLUDES = $(COMMON_INCLUDES) -Iinc/server
+INCLUDES = -Iinc
 
 SERVER_SRCS = $(wildcard $(SRC_FOLDER)/server/*.cpp)
 SERVER_OBJS = $(addprefix $(OBJ_FOLDER)/server/, $(notdir $(patsubst %.cpp, %.o, $(SERVER_SRCS))))
@@ -52,15 +50,15 @@ client: $(COMMON_OBJS) $(CLIENT_OBJS)
 
 $(OBJ_FOLDER)/server/%.o: $(SRC_FOLDER)/server/%.cpp
 	@mkdir -p $(BIN_FOLDER) $(OBJ_FOLDER)/server
-	$(CC) $(SERVER_INCLUDES) $(CFLAGS) $< -o $@
+	$(CC) $(INCLUDES) $(CFLAGS) $< -o $@
 
 $(OBJ_FOLDER)/client/%.o: $(SRC_FOLDER)/client/%.cpp
 	@mkdir -p $(BIN_FOLDER) $(OBJ_FOLDER)/client
-	$(CC) $(CLIENT_INCLUDES) $(CFLAGS) $< -o $@
+	$(CC) $(INCLUDES) $(CFLAGS) $< -o $@
 
 $(OBJ_FOLDER)/common/%.o: $(SRC_FOLDER)/common/%.cpp
 	@mkdir -p $(BIN_FOLDER) $(OBJ_FOLDER)/common
-	$(CC) $(COMMON_INCLUDES) $(CFLAGS) $< -o $@
+	$(CC) $(INCLUDES) $(CFLAGS) $< -o $@
 
 clean:
 	$(RM) $(BIN_FOLDER) $(OBJ_FOLDER) $(TAR_FILE) $(DOXY_DIR)

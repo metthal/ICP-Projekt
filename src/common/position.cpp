@@ -29,7 +29,7 @@ Position Position::next(Direction dir)
 	default:
 		throw MsgException("Invalid direction");
 	}
-
+	return Position(-1, -1);
 }
 
 bool Position::operator ==(const Position& other) const

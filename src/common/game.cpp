@@ -1,6 +1,7 @@
 #include "common/game.h"
 
-Game::Game()
+Game::Game() :
+    _plankDropped(true)
 {
     _map.load("../../examples/level1");
     _players.push_back(Player());
