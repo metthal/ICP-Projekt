@@ -7,6 +7,7 @@
 #include <QLabel>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
+#include <QTimer>
 #include "common/game.h"
 
 namespace Ui {
@@ -63,6 +64,8 @@ private slots:
 
     void on_actionMenuEsc_triggered();
 
+    void update();
+
 private:
     DialogGameMenu *gameMenu;
 
@@ -101,6 +104,8 @@ private:
     QPixmap tileTextures[(int)LevelMap::Tile::Count];
     QPixmap plankTexture;
     QPixmap playerTexture[(int)Direction::Count];
+
+    QTimer *timer;
 
     Game game;
 };

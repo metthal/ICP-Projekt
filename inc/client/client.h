@@ -1,19 +1,22 @@
 #ifndef CLIENT_H_
 #define CLIENT_H_
 
-#include <List>
+#include <list>
+#include <atomic>
 
-#include "clientplayer.h"
-#include "levelmap.h"
+#include "common/levelmap.h"
+#include "common/player.h"
 
 class Client
 {
 public:
-	void loop();
+	void start();
+	void controlLoop();
 private:
 	//TODO Connection _con;
 	LevelMap _map;
 	std::list<Player> _players;
+	std::atomic_bool _close;
 };
 
 #endif /* CLIENT_H_ */

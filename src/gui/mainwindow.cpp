@@ -55,18 +55,22 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->PageTableView->addAction(ui->actionMenuEsc);
     ui->PageLobby->addAction(ui->actionMenuEsc);
 
-    tileTextures[(int)LevelMap::Tile::Forest] = QPixmap(QString("../../art/forest1.png"));
-    tileTextures[(int)LevelMap::Tile::Water] = QPixmap(QString("../../art/water2.png"));
-    tileTextures[(int)LevelMap::Tile::Bridge] = QPixmap(QString("../../art/bridge1.png"));
-    tileTextures[(int)LevelMap::Tile::Grass] = QPixmap(QString("../../art/dirt1.png"));
-    tileTextures[(int)LevelMap::Tile::Path] = QPixmap(QString("../../art/dirt1.png"));
-    plankTexture = QPixmap(QString("../../art/plank1.png"));
+    tileTextures[(int)LevelMap::Tile::Forest] = QPixmap(QString("../art/forest1.png"));
+    tileTextures[(int)LevelMap::Tile::Water] = QPixmap(QString("../art/water2.png"));
+    tileTextures[(int)LevelMap::Tile::Bridge] = QPixmap(QString("../art/bridge1.png"));
+    tileTextures[(int)LevelMap::Tile::Grass] = QPixmap(QString("../art/dirt1.png"));
+    tileTextures[(int)LevelMap::Tile::Path] = QPixmap(QString("../art/dirt1.png"));
+    plankTexture = QPixmap(QString("../art/plank1.png"));
 
-    QPixmap playerTextureAll(QString("../../art/brian.png"));
+    QPixmap playerTextureAll(QString("../art/brian.png"));
     playerTexture[(int)Direction::Down] = playerTextureAll.copy(0, 0, playerTextureWidth, playerTextureHeight);
     playerTexture[(int)Direction::Left] = playerTextureAll.copy(0, playerTextureHeight, playerTextureWidth, playerTextureHeight);
     playerTexture[(int)Direction::Right] = playerTextureAll.copy(0, 2 * playerTextureHeight, playerTextureWidth, playerTextureHeight);
     playerTexture[(int)Direction::Up] = playerTextureAll.copy(0, 3 * playerTextureHeight, playerTextureWidth, playerTextureHeight);
+
+    timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+    timer->start(100);
 }
 
 MainWindow::~MainWindow()
@@ -81,6 +85,7 @@ MainWindow::~MainWindow()
     }
     delete gameMenu; gameMenu = nullptr;
     delete ui; ui = nullptr;
+    delete timer; timer = nullptr;
 }
 
 void MainWindow::leaveGame()
@@ -150,7 +155,6 @@ void MainWindow::loadTable(QStandardItemModel *table)
         table->appendRow(QList<QStandardItem*>({new QStandardItem(QString("Such level")), new QStandardItem(QString("25x25"))}));
         ui->TableViewTitle->setText(QString("Level selection"));
     }
-
     else if (table == ModelSavedGames)
     {
         table->appendRow(QList<QStandardItem*>({new QStandardItem(QDateTime::currentDateTime().toString("d.M.yyyy\thh:mm:ss")),
@@ -185,8 +189,6 @@ void MainWindow::loadGame()
     gameScene->setSceneRect(0, 0, map.getWidth() * tileTextureSize + 2 * margin, map.getHeight() * tileTextureSize + 2 * margin);
 
     ui->GameView->setScene(gameScene);
-    ui->GameView->centerOn(100, 100);
-    redrawScene();
 }
 
 void MainWindow::sendCommand()
@@ -195,8 +197,23 @@ void MainWindow::sendCommand()
     ui->CommandInput->text();
 }
 
+void MainWindow::update()
+{
+    //TODO: Process server messages
+
+    // If in-game, redraw scene
+    if (ui->MainView->currentWidget() == ui->PageGame)
+        redrawScene();
+}
+
 void MainWindow::redrawScene()
 {
+    // Focus on player
+    ui->GameView->centerOn(100, 100);
+
+    static int i = 0;
+    gameScene->clear();
+
     QGraphicsPixmapItem *item = nullptr;
     const LevelMap &map = game.getMap();
     int rows = map.getHeight();
@@ -223,9 +240,10 @@ void MainWindow::redrawScene()
         item = new QGraphicsPixmapItem();
         item->setPixmap(playerTexture[(int)it->getDirection()]);
         Position pos = it->getPosition();
-        item->setPos(margin + pos.x * tileTextureSize, margin + pos.y * tileTextureSize);
+        item->setPos(margin + i + pos.x * tileTextureSize, margin + pos.y * tileTextureSize);
         gameScene->addItem(item);
     }
+    i++;
 }
 
 void MainWindow::on_TableViewGeneral_doubleClicked(const QModelIndex &index)

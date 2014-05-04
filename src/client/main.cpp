@@ -1,9 +1,9 @@
 #include <iostream>
-#include "common.h"
+#include "client/client.h"
 
 int main()
 {
-	std::cout << "Client here, how can I help you?" << std::endl;
-	commonTalk();
+	Client client;
+	client.start();
 	return 0;
 }

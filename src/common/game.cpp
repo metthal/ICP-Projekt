@@ -3,7 +3,7 @@
 Game::Game() :
     _plankDropped(true)
 {
-    _map.load("../../examples/level1");
+    _map.load("../examples/level1");
     _players.push_back(Player());
     _players.back().setPosition(Position(2, 2));
     _players.back().setDirection(Direction::Right);

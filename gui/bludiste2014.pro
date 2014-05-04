@@ -13,7 +13,6 @@ QMAKE_CXXFLAGS += -std=c++11
 TARGET = bludiste2014
 TEMPLATE = app
 
-
 INCLUDEPATH += ../inc/
 
 SOURCES += ../src/gui/main.cpp\
@@ -37,3 +36,6 @@ HEADERS  += ../inc/gui/mainwindow.h \
 
 FORMS    += mainwindow.ui \
     dialoggamemenu.ui
+
+DESTDIR = ../bin
+OBJECTS_DIR = ../obj/gui
