@@ -23,7 +23,8 @@ SOURCES += ../src/gui/main.cpp\
     ../src/common/position.cpp \
     ../src/common/player.cpp \
     ../src/common/msgexception.cpp \
-    ../src/gui/zoomgraphicsview.cpp
+    ../src/gui/zoomgraphicsview.cpp \
+    ../src/common/sentry.cpp
 
 HEADERS  += ../inc/gui/mainwindow.h \
     ../inc/gui/dialoggamemenu.h \
@@ -32,7 +33,8 @@ HEADERS  += ../inc/gui/mainwindow.h \
     ../inc/common/position.h \
     ../inc/common/player.h \
     ../inc/common/msgexception.h \
-    ../inc/gui/zoomgraphicsview.h
+    ../inc/gui/zoomgraphicsview.h \
+    ../inc/common/sentry.h
 
 FORMS    += mainwindow.ui \
     dialoggamemenu.ui

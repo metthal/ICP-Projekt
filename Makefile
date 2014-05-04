@@ -51,7 +51,7 @@ client: $(COMMON_OBJS) $(CLIENT_OBJS)
 	$(CC) $^ -o $(BIN_FOLDER)/$(BIN_CLIENT) $(LFLAGS)
 	
 gui:
-	@qmake $(GUI_FOLDER) -o $(GUI_WORK_FOLDER)/Makefile
+	@cd $(GUI_FOLDER) && qmake -o ../$(GUI_WORK_FOLDER)/Makefile
 	$(MAKE) -C $(GUI_WORK_FOLDER)
 
 $(OBJ_FOLDER)/server/%.o: $(SRC_FOLDER)/server/%.cpp

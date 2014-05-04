@@ -3,6 +3,7 @@
 
 #include <list>
 #include "common/player.h"
+#include "common/sentry.h"
 #include "common/levelmap.h"
 
 class Game
@@ -13,12 +14,15 @@ public:
 
     const LevelMap& getMap() const;
     const std::list<Player>& getPlayers() const;
+    const Player* getPlayer(int id) const;
+    const std::list<Sentry>& getSentries() const;
 
 protected:
 	LevelMap _map;
 	Position _plankPos;
 	bool _plankDropped;
 	std::list<Player> _players;
+    std::list<Sentry> _sentries;
 };
 
 #endif /* GAME_H_ */

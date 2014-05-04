@@ -20,13 +20,15 @@ class PlayerLabel : public QObject
     Q_OBJECT
 
 public:
-    PlayerLabel(QObject *parent);
+    PlayerLabel(QObject *parent, const Game *game, int id);
 
 protected:
     bool eventFilter(QObject *object, QEvent *event);
 
 private:
     QLabel *label;
+    const Game *_game;
+    int _id;
 };
 
 class MainWindow : public QMainWindow
@@ -66,6 +68,20 @@ private slots:
 
     void update();
 
+    void on_ButtonServerManual_clicked();
+
+    void on_actionCenterPlayer_triggered();
+
+    void on_actionGoLeft_triggered();
+
+    void on_actionGoUp_triggered();
+
+    void on_actionGoRight_triggered();
+
+    void on_actionGoDown_triggered();
+
+    void on_actionGameAction_triggered();
+
 private:
     DialogGameMenu *gameMenu;
 
@@ -83,6 +99,8 @@ private:
 
     void sendCommand();
 
+    QPoint tileToPoint(int x, int y, double xc = 0, double yc = 0);
+
     void redrawScene();
 
     std::vector<QWidget*> pages;
@@ -93,17 +111,21 @@ private:
 
     static const int maxPlayers = 4;
     PlayerLabel *playerLabels[maxPlayers];
+    int myPlayerId;
 
     QGraphicsScene *gameScene;
 
     const int tileTextureSize = 64;
     const int playerTextureHeight = 48;
     const int playerTextureWidth = 32;
+    const int sentryTextureHeight = 48;
+    const int sentryTextureWidth = 50;
     const int margin = 20;
 
     QPixmap tileTextures[(int)LevelMap::Tile::Count];
     QPixmap plankTexture;
     QPixmap playerTexture[(int)Direction::Count];
+    QPixmap sentryTexture[(int)Direction::Count];
 
     QTimer *timer;
 

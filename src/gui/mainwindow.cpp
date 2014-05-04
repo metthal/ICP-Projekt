@@ -4,6 +4,7 @@
 #include <QDateTime>
 #include <QHeaderView>
 #include <QScrollBar>
+#include <QToolTip>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -42,16 +43,30 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->StepTimeValue->setValidator(new QRegExpValidator(QRegExp("(0\\.|[1-9]\\d*\\.?)\\d*")));
     ui->CommandInput->setValidator(new QRegExpValidator(QRegExp("[a-z]*")));
 
-    ui->playerLabel_1->setStyleSheet("QLabel { background-color : red; color : blue; }");
+    ui->playerLabel_1->setText("Player 1");
+    ui->playerLabel_1->setStyleSheet("QLabel { background-color : orange; color : white;}");
+    ui->playerLabel_2->setText("Player 2");
+    ui->playerLabel_2->setStyleSheet("QLabel { background-color : blue; color : white;}");
+    ui->playerLabel_3->setText("Player 3");
+    ui->playerLabel_3->setStyleSheet("QLabel { background-color : green; color : white}");
+    ui->playerLabel_4->setText("Player 4");
+    ui->playerLabel_4->setStyleSheet("QLabel { background-color : purple; color : white}");
 
-    playerLabels[0] = new PlayerLabel(ui->playerLabel_1);
-    playerLabels[1] = new PlayerLabel(ui->playerLabel_2);
-    playerLabels[2] = new PlayerLabel(ui->playerLabel_3);
-    playerLabels[3] = new PlayerLabel(ui->playerLabel_4);
+    playerLabels[0] = new PlayerLabel(ui->playerLabel_1, &game, 0);
+    playerLabels[1] = new PlayerLabel(ui->playerLabel_2, &game, 1);
+    playerLabels[2] = new PlayerLabel(ui->playerLabel_3, &game, 2);
+    playerLabels[3] = new PlayerLabel(ui->playerLabel_4, &game, 3);
 
     gameMenu = new DialogGameMenu(this);
-    ui->PageGame->addAction(ui->actionGameEsc);
 
+    // Add shortcuts
+    ui->PageGame->addAction(ui->actionGameEsc);
+    ui->PageGame->addAction(ui->actionCenterPlayer);
+    ui->GameView->addAction(ui->actionGoLeft);
+    ui->GameView->addAction(ui->actionGoRight);
+    ui->GameView->addAction(ui->actionGoUp);
+    ui->GameView->addAction(ui->actionGoDown);
+    ui->GameView->addAction(ui->actionGameAction);
     ui->PageTableView->addAction(ui->actionMenuEsc);
     ui->PageLobby->addAction(ui->actionMenuEsc);
 
@@ -67,6 +82,13 @@ MainWindow::MainWindow(QWidget *parent) :
     playerTexture[(int)Direction::Left] = playerTextureAll.copy(0, playerTextureHeight, playerTextureWidth, playerTextureHeight);
     playerTexture[(int)Direction::Right] = playerTextureAll.copy(0, 2 * playerTextureHeight, playerTextureWidth, playerTextureHeight);
     playerTexture[(int)Direction::Up] = playerTextureAll.copy(0, 3 * playerTextureHeight, playerTextureWidth, playerTextureHeight);
+
+    QPixmap sentryTextureAll(QString("../art/death_scythe.png"));
+    sentryTexture[(int)Direction::Down] = sentryTextureAll.copy(0, 0, sentryTextureWidth, sentryTextureHeight);
+    sentryTexture[(int)Direction::Left] = sentryTextureAll.copy(0, sentryTextureHeight, sentryTextureWidth, sentryTextureHeight);
+    sentryTexture[(int)Direction::Right] = sentryTextureAll.copy(0, 2 * sentryTextureHeight, sentryTextureWidth, sentryTextureHeight);
+    sentryTexture[(int)Direction::Up] = sentryTextureAll.copy(0, 3 * sentryTextureHeight, sentryTextureWidth, sentryTextureHeight);
+
 
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
@@ -188,13 +210,47 @@ void MainWindow::loadGame()
     gameScene = new QGraphicsScene(ui->GameView);
     gameScene->setSceneRect(0, 0, map.getWidth() * tileTextureSize + 2 * margin, map.getHeight() * tileTextureSize + 2 * margin);
 
+    myPlayerId = 0;
     ui->GameView->setScene(gameScene);
 }
 
 void MainWindow::sendCommand()
 {
+    ui->LabelCommandStatus->setText("Waiting");
+    ui->LabelCommandStatus->setStyleSheet("QLabel { background-color : orange; color : white;}");
+
+    if (ui->CommandInput->text() == "left")
+    {
+
+    }
+    else if (ui->CommandInput->text() == "right")
+    {
+
+    }
+    else if (ui->CommandInput->text() == "up")
+    {
+
+    }
+    else if (ui->CommandInput->text() == "down")
+    {
+
+    }
+    else if (ui->CommandInput->text() == "action")
+    {
+
+    }
+    else
+    {
+        ui->LabelCommandStatus->setText("Failed");
+        ui->LabelCommandStatus->setStyleSheet("QLabel { background-color : red; color : white; font-weight:bold;}");
+        return;
+    }
+
     //TODO send this
     ui->CommandInput->text();
+
+    ui->LabelCommandStatus->setText("O.K.");
+    ui->LabelCommandStatus->setStyleSheet("QLabel { background-color : green; color : white;}");
 }
 
 void MainWindow::update()
@@ -206,12 +262,15 @@ void MainWindow::update()
         redrawScene();
 }
 
+QPoint MainWindow::tileToPoint(int x, int y, double xc, double yc)
+{
+    double px = margin + x * tileTextureSize + xc / 2.0;
+    double py = margin + y * tileTextureSize + yc / 2.0;
+    return QPoint(px, py);
+}
+
 void MainWindow::redrawScene()
 {
-    // Focus on player
-    ui->GameView->centerOn(100, 100);
-
-    static int i = 0;
     gameScene->clear();
 
     QGraphicsPixmapItem *item = nullptr;
@@ -220,6 +279,7 @@ void MainWindow::redrawScene()
     int columns = map.getWidth();
     LevelMap::Tile tile;
 
+    // Draw tiles
     for (int dx = 0; dx < columns; dx++)
     {
         for (int dy = 0; dy < rows; dy++)
@@ -228,22 +288,33 @@ void MainWindow::redrawScene()
             item = new QGraphicsPixmapItem();
             tile = map.getTileAt(pos);
             item->setPixmap(tileTextures[(int)tile]);
-            item->pixmap().scaled(tileTextureSize, tileTextureSize, Qt::KeepAspectRatio);
-            item->setPos(margin + dx * tileTextureSize, margin + dy * tileTextureSize);
+            item->pixmap().scaled(tileTextureSize, tileTextureSize, Qt::KeepAspectRatio);          
+            item->setPos(tileToPoint(dx, dy));
             gameScene->addItem(item);
         }
     }
 
+    // Draw players
     const std::list<Player> &players = game.getPlayers();
     for (auto it = players.begin(); it != players.end(); it++)
     {
         item = new QGraphicsPixmapItem();
         item->setPixmap(playerTexture[(int)it->getDirection()]);
         Position pos = it->getPosition();
-        item->setPos(margin + i + pos.x * tileTextureSize, margin + pos.y * tileTextureSize);
+        item->setPos(tileToPoint(pos.x, pos.y, tileTextureSize - playerTextureWidth, tileTextureSize - playerTextureHeight));
         gameScene->addItem(item);
     }
-    i++;
+
+    // Draw sentries
+    const std::list<Sentry> &sentries = game.getSentries();
+    for (auto it = sentries.begin(); it != sentries.end(); it++)
+    {
+        item = new QGraphicsPixmapItem();
+        item->setPixmap(sentryTexture[(int)it->getDirection()]);
+        Position pos = it->getPosition();
+        item->setPos(tileToPoint(pos.x, pos.y, tileTextureSize - sentryTextureWidth, tileTextureSize - sentryTextureHeight));
+        gameScene->addItem(item);
+    }
 }
 
 void MainWindow::on_TableViewGeneral_doubleClicked(const QModelIndex &index)
@@ -305,11 +376,13 @@ void MainWindow::on_StepTimeValue_editingFinished()
     }
 }
 
-PlayerLabel::PlayerLabel(QObject *parent)
+PlayerLabel::PlayerLabel(QObject *parent, const Game * game, int id)
 {
     parent->installEventFilter(this);
 
     label = (QLabel *)parent;
+    _game = game;
+    _id = id;
 }
 
 bool PlayerLabel::eventFilter(QObject *object, QEvent *event)
@@ -318,12 +391,16 @@ bool PlayerLabel::eventFilter(QObject *object, QEvent *event)
     {
         if (event->type() == QEvent::Enter)
         {
-            label->setText("Howering");
+            // Get stats for player with ID of this label
+            const Player *labelPlayer = _game->getPlayer(_id);
+            QString text("Player " + QString::number(_id + 1) + " statistics:\n");
+            text.append(labelPlayer == nullptr ? "Not connected" : QString::number(labelPlayer->getJoinTime()));
+            QToolTip::showText(label->mapToGlobal(QPoint( 0, 10 ) ), text);
             return true;
         }
         else if (event->type() == QEvent::Leave)
         {
-            label->setText("Not howering");
+            QToolTip::hideText();
             return true;
         }
     }
@@ -348,4 +425,47 @@ void MainWindow::on_actionGameEsc_triggered()
 void MainWindow::on_actionMenuEsc_triggered()
 {
     previousPage();
+}
+
+void MainWindow::on_ButtonServerManual_clicked()
+{
+    // Find server at ui->ServerSelectIP and display it
+}
+
+void MainWindow::on_actionCenterPlayer_triggered()
+{
+    // Focus on player
+    const Player *myPlayer = game.getPlayer(myPlayerId);
+    ui->GameView->centerOn(tileToPoint(myPlayer->getPosition().x, myPlayer->getPosition().y));
+}
+
+
+void MainWindow::on_actionGoLeft_triggered()
+{
+    ui->CommandInput->setText("left");
+    sendCommand();
+}
+
+void MainWindow::on_actionGoUp_triggered()
+{
+    ui->CommandInput->setText("up");
+    sendCommand();
+}
+
+void MainWindow::on_actionGoRight_triggered()
+{
+    ui->CommandInput->setText("right");
+    sendCommand();
+}
+
+void MainWindow::on_actionGoDown_triggered()
+{
+    ui->CommandInput->setText("down");
+    sendCommand();
+}
+
+void MainWindow::on_actionGameAction_triggered()
+{
+    ui->CommandInput->setText("action");
+    sendCommand();
 }

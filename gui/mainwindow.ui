@@ -27,7 +27,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="PageMainMenu">
        <property name="sizePolicy">
@@ -284,9 +284,19 @@
            </spacer>
           </item>
           <item>
+           <widget class="QLineEdit" name="ServerSelectIP">
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="ButtonServerManual">
             <property name="text">
-             <string>Manual connect</string>
+             <string>Find server manually</string>
             </property>
            </widget>
           </item>
@@ -828,6 +838,9 @@
             <property name="mouseTracking">
              <bool>false</bool>
             </property>
+            <property name="toolTip">
+             <string/>
+            </property>
             <property name="frameShape">
              <enum>QFrame::StyledPanel</enum>
             </property>
@@ -835,7 +848,7 @@
              <enum>QFrame::Sunken</enum>
             </property>
             <property name="text">
-             <string>XXXXXXXXXXXXXXXX</string>
+             <string>Player 1</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -865,7 +878,7 @@
              <enum>QFrame::Sunken</enum>
             </property>
             <property name="text">
-             <string>XXXXXXXXXXXXXXXX</string>
+             <string>Player 2</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -895,7 +908,7 @@
              <enum>QFrame::Sunken</enum>
             </property>
             <property name="text">
-             <string>XXXXXXXXXXXXXXXX</string>
+             <string>Player 3</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -925,7 +938,7 @@
              <enum>QFrame::Sunken</enum>
             </property>
             <property name="text">
-             <string>XXXXXXXXXXXXXXXX</string>
+             <string>Player 4</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -993,6 +1006,13 @@
            <number>0</number>
           </property>
           <item>
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Command:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QLineEdit" name="CommandInput">
             <property name="inputMethodHints">
              <set>Qt::ImhNone</set>
@@ -1001,8 +1021,17 @@
           </item>
           <item>
            <widget class="QLabel" name="LabelCommandStatus">
+            <property name="minimumSize">
+             <size>
+              <width>50</width>
+              <height>0</height>
+             </size>
+            </property>
             <property name="text">
              <string>Status</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
             </property>
            </widget>
           </item>
@@ -1017,6 +1046,13 @@
            <widget class="QPushButton" name="ButtonCommandHistory">
             <property name="text">
              <string>History</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="LabelGameTime">
+            <property name="text">
+             <string>00:00</string>
             </property>
            </widget>
           </item>
@@ -1042,6 +1078,54 @@
    </property>
    <property name="shortcut">
     <string>Esc</string>
+   </property>
+  </action>
+  <action name="actionCenterPlayer">
+   <property name="text">
+    <string>CenterPlayer</string>
+   </property>
+   <property name="shortcut">
+    <string>F1</string>
+   </property>
+  </action>
+  <action name="actionGoLeft">
+   <property name="text">
+    <string>GoLeft</string>
+   </property>
+   <property name="shortcut">
+    <string>Left</string>
+   </property>
+  </action>
+  <action name="actionGoUp">
+   <property name="text">
+    <string>GoUp</string>
+   </property>
+   <property name="shortcut">
+    <string>Up</string>
+   </property>
+  </action>
+  <action name="actionGoRight">
+   <property name="text">
+    <string>GoRight</string>
+   </property>
+   <property name="shortcut">
+    <string>Right</string>
+   </property>
+  </action>
+  <action name="actionGoDown">
+   <property name="text">
+    <string>GoDown</string>
+   </property>
+   <property name="shortcut">
+    <string>Down</string>
+   </property>
+  </action>
+  <action name="actionGameAction">
+   <property name="text">
+    <string>GameAction</string>
+   </property>
+   <property name="shortcut">
+    <string>Space</string>
    </property>
   </action>
  </widget>

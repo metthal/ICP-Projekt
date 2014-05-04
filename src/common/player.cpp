@@ -1,5 +1,10 @@
 #include "common/player.h"
 
+int Player::getId() const
+{
+    return _id;
+}
+
 Direction Player::getDirection() const
 {
     return _faceDir;
@@ -8,6 +13,11 @@ Direction Player::getDirection() const
 Position Player::getPosition() const
 {
     return _pos;
+}
+
+int Player::getJoinTime() const
+{
+    return _joinTime;
 }
 
 bool Player::hasPlank() const
