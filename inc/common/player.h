@@ -17,8 +17,10 @@ public:
     Direction getDirection() const;
     Position getPosition() const;
     int getJoinTime() const;
+    int getKills() const;
     bool hasPlank() const;
 
+    void setId(int id);
     void setDirection(Direction dir);
     void setPosition(Position pos);
 
@@ -27,6 +29,7 @@ protected:
 	Direction _faceDir;
 	Position _pos;
 	int _joinTime;
+    int _kills;
 	bool _hasPlank;
 };
 

@@ -16,11 +16,13 @@ public:
     const std::list<Player>& getPlayers() const;
     const Player* getPlayer(int id) const;
     const std::list<Sentry>& getSentries() const;
+    int getTime() const;
 
 protected:
 	LevelMap _map;
 	Position _plankPos;
 	bool _plankDropped;
+    int _time;
 	std::list<Player> _players;
     std::list<Sentry> _sentries;
 };

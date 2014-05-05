@@ -5,6 +5,17 @@
 #include <QHeaderView>
 #include <QScrollBar>
 #include <QToolTip>
+#include <QBitmap>
+#include <QPainter>
+
+QString formatTime(int seconds)
+{
+    int hours = seconds / 3600;
+    seconds -= hours * 3600;
+    int minutes = seconds / 60;
+    seconds -= minutes * 60;
+    return QString::number(hours) + (minutes < 10 ? ":0" : ":") + QString::number(minutes) + (seconds < 10 ? ":0" : ":") + QString::number(seconds);
+}
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -44,13 +55,13 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->CommandInput->setValidator(new QRegExpValidator(QRegExp("[a-z]*")));
 
     ui->playerLabel_1->setText("Player 1");
-    ui->playerLabel_1->setStyleSheet("QLabel { background-color : orange; color : white;}");
+    ui->playerLabel_1->setStyleSheet("QLabel { background-color : blue; color : white;}");
     ui->playerLabel_2->setText("Player 2");
-    ui->playerLabel_2->setStyleSheet("QLabel { background-color : blue; color : white;}");
+    ui->playerLabel_2->setStyleSheet("QLabel { background-color : orange; color : white;}");
     ui->playerLabel_3->setText("Player 3");
     ui->playerLabel_3->setStyleSheet("QLabel { background-color : green; color : white}");
     ui->playerLabel_4->setText("Player 4");
-    ui->playerLabel_4->setStyleSheet("QLabel { background-color : purple; color : white}");
+    ui->playerLabel_4->setStyleSheet("QLabel { background-color : red; color : white}");
 
     playerLabels[0] = new PlayerLabel(ui->playerLabel_1, &game, 0);
     playerLabels[1] = new PlayerLabel(ui->playerLabel_2, &game, 1);
@@ -77,12 +88,40 @@ MainWindow::MainWindow(QWidget *parent) :
     tileTextures[(int)LevelMap::Tile::Path] = QPixmap(QString("../art/dirt1.png"));
     plankTexture = QPixmap(QString("../art/plank1.png"));
 
-    QPixmap playerTextureAll(QString("../art/brian.png"));
-    playerTexture[(int)Direction::Down] = playerTextureAll.copy(0, 0, playerTextureWidth, playerTextureHeight);
-    playerTexture[(int)Direction::Left] = playerTextureAll.copy(0, playerTextureHeight, playerTextureWidth, playerTextureHeight);
-    playerTexture[(int)Direction::Right] = playerTextureAll.copy(0, 2 * playerTextureHeight, playerTextureWidth, playerTextureHeight);
-    playerTexture[(int)Direction::Up] = playerTextureAll.copy(0, 3 * playerTextureHeight, playerTextureWidth, playerTextureHeight);
+    QPixmap playerTextureAll(QString("../art/modernguy.png"));
 
+    for (int i = 0; i < maxPlayers; i++)
+    {
+        QPixmap curTex(playerTextureAll);
+        switch(i)
+        {
+        case 0:
+            changeColor(curTex, QColor(204, 212, 219), QColor(0, 0, 255));
+            changeColor(curTex, QColor(170, 170, 170), QColor(0, 0, 255));
+            changeColor(curTex, QColor(255, 255, 255), QColor(0, 0, 255));
+            break;
+        case 1:
+            changeColor(curTex, QColor(204, 212, 219), QColor(255, 127, 0));
+            changeColor(curTex, QColor(170, 170, 170), QColor(255, 127, 0));
+            changeColor(curTex, QColor(255, 255, 255), QColor(255, 127, 0));
+            break;
+        case 2:
+            changeColor(curTex, QColor(204, 212, 219), QColor(0, 255, 0));
+            changeColor(curTex, QColor(170, 170, 170), QColor(0, 255, 0));
+            changeColor(curTex, QColor(255, 255, 255), QColor(0, 255, 0));
+            break;
+        case 3:
+            changeColor(curTex, QColor(204, 212, 219), QColor(255, 0, 0));
+            changeColor(curTex, QColor(170, 170, 170), QColor(255, 0, 0));
+            changeColor(curTex, QColor(255, 255, 255), QColor(255, 0, 0));
+            break;
+        }
+
+        playerTexture[i][(int)Direction::Down] = curTex.copy(0, 0, playerTextureWidth, playerTextureHeight);
+        playerTexture[i][(int)Direction::Left] = curTex.copy(0, playerTextureHeight, playerTextureWidth, playerTextureHeight);
+        playerTexture[i][(int)Direction::Right] = curTex.copy(0, 2 * playerTextureHeight, playerTextureWidth, playerTextureHeight);
+        playerTexture[i][(int)Direction::Up] = curTex.copy(0, 3 * playerTextureHeight, playerTextureWidth, playerTextureHeight);
+    }
     QPixmap sentryTextureAll(QString("../art/death_scythe.png"));
     sentryTexture[(int)Direction::Down] = sentryTextureAll.copy(0, 0, sentryTextureWidth, sentryTextureHeight);
     sentryTexture[(int)Direction::Left] = sentryTextureAll.copy(0, sentryTextureHeight, sentryTextureWidth, sentryTextureHeight);
@@ -299,7 +338,7 @@ void MainWindow::redrawScene()
     for (auto it = players.begin(); it != players.end(); it++)
     {
         item = new QGraphicsPixmapItem();
-        item->setPixmap(playerTexture[(int)it->getDirection()]);
+        item->setPixmap(playerTexture[it->getId()][(int)it->getDirection()]);
         Position pos = it->getPosition();
         item->setPos(tileToPoint(pos.x, pos.y, tileTextureSize - playerTextureWidth, tileTextureSize - playerTextureHeight));
         gameScene->addItem(item);
@@ -315,6 +354,16 @@ void MainWindow::redrawScene()
         item->setPos(tileToPoint(pos.x, pos.y, tileTextureSize - sentryTextureWidth, tileTextureSize - sentryTextureHeight));
         gameScene->addItem(item);
     }
+}
+
+void MainWindow::changeColor(QPixmap& pixmap, QColor origColor, QColor newColor)
+{
+    QBitmap mask(pixmap.createMaskFromColor(origColor, Qt::MaskOutColor));
+
+    QPainter paint(&pixmap);
+    paint.setPen(newColor);
+    paint.drawPixmap(pixmap.rect(), mask, mask.rect());
+    paint.end();
 }
 
 void MainWindow::on_TableViewGeneral_doubleClicked(const QModelIndex &index)
@@ -394,7 +443,14 @@ bool PlayerLabel::eventFilter(QObject *object, QEvent *event)
             // Get stats for player with ID of this label
             const Player *labelPlayer = _game->getPlayer(_id);
             QString text("Player " + QString::number(_id + 1) + " statistics:\n");
-            text.append(labelPlayer == nullptr ? "Not connected" : QString::number(labelPlayer->getJoinTime()));
+            if (labelPlayer == nullptr)
+                text.append("Not connected");
+            else
+            {
+                int gameTime = labelPlayer->getJoinTime() - _game->getTime();
+                text.append("Game time: " + formatTime(gameTime) + "\n");
+                text.append("Kills: " + QString::number(labelPlayer->getKills()));
+            }
             QToolTip::showText(label->mapToGlobal(QPoint( 0, 10 ) ), text);
             return true;
         }

@@ -6,15 +6,19 @@ Game::Game() :
     _map.load("../examples/level1");
 
     _players.push_back(Player());
+    _players.back().setId(0);
     _players.back().setPosition(Position(2, 2));
     _players.back().setDirection(Direction::Right);
     _players.push_back(Player());
+    _players.back().setId(1);
     _players.back().setPosition(Position(5, 2));
     _players.back().setDirection(Direction::Down);
     _players.push_back(Player());
+    _players.back().setId(2);
     _players.back().setPosition(Position(2, 5));
     _players.back().setDirection(Direction::Up);
     _players.push_back(Player());
+    _players.back().setId(3);
     _players.back().setPosition(Position(5, 5));
     _players.back().setDirection(Direction::Left);
 
@@ -56,4 +60,9 @@ const Player* Game::getPlayer(int id) const
 const std::list<Sentry>& Game::getSentries() const
 {
     return _sentries;
+}
+
+int Game::getTime() const
+{
+    return _time;
 }

@@ -7,6 +7,7 @@
 #include <QLabel>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
+#include <QPixmap>
 #include <QTimer>
 #include "common/game.h"
 
@@ -103,6 +104,8 @@ private:
 
     void redrawScene();
 
+    void changeColor(QPixmap& pixmap, QColor origColor, QColor newColor);
+
     std::vector<QWidget*> pages;
 
     QStandardItemModel *ModelLevelSelection;
@@ -124,7 +127,7 @@ private:
 
     QPixmap tileTextures[(int)LevelMap::Tile::Count];
     QPixmap plankTexture;
-    QPixmap playerTexture[(int)Direction::Count];
+    QPixmap playerTexture[maxPlayers][(int)Direction::Count];
     QPixmap sentryTexture[(int)Direction::Count];
 
     QTimer *timer;

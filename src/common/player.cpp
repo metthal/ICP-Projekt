@@ -20,9 +20,19 @@ int Player::getJoinTime() const
     return _joinTime;
 }
 
+int Player::getKills() const
+{
+    return _kills;
+}
+
 bool Player::hasPlank() const
 {
 	return _hasPlank;
+}
+
+void Player::setId(int id)
+{
+    _id = id;
 }
 
 void Player::setDirection(Direction dir)
