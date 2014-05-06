@@ -1,9 +1,11 @@
 #ifndef TSQUEUE_H
 #define TSQUEUE_H
 
-#include "Shared.h"
 #include <queue>
-#include <boost/thread.hpp>
+#include <mutex>
+#include <condition_variable>
+
+typedef std::unique_lock<std::mutex> ScopedLock;
 
 template <typename T> class TsQueue
 {
@@ -55,6 +57,21 @@ public:
         if (m_interrupted)
             return value_type();
 
+        if (m_queue.empty())
+            return value_type();
+
+        value_type val = m_queue.front();
+        m_queue.pop();
+        return val;
+    }
+
+    value_type waitAndDequeue()
+    {
+        ScopedLock lock(m_mutex);
+
+        if (m_interrupted)
+            return value_type();
+
         while (!m_interrupted && m_queue.empty())
             m_monitor.wait(lock);
 
@@ -90,8 +107,8 @@ public:
 
 private:
     bool m_interrupted;
-    boost::mutex m_mutex;
-    boost::condition_variable m_monitor;
+    std::mutex m_mutex;
+    std::condition_variable m_monitor;
     std::queue<value_type> m_queue;
 };
 
