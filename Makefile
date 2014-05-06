@@ -10,6 +10,8 @@ TAR = tar -czf
 CFLAGS = -Wall -Wextra -c --std=c++11
 CFLAGS_RELEASE = -O2
 CFLAGS_DEBUG = -O0 -g -DDEBUG
+QFLAGS =
+QFLAGS_DEBUG = CONFIG+=debug CONFIG+=declarative_debug CONFIG+=qml_debug
 
 LFLAGS = -lpthread -lboost_system
 
@@ -40,6 +42,7 @@ release: CFLAGS += $(CFLAGS_RELEASE)
 release: build
 
 debug: CFLAGS += $(CFLAGS_DEBUG)
+debug: QFLAGS += $(QFLAGS_DEBUG)
 debug: build
 
 build: server client gui
@@ -51,7 +54,7 @@ client: $(COMMON_OBJS) $(CLIENT_OBJS)
 	$(CC) $^ -o $(BIN_FOLDER)/$(BIN_CLIENT) $(LFLAGS)
 	
 gui:
-	@cd $(GUI_FOLDER) && qmake -o ../$(GUI_WORK_FOLDER)/Makefile
+	@cd $(GUI_FOLDER) && qmake -o ../$(GUI_WORK_FOLDER)/Makefile $(QFLAGS)
 	$(MAKE) -C $(GUI_WORK_FOLDER)
 
 $(OBJ_FOLDER)/server/%.o: $(SRC_FOLDER)/server/%.cpp

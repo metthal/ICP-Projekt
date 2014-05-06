@@ -7,6 +7,7 @@
 #include <QToolTip>
 #include <QBitmap>
 #include <QPainter>
+#include <QAbstractItemView>
 
 QString formatTime(int seconds)
 {
@@ -32,6 +33,12 @@ MainWindow::MainWindow(QWidget *parent) :
     loadPage(ui->PageMainMenu);
     gameScene = nullptr;
 
+    ModelServerSelection = new QStandardItemModel(0, 2, this);
+    ModelServerSelection->setHorizontalHeaderItem(0, new QStandardItem(QString("IP")));
+    ModelServerSelection->setHorizontalHeaderItem(1, new QStandardItem(QString("Name")));
+    ModelServerSelection->setHorizontalHeaderItem(2, new QStandardItem(QString("Number of games")));
+    ui->TableViewServers->setModel(ModelServerSelection);
+
     ModelLevelSelection = new QStandardItemModel(0, 2, this);
     ModelLevelSelection->setHorizontalHeaderItem(0, new QStandardItem(QString("Name")));
     ModelLevelSelection->setHorizontalHeaderItem(1, new QStandardItem(QString("Size")));
@@ -49,7 +56,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ModelRunningGames->setHorizontalHeaderItem(2, new QStandardItem(QString("Size")));
     ModelRunningGames->setHorizontalHeaderItem(3, new QStandardItem(QString("Stage")));
 
+    ui->TableViewServers->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Stretch);
+    ui->TableViewServers->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->TableViewGeneral->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Stretch);
+    ui->TableViewGeneral->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     ui->StepTimeValue->setValidator(new QRegExpValidator(QRegExp("(0\\.|[1-9]\\d*\\.?)\\d*")));
     ui->CommandInput->setValidator(new QRegExpValidator(QRegExp("[a-z]*")));
@@ -63,11 +73,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->playerLabel_4->setText("Player 4");
     ui->playerLabel_4->setStyleSheet("QLabel { background-color : red; color : white}");
 
-    playerLabels[0] = new PlayerLabel(ui->playerLabel_1, &game, 0);
-    playerLabels[1] = new PlayerLabel(ui->playerLabel_2, &game, 1);
-    playerLabels[2] = new PlayerLabel(ui->playerLabel_3, &game, 2);
-    playerLabels[3] = new PlayerLabel(ui->playerLabel_4, &game, 3);
-
     gameMenu = new DialogGameMenu(this);
 
     // Add shortcuts
@@ -78,6 +83,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->GameView->addAction(ui->actionGoUp);
     ui->GameView->addAction(ui->actionGoDown);
     ui->GameView->addAction(ui->actionGameAction);
+    ui->PageServerSelect->addAction(ui->actionMenuEsc);
     ui->PageTableView->addAction(ui->actionMenuEsc);
     ui->PageLobby->addAction(ui->actionMenuEsc);
 
@@ -96,23 +102,27 @@ MainWindow::MainWindow(QWidget *parent) :
         switch(i)
         {
         case 0:
-            changeColor(curTex, QColor(204, 212, 219), QColor(0, 0, 255));
-            changeColor(curTex, QColor(170, 170, 170), QColor(0, 0, 255));
+            changeColor(curTex, QColor(136, 136, 136), QColor(0, 0, 136));
+            changeColor(curTex, QColor(204, 212, 219), QColor(0, 0, 200));
+            changeColor(curTex, QColor(170, 170, 170), QColor(0, 0, 170));
             changeColor(curTex, QColor(255, 255, 255), QColor(0, 0, 255));
             break;
         case 1:
-            changeColor(curTex, QColor(204, 212, 219), QColor(255, 127, 0));
-            changeColor(curTex, QColor(170, 170, 170), QColor(255, 127, 0));
+            changeColor(curTex, QColor(136, 136, 136), QColor(136, 60, 0));
+            changeColor(curTex, QColor(204, 212, 219), QColor(200, 80, 0));
+            changeColor(curTex, QColor(170, 170, 170), QColor(170, 70, 0));
             changeColor(curTex, QColor(255, 255, 255), QColor(255, 127, 0));
             break;
         case 2:
-            changeColor(curTex, QColor(204, 212, 219), QColor(0, 255, 0));
-            changeColor(curTex, QColor(170, 170, 170), QColor(0, 255, 0));
+            changeColor(curTex, QColor(136, 136, 136), QColor(0, 136, 0));
+            changeColor(curTex, QColor(204, 212, 219), QColor(0, 200, 0));
+            changeColor(curTex, QColor(170, 170, 170), QColor(0, 170, 0));
             changeColor(curTex, QColor(255, 255, 255), QColor(0, 255, 0));
             break;
         case 3:
-            changeColor(curTex, QColor(204, 212, 219), QColor(255, 0, 0));
-            changeColor(curTex, QColor(170, 170, 170), QColor(255, 0, 0));
+            changeColor(curTex, QColor(136, 136, 136), QColor(136, 0, 0));
+            changeColor(curTex, QColor(204, 212, 219), QColor(200, 0, 0));
+            changeColor(curTex, QColor(170, 170, 170), QColor(170, 0, 0));
             changeColor(curTex, QColor(255, 255, 255), QColor(255, 0, 0));
             break;
         }
@@ -129,29 +139,43 @@ MainWindow::MainWindow(QWidget *parent) :
     sentryTexture[(int)Direction::Up] = sentryTextureAll.copy(0, 3 * sentryTextureHeight, sentryTextureWidth, sentryTextureHeight);
 
 
-    timer = new QTimer(this);
+    timer = new QTimer();
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
     timer->start(100);
 }
 
 MainWindow::~MainWindow()
 {
+    delete gameMenu; gameMenu = nullptr;
+    delete ui; ui = nullptr;
+
+    for (auto it = pages.begin(); it != pages.end(); it++)
+    {
+        delete (*it); (*it) = nullptr;
+    }
+
+    delete ModelServerSelection; ModelServerSelection = nullptr;
     delete ModelLevelSelection; ModelLevelSelection = nullptr;
     delete ModelSavedGames; ModelSavedGames = nullptr;
     delete ModelRunningGames; ModelRunningGames = nullptr;
     for (int i = 0; i < maxPlayers; i++)
     {
-        delete playerLabels[i];
-        playerLabels[i] = nullptr;
+        delete playerLabels[i]; playerLabels[i] = nullptr;
     }
-    delete gameMenu; gameMenu = nullptr;
-    delete ui; ui = nullptr;
+
+    delete gameScene; gameScene = nullptr;
     delete timer; timer = nullptr;
+    delete game; game = nullptr;
 }
 
 void MainWindow::leaveGame()
 {
+    delete game; game = nullptr;
     delete gameScene; gameScene = nullptr;
+    for (int i = 0; i < maxPlayers; i++)
+    {
+        delete playerLabels[i]; playerLabels[i] = nullptr;
+    }
     changePage(ui->PageMainMenu, false);
 }
 
@@ -190,6 +214,13 @@ void MainWindow::loadPage(QWidget *page, void* object)
     {
 
     }
+    else if (page == ui->PageServerSelect)
+    {
+        ModelServerSelection->setRowCount(0);
+        ModelServerSelection->appendRow(QList<QStandardItem*>({new QStandardItem(QString("127.0.0.1")),
+                                                               new QStandardItem(QString("Great local server")),
+                                                               new QStandardItem(QString("0"))}));
+    }
     else if (page == ui->PageTableView)
     {
         loadTable((QStandardItemModel*)object);
@@ -211,6 +242,7 @@ void MainWindow::loadPage(QWidget *page, void* object)
 
 void MainWindow::loadTable(QStandardItemModel *table)
 {
+    table->setRowCount(0);
     if (table == ModelLevelSelection)
     {
         table->appendRow(QList<QStandardItem*>({new QStandardItem(QString("Such level")), new QStandardItem(QString("25x25"))}));
@@ -245,9 +277,18 @@ void MainWindow::loadTable(QStandardItemModel *table)
 
 void MainWindow::loadGame()
 {
-    const LevelMap &map = game.getMap();
+    game = new Game();
+    const LevelMap &map = game->getMap();
     gameScene = new QGraphicsScene(ui->GameView);
-    gameScene->setSceneRect(0, 0, map.getWidth() * tileTextureSize + 2 * margin, map.getHeight() * tileTextureSize + 2 * margin);
+    gameScene->setSceneRect(0, 0,
+                            map.getWidth() * tileTextureSize + 2 * margin,
+                            map.getHeight() * tileTextureSize + 2 * margin);
+
+
+    playerLabels[0] = new PlayerLabel(ui->playerLabel_1, game, 0);
+    playerLabels[1] = new PlayerLabel(ui->playerLabel_2, game, 1);
+    playerLabels[2] = new PlayerLabel(ui->playerLabel_3, game, 2);
+    playerLabels[3] = new PlayerLabel(ui->playerLabel_4, game, 3);
 
     myPlayerId = 0;
     ui->GameView->setScene(gameScene);
@@ -296,6 +337,26 @@ void MainWindow::update()
 {
     //TODO: Process server messages
 
+    if (ui->MainView->currentWidget() == ui->PageTableView)
+    {
+        if (ui->TableViewGeneral->model() == ModelRunningGames)
+        {
+            // Display running games
+            ModelRunningGames->appendRow(QList<QStandardItem*>({new QStandardItem(QString("Doge")),
+                                                                new QStandardItem(QString("Such level")),
+                                                                new QStandardItem(QString("25x25")),
+                                                                new QStandardItem(QString("Very running."))}));
+        }
+        else if (ui->TableViewGeneral->model() == ModelLevelSelection)
+        {
+            // Display levels to choose from
+        }
+        else if (ui->TableViewGeneral->model() == ModelSavedGames)
+        {
+            // Display games saved on server
+        }
+    }
+
     // If in-game, redraw scene
     if (ui->MainView->currentWidget() == ui->PageGame)
         redrawScene();
@@ -313,7 +374,7 @@ void MainWindow::redrawScene()
     gameScene->clear();
 
     QGraphicsPixmapItem *item = nullptr;
-    const LevelMap &map = game.getMap();
+    const LevelMap &map = game->getMap();
     int rows = map.getHeight();
     int columns = map.getWidth();
     LevelMap::Tile tile;
@@ -334,7 +395,7 @@ void MainWindow::redrawScene()
     }
 
     // Draw players
-    const std::list<Player> &players = game.getPlayers();
+    const std::list<Player> &players = game->getPlayers();
     for (auto it = players.begin(); it != players.end(); it++)
     {
         item = new QGraphicsPixmapItem();
@@ -345,7 +406,7 @@ void MainWindow::redrawScene()
     }
 
     // Draw sentries
-    const std::list<Sentry> &sentries = game.getSentries();
+    const std::list<Sentry> &sentries = game->getSentries();
     for (auto it = sentries.begin(); it != sentries.end(); it++)
     {
         item = new QGraphicsPixmapItem();
@@ -491,7 +552,7 @@ void MainWindow::on_ButtonServerManual_clicked()
 void MainWindow::on_actionCenterPlayer_triggered()
 {
     // Focus on player
-    const Player *myPlayer = game.getPlayer(myPlayerId);
+    const Player *myPlayer = game->getPlayer(myPlayerId);
     ui->GameView->centerOn(tileToPoint(myPlayer->getPosition().x, myPlayer->getPosition().y));
 }
 
@@ -524,4 +585,40 @@ void MainWindow::on_actionGameAction_triggered()
 {
     ui->CommandInput->setText("action");
     sendCommand();
+}
+
+void MainWindow::on_ButtonServerConnect_clicked()
+{
+    loadGame();
+}
+
+void MainWindow::on_ButtonServerRefresh_clicked()
+{
+    // Fetch all servers
+
+}
+
+void MainWindow::on_ButtonServerBack_clicked()
+{
+    previousPage();
+}
+
+void MainWindow::on_ButtonChangeServer_clicked()
+{
+    changePage(ui->PageServerSelect);
+}
+
+void MainWindow::on_TableViewServers_doubleClicked(const QModelIndex &index)
+{
+    //TODO: get ip from data loaded
+    ui->LabelServerIP->setText("127.0.0.1");
+    previousPage();
+}
+
+void MainWindow::on_ButtonStartGame_clicked()
+{
+    //TODO start new game on server with selected level
+    //TODO receive new game ID from server
+    //TODO connect to running game
+    changePage(ui->PageGame, false);
 }

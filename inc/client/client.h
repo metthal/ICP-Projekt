@@ -11,9 +11,10 @@ class Client
 {
 public:
 	void start();
-	void controlLoop();
+
 private:
 	//TODO Connection _con;
+	void controlLoop();
 	LevelMap _map;
 	std::list<Player> _players;
 	std::atomic_bool _close;

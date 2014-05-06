@@ -83,11 +83,19 @@ private slots:
 
     void on_actionGameAction_triggered();
 
+    void on_ButtonServerConnect_clicked();
+
+    void on_ButtonServerRefresh_clicked();
+
+    void on_ButtonServerBack_clicked();
+
+    void on_ButtonChangeServer_clicked();
+
+    void on_TableViewServers_doubleClicked(const QModelIndex &index);
+
+    void on_ButtonStartGame_clicked();
+
 private:
-    DialogGameMenu *gameMenu;
-
-    Ui::MainWindow *ui;
-
     void changePage(QWidget *newPage, bool putInChain = true, void *object = nullptr);
 
     void previousPage();
@@ -106,8 +114,13 @@ private:
 
     void changeColor(QPixmap& pixmap, QColor origColor, QColor newColor);
 
+    DialogGameMenu *gameMenu;
+
+    Ui::MainWindow *ui;
+
     std::vector<QWidget*> pages;
 
+    QStandardItemModel *ModelServerSelection;
     QStandardItemModel *ModelLevelSelection;
     QStandardItemModel *ModelSavedGames;
     QStandardItemModel *ModelRunningGames;
@@ -132,7 +145,7 @@ private:
 
     QTimer *timer;
 
-    Game game;
+    Game *game;
 };
 
 #endif // MAINWINDOW_H
