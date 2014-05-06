@@ -90,8 +90,9 @@ MainWindow::MainWindow(QWidget *parent) :
     tileTextures[(int)LevelMap::Tile::Forest] = QPixmap(QString("../art/forest1.png"));
     tileTextures[(int)LevelMap::Tile::Water] = QPixmap(QString("../art/water2.png"));
     tileTextures[(int)LevelMap::Tile::Bridge] = QPixmap(QString("../art/bridge1.png"));
-    tileTextures[(int)LevelMap::Tile::Grass] = QPixmap(QString("../art/dirt1.png"));
+    tileTextures[(int)LevelMap::Tile::Grass] = QPixmap(QString("../art/grass1.png"));
     tileTextures[(int)LevelMap::Tile::Path] = QPixmap(QString("../art/dirt1.png"));
+    tileTextures[(int)LevelMap::Tile::Finish] = QPixmap(QString("../art/finish.png"));
     plankTexture = QPixmap(QString("../art/plank1.png"));
 
     QPixmap playerTextureAll(QString("../art/modernguy.png"));
@@ -357,9 +358,12 @@ void MainWindow::update()
         }
     }
 
-    // If in-game, redraw scene
+    // If in-game, redraw scene and update game time
     if (ui->MainView->currentWidget() == ui->PageGame)
+    {
         redrawScene();
+        ui->LabelGameTime->setText(formatTime(game->getTime()));
+    }
 }
 
 QPoint MainWindow::tileToPoint(int x, int y, double xc, double yc)
@@ -386,10 +390,21 @@ void MainWindow::redrawScene()
         {
             Position pos = Position(dx, dy);
             item = new QGraphicsPixmapItem();
-            tile = map.getTileAt(pos);
-            item->setPixmap(tileTextures[(int)tile]);
-            item->pixmap().scaled(tileTextureSize, tileTextureSize, Qt::KeepAspectRatio);          
             item->setPos(tileToPoint(dx, dy));
+
+            tile = map.getTileAt(pos);
+            if (tile == LevelMap::Tile::Finish || tile == LevelMap::Tile::Bridge)
+            {
+                if (tile == LevelMap::Tile::Finish)
+                    item->setPixmap(tileTextures[(int)LevelMap::Tile::Path]);
+                else
+                    item->setPixmap(tileTextures[(int)LevelMap::Tile::Water]);
+                gameScene->addItem(item);
+                item = new QGraphicsPixmapItem();
+                item->setPos(tileToPoint(dx, dy));
+            }
+
+            item->setPixmap(tileTextures[(int)tile]);
             gameScene->addItem(item);
         }
     }
@@ -413,6 +428,16 @@ void MainWindow::redrawScene()
         item->setPixmap(sentryTexture[(int)it->getDirection()]);
         Position pos = it->getPosition();
         item->setPos(tileToPoint(pos.x, pos.y, tileTextureSize - sentryTextureWidth, tileTextureSize - sentryTextureHeight));
+        gameScene->addItem(item);
+    }
+
+    // Draw plank
+    if (game->isPlankDropped())
+    {
+        item = new QGraphicsPixmapItem();
+        item->setPixmap(plankTexture);
+        Position pos = game->getPlankPos();
+        item->setPos(tileToPoint(pos.x, pos.y));
         gameScene->addItem(item);
     }
 }

@@ -78,11 +78,12 @@ char LevelMap::tileToChar(Tile tile)
 {
     switch (tile)
 	{
-	case Tile::Forest : return 'F';
-	case Tile::Water : return 'W';
-	case Tile::Bridge : return 'B';
-	case Tile::Grass : return 'G';
-	case Tile::Path : return 'P';
+    case Tile::Forest : return 'F';
+    case Tile::Water : return 'W';
+    case Tile::Bridge : return 'B';
+    case Tile::Grass : return 'G';
+    case Tile::Path : return 'P';
+    case Tile::Finish : return 'X';
 	default:
 		throw MsgException("Unknown tile");
 	}
@@ -97,6 +98,7 @@ LevelMap::Tile LevelMap::charToTile(char c)
 	case 'B': return Tile::Bridge;
 	case 'G': return Tile::Grass;
 	case 'P': return Tile::Path;
+    case 'X': return Tile::Finish;
 	default:
 		throw MsgException("Unknown tile");
 	}

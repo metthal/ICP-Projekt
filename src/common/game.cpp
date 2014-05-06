@@ -66,3 +66,14 @@ int Game::getTime() const
 {
     return _time;
 }
+
+
+bool Game::isPlankDropped() const
+{
+    return _plankDropped;
+}
+
+Position Game::getPlankPos() const
+{
+    return _plankPos;
+}

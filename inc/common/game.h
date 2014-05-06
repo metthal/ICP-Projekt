@@ -17,6 +17,8 @@ public:
     const Player* getPlayer(int id) const;
     const std::list<Sentry>& getSentries() const;
     int getTime() const;
+    bool isPlankDropped() const;
+    Position getPlankPos() const;
 
 protected:
 	LevelMap _map;

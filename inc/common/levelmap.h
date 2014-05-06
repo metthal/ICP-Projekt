@@ -25,7 +25,7 @@ public:
 	int getHeight() const;
 	bool checkBounds(const Position &pos) const;
 
-    enum class Tile {Forest = 0, Water, Bridge, Grass, Path, Count};
+    enum class Tile {Forest = 0, Water, Bridge, Grass, Path, Finish, Count};
 	Tile getTileAt(const Position &pos) const;
 	void setTileAt(const Position &pos, Tile tile);
 private:
