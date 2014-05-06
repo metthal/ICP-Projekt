@@ -1,0 +1,79 @@
+#include <boost/bind.hpp>
+#include "server/Session.h"
+
+Session::Session(boost::asio::io_service& ioService) : _socket(ioService)
+{
+    _receivedPackets = new TsQueue<PacketPtr>();
+    _pendingPacket = nullptr;
+}
+
+Session::~Session()
+{
+    delete _receivedPackets;
+}
+
+void Session::start()
+{
+    startReceive();
+}
+
+void Session::startReceive()
+{
+    _socket.async_receive(boost::asio::buffer(_buffer + _bytesReserved, 4096 - _bytesReserved), boost::bind(&Session::handleReceive, shared_from_this(),
+                boost::asio::placeholders::bytes_transferred, boost::asio::placeholders::error));
+}
+
+void Session::handleReceive(size_t bytesReceived, const boost::system::error_code& error)
+{
+    if (error)
+        return;
+
+    uint32_t addedBytes;
+    while (bytesReceived >= PACKET_HEADER_SIZE)
+    {
+        if (!_pendingPacket)
+        {
+            _pendingPacket = PacketPtr(new Packet(_buffer, bytesReceived));
+            addedBytes = _pendingPacket->getCurrentLength();
+        }
+        else
+        {
+            addedBytes = _pendingPacket->getCurrentLength();
+            _pendingPacket->appendBuffer(_buffer, bytesReceived);
+            addedBytes = _pendingPacket->getCurrentLength() - addedBytes;
+        }
+
+        memmove(_buffer, _buffer + addedBytes, bytesReceived - addedBytes);
+        bytesReceived -= addedBytes;
+
+        if (_pendingPacket->isValid())
+        {
+            _receivedPackets->enqueue(_pendingPacket);
+            _pendingPacket = nullptr;
+        }
+    }
+    _bytesReserved = bytesReceived;
+
+    startReceive();
+}
+
+boost::asio::ip::tcp::socket& Session::getSocket()
+{
+    return _socket;
+}
+
+PacketPtr Session::getReceivedPacket()
+{
+    return _receivedPackets->dequeue();
+}
+
+void Session::send(PacketPtr packet)
+{
+    _socket.async_send(boost::asio::buffer(packet->getBufferCopy()), boost::bind(&Session::handleSend, this, packet, boost::asio::placeholders::bytes_transferred, boost::asio::placeholders::error));
+}
+
+void Session::handleSend(PacketPtr /*packet*/, size_t /*bytesSent*/, const boost::system::error_code& error)
+{
+    if (error)
+        return;
+}
