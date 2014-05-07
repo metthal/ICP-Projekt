@@ -24,6 +24,7 @@ public:
     void stop();
 
     std::list<SessionPtr> getSessions();
+    void removeSessions(SessionList& sessionList);
 
 private:
     TcpServer& operator =(const TcpServer&);

@@ -6,6 +6,7 @@ Session::Session(boost::asio::io_service& ioService) : _socket(ioService)
 {
     _receivedPackets = new TsQueue<PacketPtr>();
     _pendingPacket = nullptr;
+    _connected = false;
 }
 
 Session::~Session()
@@ -15,6 +16,7 @@ Session::~Session()
 
 void Session::start()
 {
+    _connected = true;
     sLog.out("Starting new session ", *this);
     startReceive();
 }
@@ -25,10 +27,18 @@ void Session::startReceive()
                 boost::asio::placeholders::bytes_transferred, boost::asio::placeholders::error));
 }
 
+bool Session::isConnected() const
+{
+    return _connected;
+}
+
 void Session::handleReceive(size_t bytesReceived, const boost::system::error_code& error)
 {
     if (error)
+    {
+        _connected = false;
         return;
+    }
 
     uint32_t addedBytes;
     while (bytesReceived >= PACKET_HEADER_SIZE)
@@ -71,6 +81,9 @@ PacketPtr Session::getReceivedPacket()
 
 void Session::send(PacketPtr packet)
 {
+    if (!_connected)
+        return;
+
     _socket.async_send(boost::asio::buffer(packet->getBufferCopy()), boost::bind(&Session::handleSend, this, packet, boost::asio::placeholders::bytes_transferred, boost::asio::placeholders::error));
 }
 

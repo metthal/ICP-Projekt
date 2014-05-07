@@ -38,13 +38,25 @@ void ServerHandler::startImpl()
     while (_running)
     {
         SessionList sessions = _server->getSessions();
-        for (SessionPtr& session : sessions)
+        SessionList toErase = SessionList();
+
+        for (auto itr = sessions.begin(); itr != sessions.end(); ++itr)
         {
+            SessionPtr& session = *itr;
+            if (!session->isConnected())
+            {
+                toErase.push_back(session);
+                continue;
+            }
+
             while (PacketPtr packet = session->getReceivedPacket())
                 (this->*_handlerTable[packet->getOpcode()])(session, packet);
 
             // sGameMgr.Update();
         }
+
+        if (!toErase.empty())
+            _server->removeSessions(toErase);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(16));
     }
