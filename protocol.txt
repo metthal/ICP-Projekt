@@ -1,0 +1,172 @@
+1. INTRODUCTION
+
+This document provides description of application protocol for project to the
+subject The C++ Programming Language.
+
+LSB = Least Significant Bit (http://en.wikipedia.org/wiki/Least_significant_bit)
+MSB = Most Significant Bit (http://en.wikipedia.org/wiki/Most_significant_bit)
+
+Bits are numbered from 0 to 7, where bit 0 is LSB and bit 7 is MSB. 8 bits are referred as octet
+in this document.
+
+2. SERVER
+
+The server shall consist of lobby server and game servers. These services should run simultaneously.
+
+LOBBY SERVER
+Lobby server shall be UDP service listening to the broadcast on the port 11330. (Port is not changable by
+the user.) This service shall read communication broadcasted by the clients which are trying to discover
+running game servers on the network. Lobby server is obligated to response to this request if it contains valid
+information and provide client information about itself. (Described later)
+
+GAME SERVER
+Game server shall be TCP service listening defaultly on the port 11337, however port can be specified by the user.
+This server hold information about all games on the server, players in the games. (Described later)
+
+3. CLIENT
+
+The client shall consist of two running services, where only one is active at the time.
+
+These services are:
+    1. Lobby client
+    2. Game client
+
+LOBBY CLIENT
+Lobby client shall be UDP service broadcasting discovery packets to the network on the port 11330 (Port is
+not changable by the user.) and awaiting information from lobby servers. This service is running as first
+when client is started. This connection becomes inactive when the client joins the game.
+
+GAME CLIENT
+Game client shall be TCP service, which initiates connection to the game server on the port and IP provided by server
+in its information received by lobby client. This connection is inactive on the startup. Game client becomes active
+when it initiates connection to the game server, where it communicates with the game server.
+
+4. PACKET STRUCTURE
+
+This packet structure is shared for lobby and game services. This protocol uses
+TLV (Type-Length-Value) type of packets, where every packet carries information
+about the type of action, the length of data and the data itself.
+
++-------------------------------------------------------------------------------+
+|                                     Octet                                     |
++---------+---------+---------+---------+---------+-------------------+---------+
+|    1    |    2    |    3    |    4    |    5    |        ...        |LENGTH+5 |
++---------+---------+---------+---------+---------+-------------------+---------+
+|         |                                       |                             |
+| OPCODE  |                 LENGTH                |            DATA             |
+|         |                                       |                             |
++---------+---------------------------------------+-----------------------------+
+
+Description:
+    OPCODE = Operation code describing type of action that is going to happen.
+             Operation code also defines what is allowed LENGTH TLV and internal strucutre of DATA TLV
+
+    LENGTH = Defines length of the DATA TLV in number of octets
+
+    DATA   = DATA TLV carrying the LENGTH octets of data
+
+Strings are always transffered in length of string + 1 octets because they are carried with null-terminator to recognize string end.
+Further in the document, there is data type of strings described as string(X) where X is maximum length of the string WITH null-terminator.
+
+5. OPCODES
+
+Every opcode has its enum name and integer code. Enum names are just for human readable form of packet, they are not
+referenced anywhere in the packet. Enum names are in format (described by regular expression):
+
+    (C|S)MSG_[A-Z0-9_]+
+
+    (C|S)       - describes where the packet comes from
+                - CMSG means packet sent by client to the server
+                - SMSG means packet sent by server to the client
+
+    [A-Z0-9_]+  - basic description of the opcode containg uppercase letters of English alphabet divided by underscore
+
+LIST OF OPCODES
+
+[ENUM NAME of OPCODE]
+[description]
+Structure of DATA:
+    [data type] [data name] - [description]
+
+CMSG_HANDSHAKE_REQUEST
+    - uint32_t magicNumber - can be later specified as protocol version
+
+SMSG_HANDSHAKE_RESPONSE
+    - bool connected - TRUE if server accepted client, FALSE if there was e.g. protocol version mismatch
+
+CMSG_GAME_LIST_REQUEST
+    - no data
+
+SMSG_GAME_LIST_RESPONSE
+    - uint32_t gamesCount - number of games running on the server
+    (here comes the info about every game, which is repeated "gamesCount" times, if gamesCount == 0, then there is end of packet)
+    - uint32_t gameId - unique identifier of the game
+    - string(31) gameName - name of the game which the player who created the game specified
+    - uint8_t gamePlayerCount - number of players in the game
+
+CMSG_GAME_JOIN_REQUEST
+    - uint32_t gameId - identifier of the game which player wants to join
+
+SMSG_GAME_JOIN_RESPONSE
+    - bool canJoin - TRUE if the player is allowed to join the game, FALSE if the join failed (someone else connected first and the game was full, game ended etc...)
+    - uint8_t playerId - unique identifier for the player in the game (in range 0-3)
+
+CMSG_MAP_LIST_REQUEST
+    - no data
+
+SMSG_MAP_LIST_RESPONSE
+    - uint32_t mapCount - number of maps in the server database
+    (here comes the info about every map, which is repeated "mapCount" times, if mapCount == 0, then there is end of packet)
+    - uint32_t mapId - unique identifier of the map
+    - string(11) mapName - name of the map
+
+CMSG_GAME_CREATE_REQUEST
+    - uint32_t mapId - id of the map the player wants to create
+    - string(31) gameName - name of the game
+
+SMSG_GAME_CREATE_RESPONSE
+    - bool created - TRUE if the game was successfuly create, FALSE if error occured
+    - uint8_t playerId - unique identifier for the player in the game (for this case it will be 0)
+
+SMSG_MAP_DATA
+    - string(2501) mapData - map itself
+
+TODO
+
+6. COMMUNICATION
+
+Here are some examples of the communication in the protocol. In the data written in the parentheses divided by comma.
+
+Protocol version mismatch:
+C: CMSG_HANDSHAKE (42)
+S: SMSG_HANDSHAKE (false)
+---END OF COMMUNICATION----
+
+Game ended while user joined:
+C: CMSG_HANDSHAKE (1)
+S: SMSG_HANDSHAKE (true)
+C: CMSG_GAME_LIST_REQUEST
+S: SMSG_GAME_LIST_RESPONSE (1, 1, "example game", 3)
+C: CMSG_GAME_JOIN_REQUEST (1)
+S: SMSG_GAME_JOIN_RESPONSE (false, 0)
+---COMMUNICATION CONTINUES...---
+
+User successfuly join to the game:
+C: CMSG_HANDSHAKE (1)
+S: SMSG_HANDSHAKE (true)
+C: CMSG_GAME_LIST_REQUEST
+S: SMSG_GAME_LIST_RESPONSE (1, 1, "example game", 3)
+C: CMSG_GAME_JOIN_REQUEST (1)
+S: SMSG_GAME_JOIN_RESPONSE (true, 3)
+S: SMSG_MAP_DATA (.....)
+
+User successufuly created the new game:
+C: CMSG_HANDSHAKE (1)
+S: SMSG_HANDSHAKE (true)
+C: CMSG_MAP_LIST_REQUEST
+S: SMSG_MAP_LIST_RESPONSE (1, 1, "de_dust")
+C: CMSG_GAME_CREATE_REQUEST (1, "my new game")
+S: SMSG_GAME_CREATE_RESPONSE (true, 0)
+S: SMSG_MAP_DATA (.....)
+---COMMUNICATION CONTINUES...---
+
