@@ -16,20 +16,29 @@ public:
         return instance;
     }
 
-    void out()
+    inline void out()
     {
         OutputLock lock(_outputMutex);
 
         std::cout << std::endl;
     }
 
-    template <typename T, typename... Args> void out(const T& data, const Args&... args)
+    template <typename T, typename... Args> inline void out(const T& data, const Args&... args)
     {
         OutputLock lock(_outputMutex);
 
         std::cout << data;
         out(args...);
     }
+
+#ifdef DEBUG
+    template <typename... Args> inline void outDebug(const Args&... args)
+    {
+        out("DEBUG: ", args...);
+    }
+#else
+    template <typename... Args> inline void outDebug(const Args&...) {}
+#endif
 
 private:
     Log() : _outputMutex() {}

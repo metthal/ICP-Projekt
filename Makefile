@@ -3,7 +3,7 @@ PROJECT = bludiste2014
 BIN_CLIENT = $(PROJECT)-cli
 BIN_SERVER = $(PROJECT)-server
 
-CC = g++
+CXX = $(shell command -v g++-4.8 >/dev/null 2>&1 && echo -n "g++-4.8" || echo -n "g++")
 RM = rm -rf
 TAR = tar -czf
 
@@ -14,6 +14,7 @@ QFLAGS =
 QFLAGS_DEBUG = CONFIG+=debug CONFIG+=declarative_debug CONFIG+=qml_debug
 
 LFLAGS = -lpthread -lboost_system
+LFLAGS += $(shell command -v g++-4.8 >/dev/null 2>&1 && echo -n "-static-libstdc++")
 
 SRC_FOLDER = src
 BIN_FOLDER = bin
@@ -48,26 +49,26 @@ debug: build
 build: server client gui
 
 server: $(COMMON_OBJS) $(SERVER_OBJS)
-	$(CC) $^ -o $(BIN_FOLDER)/$(BIN_SERVER) $(LFLAGS)
+	$(CXX) $^ -o $(BIN_FOLDER)/$(BIN_SERVER) $(LFLAGS)
 
 client: $(COMMON_OBJS) $(CLIENT_OBJS)
-	$(CC) $^ -o $(BIN_FOLDER)/$(BIN_CLIENT) $(LFLAGS)
+	$(CXX) $^ -o $(BIN_FOLDER)/$(BIN_CLIENT) $(LFLAGS)
 	
 gui:
 	@cd $(GUI_FOLDER) && qmake -o ../$(GUI_WORK_FOLDER)/Makefile $(QFLAGS)
-	$(MAKE) -C $(GUI_WORK_FOLDER)
+	$(MAKE) CXX=$(CXX) -C $(GUI_WORK_FOLDER)
 
 $(OBJ_FOLDER)/server/%.o: $(SRC_FOLDER)/server/%.cpp
 	@mkdir -p $(BIN_FOLDER) $(OBJ_FOLDER)/server
-	$(CC) $(INCLUDES) $(CFLAGS) $< -o $@
+	$(CXX) $(INCLUDES) $(CFLAGS) $< -o $@
 
 $(OBJ_FOLDER)/client/%.o: $(SRC_FOLDER)/client/%.cpp
 	@mkdir -p $(BIN_FOLDER) $(OBJ_FOLDER)/client
-	$(CC) $(INCLUDES) $(CFLAGS) $< -o $@
+	$(CXX) $(INCLUDES) $(CFLAGS) $< -o $@
 
 $(OBJ_FOLDER)/common/%.o: $(SRC_FOLDER)/common/%.cpp
 	@mkdir -p $(BIN_FOLDER) $(OBJ_FOLDER)/common
-	$(CC) $(INCLUDES) $(CFLAGS) $< -o $@
+	$(CXX) $(INCLUDES) $(CFLAGS) $< -o $@
 
 clean:
 	$(RM) $(BIN_FOLDER) $(OBJ_FOLDER) $(TAR_FILE) $(DOXY_DIR) $(GUI_WORK_FOLDER)
