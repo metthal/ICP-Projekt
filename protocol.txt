@@ -110,6 +110,7 @@ CMSG_GAME_JOIN_REQUEST
 SMSG_GAME_JOIN_RESPONSE
     - bool canJoin - TRUE if the player is allowed to join the game, FALSE if the join failed (someone else connected first and the game was full, game ended etc...)
     - uint8_t playerId - unique identifier for the player in the game (in range 0-3)
+    - string(2501) mapData - map itself
 
 CMSG_MAP_LIST_REQUEST
     - no data
@@ -127,8 +128,6 @@ CMSG_GAME_CREATE_REQUEST
 SMSG_GAME_CREATE_RESPONSE
     - bool created - TRUE if the game was successfuly create, FALSE if error occured
     - uint8_t playerId - unique identifier for the player in the game (for this case it will be 0)
-
-SMSG_MAP_DATA
     - string(2501) mapData - map itself
 
 TODO
@@ -157,8 +156,7 @@ S: SMSG_HANDSHAKE (true)
 C: CMSG_GAME_LIST_REQUEST
 S: SMSG_GAME_LIST_RESPONSE (1, 1, "example game", 3)
 C: CMSG_GAME_JOIN_REQUEST (1)
-S: SMSG_GAME_JOIN_RESPONSE (true, 3)
-S: SMSG_MAP_DATA (.....)
+S: SMSG_GAME_JOIN_RESPONSE (true, 3, [map data])
 
 User successufuly created the new game:
 C: CMSG_HANDSHAKE (1)
@@ -166,7 +164,6 @@ S: SMSG_HANDSHAKE (true)
 C: CMSG_MAP_LIST_REQUEST
 S: SMSG_MAP_LIST_RESPONSE (1, 1, "de_dust")
 C: CMSG_GAME_CREATE_REQUEST (1, "my new game")
-S: SMSG_GAME_CREATE_RESPONSE (true, 0)
-S: SMSG_MAP_DATA (.....)
+S: SMSG_GAME_CREATE_RESPONSE (true, 0, [map data])
 ---COMMUNICATION CONTINUES...---
 
