@@ -21,6 +21,8 @@ public:
     PacketPtr getReceivedPacket();
     boost::asio::ip::tcp::socket& getSocket();
 
+    friend std::ostream& operator <<(std::ostream& stream, const Session& session);
+
 private:
     void startReceive();
     void handleReceive(size_t bytesReceived, const boost::system::error_code& error);

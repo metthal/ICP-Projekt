@@ -1,5 +1,6 @@
 #include <boost/bind.hpp>
 #include "server/Session.h"
+#include "common/Log.h"
 
 Session::Session(boost::asio::io_service& ioService) : _socket(ioService)
 {
@@ -14,6 +15,7 @@ Session::~Session()
 
 void Session::start()
 {
+    sLog.out("Starting new session ", *this);
     startReceive();
 }
 
@@ -76,4 +78,10 @@ void Session::handleSend(PacketPtr /*packet*/, size_t /*bytesSent*/, const boost
 {
     if (error)
         return;
+}
+
+std::ostream& operator <<(std::ostream& stream, const Session& session)
+{
+    stream << session._socket.remote_endpoint().address().to_string() << ":" << session._socket.remote_endpoint().port();
+    return stream;
 }

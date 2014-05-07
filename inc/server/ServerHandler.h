@@ -27,6 +27,8 @@ public:
     void HandleHandshakeRequest(SessionPtr session, PacketPtr packet);
     void HandleGameListRequest(SessionPtr session, PacketPtr packet);
     void HandleGameJoinRequest(SessionPtr session, PacketPtr packet);
+    void HandleMapListRequest(SessionPtr session, PacketPtr packet);
+    void HandleGameCreateRequest(SessionPtr session, PacketPtr packet);
 
 private:
     ServerHandler& operator =(const ServerHandler&);

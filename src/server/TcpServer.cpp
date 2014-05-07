@@ -38,7 +38,7 @@ void TcpServer::handleAccept(SessionPtr session, const boost::system::error_code
     if (error)
         return;
 
-    std::unique_lock<std::mutex> lock(_sessionsMutex);
+    std::lock_guard<std::mutex> lock(_sessionsMutex);
 
     _sessions.push_back(session);
     session->start();
@@ -48,6 +48,6 @@ void TcpServer::handleAccept(SessionPtr session, const boost::system::error_code
 
 SessionList TcpServer::getSessions()
 {
-    std::unique_lock<std::mutex> lock(_sessionsMutex);
+    std::lock_guard<std::mutex> lock(_sessionsMutex);
     return _sessions;
 }
