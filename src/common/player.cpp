@@ -1,6 +1,6 @@
 #include "common/player.h"
 
-int Player::getId() const
+uint8_t Player::getId() const
 {
     return _id;
 }
@@ -15,22 +15,22 @@ Position Player::getPosition() const
     return _pos;
 }
 
-int Player::getJoinTime() const
+uint32_t Player::getJoinTime() const
 {
     return _joinTime;
 }
 
-int Player::getKills() const
+uint32_t Player::getKills() const
 {
     return _kills;
 }
 
 bool Player::hasPlank() const
 {
-	return _hasPlank;
+    return _hasPlank;
 }
 
-void Player::setId(int id)
+void Player::setId(uint8_t id)
 {
     _id = id;
 }

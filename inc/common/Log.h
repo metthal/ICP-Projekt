@@ -8,8 +8,6 @@ typedef std::lock_guard<std::recursive_mutex> OutputLock;
 class Log
 {
 public:
-    ~Log() {}
-
     static Log& getInstance()
     {
         static Log instance;
@@ -43,6 +41,7 @@ public:
 private:
     Log() : _outputMutex() {}
     Log(const Log&) = delete;
+    ~Log() {}
 
     Log& operator =(const Log&);
 

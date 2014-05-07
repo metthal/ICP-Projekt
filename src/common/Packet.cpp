@@ -1,4 +1,5 @@
 #include <cstring>
+#include <iomanip>
 #include "common/Packet.h"
 
 Packet::Packet(uint8_t opcode, uint32_t length) : m_writePos(0), m_readPos(PACKET_HEADER_SIZE)
@@ -109,6 +110,19 @@ void Packet::readString(std::string& str)
         str += m_buffer[m_readPos++];
 
     m_readPos++;
+}
+
+std::ostream& operator <<(std::ostream& stream, const Packet& packet)
+{
+    stream << "OPCODE: " << (uint16_t)packet.getOpcode() << "LENGTH: " << packet.getDataLength() << std::endl;
+    for (uint32_t i = PACKET_HEADER_SIZE; i < packet.getDataLength(); ++i)
+    {
+        stream << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << (uint16_t)packet.m_buffer[i] << " ";
+        if (i % 16 == 0)
+            stream << std::endl;
+    }
+
+    return stream;
 }
 
 void Packet::setPacketSender(const boost::asio::ip::udp::endpoint& sender)

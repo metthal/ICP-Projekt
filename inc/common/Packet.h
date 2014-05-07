@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <iostream>
 #include <memory>
 #include <boost/asio.hpp>
 
@@ -61,6 +62,8 @@ public:
     Packet& operator>>(std::string& data);
 
     template <typename T> void skip();
+
+    friend std::ostream& operator <<(std::ostream& stream, const Packet& packet);
 
 private:
     template <typename T> void write(const T& data);

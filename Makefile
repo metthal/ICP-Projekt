@@ -13,7 +13,7 @@ CFLAGS_DEBUG = -O0 -g -DDEBUG
 QFLAGS =
 QFLAGS_DEBUG = CONFIG+=debug CONFIG+=declarative_debug CONFIG+=qml_debug
 
-LFLAGS = -lpthread -lboost_system
+LFLAGS = -lpthread -lboost_system -lboost_filesystem
 LFLAGS += $(shell command -v g++-4.8 >/dev/null 2>&1 && echo -n "-static-libstdc++")
 
 SRC_FOLDER = src

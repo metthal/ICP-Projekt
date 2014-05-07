@@ -1,5 +1,7 @@
 #include <chrono>
 #include "server/ServerHandler.h"
+#include "server/GameMgr.h"
+#include "server/LevelMapMgr.h"
 #include "common/Opcode.h"
 #include "common/Log.h"
 
@@ -41,7 +43,7 @@ void ServerHandler::startImpl()
             while (PacketPtr packet = session->getReceivedPacket())
                 (this->*_handlerTable[packet->getOpcode()])(session, packet);
 
-            // sGameMgr->Update();
+            // sGameMgr.Update();
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(16));
@@ -55,6 +57,7 @@ void ServerHandler::HandleUnknown(SessionPtr session, PacketPtr packet)
 
 void ServerHandler::HandleHandshakeRequest(SessionPtr session, PacketPtr /*packet*/)
 {
+    sLog.outDebug("HandleHandshakeRequest");
     // for now, ignore what is in the magic number of the received packet
 
     PacketPtr response = PacketPtr(new Packet(SMSG_HANDSHAKE_RESPONSE, 1));
@@ -62,43 +65,52 @@ void ServerHandler::HandleHandshakeRequest(SessionPtr session, PacketPtr /*packe
     session->send(response);
 }
 
-void ServerHandler::HandleGameListRequest(SessionPtr /*session*/, PacketPtr /*packet*/)
+void ServerHandler::HandleGameListRequest(SessionPtr session, PacketPtr /*packet*/)
 {
-    /*uint32_t length = 4 + sGameMgr->getGamesCount() * (4 + 1);
+    sLog.outDebug("HandleGameListRequest");
+    uint32_t length = 4 + sGameMgr.getGamesCount() * (4 + 1);
 
-    for (Game& game : sGameMgr->getGames())
+    for (auto& itr : sGameMgr.getGames())
+    {
+        ServerGamePtr& game = itr.second;
         length += game->getName().length() + 1;
+    }
 
     PacketPtr response = PacketPtr(new Packet(SMSG_GAME_LIST_RESPONSE, length));
-    *response << sGameMgr->getGamesCount();
-    for (GamePtr& game : sGameMgr->getGames())
+    *response << sGameMgr.getGamesCount();
+    for (auto& itr : sGameMgr.getGames())
+    {
+        ServerGamePtr& game = itr.second;
         *response << game->getId() << game->getName() << game->getPlayerCount();
+    }
 
     session->send(response);
-    */
 }
 
-void ServerHandler::HandleGameJoinRequest(SessionPtr /*session*/, PacketPtr packet)
+void ServerHandler::HandleGameJoinRequest(SessionPtr session, PacketPtr packet)
 {
+    sLog.outDebug("HandleGameJoinRequest");
     uint32_t gameId;
     *packet >> gameId;
 
-    /*
-    GamePtr game = sGameMgr->getGameId(gameId);
-    MapPtr map = nullptr;
+    ServerGamePtr game = sGameMgr.getGameId(gameId);
+    LevelMapPtr map = nullptr;
     ServerPlayerPtr player = nullptr;
     if (game)
     {
-        player = game->newPlayer(session);
+        player = game->addPlayer(session);
         map = game->getMap();
     }
 
     bool success = false;
     uint8_t length = 1 + 1;
+    std::string mapData = "";
+
     if (player && map)
     {
         success = true;
-        length += map->getData.length() + 1;
+        mapData = map->serialize();
+        length += mapData.length() + 1;
     }
 
     PacketPtr response = PacketPtr(new Packet(SMSG_GAME_JOIN_RESPONSE, length));
@@ -106,61 +118,68 @@ void ServerHandler::HandleGameJoinRequest(SessionPtr /*session*/, PacketPtr pack
     if (map && player)
     {
         *response << player->getId();
-        *response << map->getData();
+        *response << mapData;
     }
-    */
 }
 
-void ServerHandler::HandleMapListRequest(SessionPtr /*session*/, PacketPtr /*packet*/)
+void ServerHandler::HandleMapListRequest(SessionPtr session, PacketPtr /*packet*/)
 {
-    /*uint32_t length = 4 + sMapMgr->getMapsCount() * 4;
+    sLog.outDebug("HandleMapListRequest");
+    uint32_t length = 4 + sLevelMapMgr.getMapsCount() * 4;
 
-    for (MapPtr& map : sMapMgr->getMaps())
-        length += game->getName().length() + 1;
+    for (auto& itr : sLevelMapMgr.getMaps())
+    {
+        LevelMapPtr& map = itr.second;
+        length += map->getFilename().length() + 1;
+    }
 
     PacketPtr response = PacketPtr(new Packet(SMSG_MAP_LIST_RESPONSE, length));
 
-    *response << sMapMgr->getMapsCount();
-    for (MapPtr& map : sMapMgr->getMaps())
-        *response << map->getId() << map->getName();
+    *response << sLevelMapMgr.getMapsCount();
+    for (auto& itr : sLevelMapMgr.getMaps())
+    {
+        LevelMapPtr& map = itr.second;
+        *response << map->getId() << map->getFilename();
+    }
 
     session->send(response);
-    */
 }
 
-void ServerHandler::HandleGameCreateRequest(SessionPtr /*session*/, PacketPtr packet)
+void ServerHandler::HandleGameCreateRequest(SessionPtr session, PacketPtr packet)
 {
+    sLog.outDebug("HandleGameCreateRequest");
     uint32_t mapId;
     std::string gameName;
     *packet >> mapId >> gameName;
 
-    /*
-    MapPtr map = sMapMgr->getMapId(mapId);
-    GamePtr game = nullptr;
+    LevelMapPtr map = sLevelMapMgr.getMapId(mapId);
+    ServerGamePtr game = nullptr;
     ServerPlayerPtr player = nullptr;
     if (map)
     {
-        game = sGameMgr->newGame(map);
+        game = sGameMgr.newGame(gameName, map);
         if (game)
             player = game->addPlayer(session);
     }
 
     bool success = false;
     uint32_t length = 1 + 1;
+    std::string mapData = "";
+
     if (map && player)
     {
         success = true;
-        length += map->getData().length() + 1;
+        mapData = map->serialize();
+        length += mapData.length() + 1;
     }
 
-    PacketPtr response = PacketPtr(new Packet(SMSG_GAME_CREATE_RESPONSE, length);
+    PacketPtr response = PacketPtr(new Packet(SMSG_GAME_CREATE_RESPONSE, length));
     *response << success;
     if (map && player)
     {
         *response << player->getId();
-        *response << map->getData();
+        *response << mapData;
     }
 
     session->send(response);
-    */
 }

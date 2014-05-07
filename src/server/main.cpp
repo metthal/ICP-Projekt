@@ -1,11 +1,14 @@
 #include <memory>
 #include "server/TcpServer.h"
 #include "server/ServerHandler.h"
+#include "server/LevelMapMgr.h"
 #include "common/Packet.h"
 #include "common/Log.h"
 
 int main()
 {
+    sLevelMapMgr.loadMaps("../examples");
+
     sLog.out("Welcome to the bludiste2014-server for ICP 2013/2014");
     sLog.out("Starting TCP service on port 11337");
 
