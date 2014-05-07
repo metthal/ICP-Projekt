@@ -1,10 +1,11 @@
-#ifndef TCP_SERVICE_H
-#define TCP_SERVICE_H
+#ifndef TCP_SERVER_H
+#define TCP_SERVER_H
 
 #include <cstdint>
 #include <thread>
 #include <list>
 #include <mutex>
+#include <memory>
 #include <boost/asio.hpp>
 #include "server/Session.h"
 
@@ -39,4 +40,6 @@ private:
     std::mutex _sessionsMutex;
 };
 
-#endif // TCP_SERVICE_H
+typedef std::shared_ptr<TcpServer> TcpServerPtr;
+
+#endif // TCP_SERVER_H
