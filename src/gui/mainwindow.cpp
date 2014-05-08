@@ -1,6 +1,7 @@
 #include "gui/mainwindow.h"
 #include "ui_mainwindow.h"
 #include "gui/dialoggamemenu.h"
+#include "gui/dialoggamehistory.h"
 #include "common/Opcode.h"
 #include "common/msgexception.h"
 #include <QDateTime>
@@ -12,7 +13,6 @@
 #include <QAbstractItemView>
 #include <QMessageBox>
 #include <QValidator>
-#include <chrono>
 
 QString formatTime(int seconds)
 {
@@ -72,6 +72,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->ServerSelectIP->setValidator(new QRegExpValidator(QRegExp("(\\d{1,3}\\.){3}\\d{1,3}"), this));
     ui->ServerSelectPort->setValidator(new QRegExpValidator(QRegExp("\\d{1,5}"), this));
 
+    ui->LabelGameMsg->setStyleSheet("QLabel { background-color : white; color : grey;}");
+
     ui->playerLabel_1->setText("Player 1");
     ui->playerLabel_1->setStyleSheet("QLabel { background-color : blue; color : white;}");
     ui->playerLabel_2->setText("Player 2");
@@ -80,8 +82,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->playerLabel_3->setStyleSheet("QLabel { background-color : green; color : white}");
     ui->playerLabel_4->setText("Player 4");
     ui->playerLabel_4->setStyleSheet("QLabel { background-color : red; color : white}");
-
-    gameMenu = new DialogGameMenu(this);
 
     // Add shortcuts
     ui->PageGame->addAction(ui->actionGameEsc);
@@ -151,13 +151,15 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
     timer->start(100);
 
+    gameMenu = nullptr;
+    gameHistory = nullptr;
+
     game = nullptr;
     tcpClient = nullptr;
 }
 
 MainWindow::~MainWindow()
 {
-    delete gameMenu; gameMenu = nullptr;
     delete ui; ui = nullptr;
 
     for (auto it = pages.begin(); it != pages.end(); it++)
@@ -169,6 +171,8 @@ MainWindow::~MainWindow()
     delete ModelLevelSelection; ModelLevelSelection = nullptr;
     delete ModelSavedGames; ModelSavedGames = nullptr;
     delete ModelRunningGames; ModelRunningGames = nullptr;
+
+    timer->stop();
     delete timer; timer = nullptr;
 
     if (tcpClient != nullptr)
@@ -186,6 +190,10 @@ void MainWindow::leaveGame()
     {
         delete playerLabels[i]; playerLabels[i] = nullptr;
     }
+
+    delete gameMenu; gameMenu = nullptr;
+    delete gameHistory; gameHistory = nullptr;
+
     changePage(ui->PageMainMenu, false);
 }
 
@@ -310,10 +318,11 @@ void MainWindow::loadTable(QStandardItemModel *table)
     ui->TableViewGeneral->setModel(table);
 }
 
-void MainWindow::loadGame(const std::string &mapData)
+void MainWindow::loadGame(uint8_t playerId, const std::string &mapData)
 {
     game = new Game();
     game->loadMap(mapData);
+    myPlayerId = playerId;
     //TODO: load player positions etc.
 }
 
@@ -331,8 +340,19 @@ void MainWindow::loadGamePage()
     playerLabels[2] = new PlayerLabel(ui->playerLabel_3, game, 2);
     playerLabels[3] = new PlayerLabel(ui->playerLabel_4, game, 3);
 
-    myPlayerId = 0;
+    ui->LabelGameMsg->setText("");
+
+    gameMenu = new DialogGameMenu(this);
+    gameHistory = new DialogGameHistory(this);
+
     ui->GameView->setScene(gameScene);
+}
+
+void MainWindow::setGameMsg(std::string msg)
+{
+    lastGameMsgTime = std::chrono::high_resolution_clock::now();
+    ui->LabelGameMsg->setText(QString::fromStdString(msg));
+    gameHistory->addToHistory(msg + ".\n");
 }
 
 void MainWindow::sendCommand()
@@ -450,24 +470,26 @@ void MainWindow::update()
             if (response->getOpcode() == SMSG_GAME_CREATE_RESPONSE)
             {
                 bool success;
+                uint8_t playerId;
                 std::string mapData;
                 *response >> success;
                 if (success)
                 {
-                    *response >> myPlayerId >> mapData;
-                    loadGame(mapData);
+                    *response >> playerId >> mapData;
+                    loadGame(playerId, mapData);
                     changePage(ui->PageGame, false);
                 }
             }
             else if (response->getOpcode() == SMSG_GAME_JOIN_RESPONSE)
             {
                 bool canJoin;
+                uint8_t playerId;
                 std::string mapData;
                 *response >> canJoin;
                 if (canJoin)
                 {
-                    *response >> myPlayerId >> mapData;
-                    loadGame(mapData);
+                    *response >> playerId >> mapData;
+                    loadGame(playerId, mapData);
                     changePage(ui->PageGame, false);
                 }
             }
@@ -477,6 +499,15 @@ void MainWindow::update()
     // If in-game, redraw scene and update game time
     if (ui->MainView->currentWidget() == ui->PageGame)
     {
+        // Clear game message if too old
+        if (ui->LabelGameMsg->text() != "")
+        {
+            auto currentTime = std::chrono::high_resolution_clock::now();
+            auto dur = std::chrono::duration_cast<std::chrono::seconds>(currentTime - lastGameMsgTime).count();
+            if (dur > 3)
+                ui->LabelGameMsg->setText("");
+        }
+
         redrawScene();
         ui->LabelGameTime->setText(formatTime(game->getTime()));
     }
@@ -811,11 +842,6 @@ void MainWindow::on_actionGameAction_triggered()
     sendCommand();
 }
 
-void MainWindow::on_ButtonServerConnect_clicked()
-{
-    loadGamePage();
-}
-
 void MainWindow::on_ButtonServerRefresh_clicked()
 {
     // Fetch all servers
@@ -861,4 +887,9 @@ void MainWindow::on_ButtonStartGame_clicked()
     tcpClient->send(packet);
 
     QTimer::singleShot(3000, this, SLOT(checkGameCreated()));
+}
+
+void MainWindow::on_ButtonCommandHistory_clicked()
+{
+    gameHistory->exec();
 }

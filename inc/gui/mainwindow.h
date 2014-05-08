@@ -1,7 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "dialoggamemenu.h"
+#include "gui/dialoggamemenu.h"
+#include "gui/dialoggamehistory.h"
 #include <QMainWindow>
 #include <QStandardItemModel>
 #include <QLabel>
@@ -9,6 +10,7 @@
 #include <QGraphicsPixmapItem>
 #include <QPixmap>
 #include <QTimer>
+#include <chrono>
 #include "common/game.h"
 #include "client/TcpClient.h"
 
@@ -86,8 +88,6 @@ private slots:
 
     void on_actionGameAction_triggered();
 
-    void on_ButtonServerConnect_clicked();
-
     void on_ButtonServerRefresh_clicked();
 
     void on_ButtonServerBack_clicked();
@@ -100,6 +100,8 @@ private slots:
 
     void on_ButtonStartGame_clicked();
 
+    void on_ButtonCommandHistory_clicked();
+
 private:
     void changePage(QWidget *newPage, bool putInChain = true, void *object = nullptr);
 
@@ -111,7 +113,9 @@ private:
 
     void loadTable(QStandardItemModel *table);
 
-    void loadGame(const std::string &mapData);
+    void loadGame(uint8_t playerId, const std::string &mapData);
+
+    void setGameMsg(std::string msg);
 
     void sendCommand();
 
@@ -122,6 +126,7 @@ private:
     void changeColor(QPixmap& pixmap, QColor origColor, QColor newColor);
 
     DialogGameMenu *gameMenu;
+    DialogGameHistory *gameHistory;
 
     Ui::MainWindow *ui;
 
@@ -157,6 +162,7 @@ private:
     uint32_t selectedLevelId;
 
     Game *game;
+    std::chrono::time_point<std::chrono::high_resolution_clock> lastGameMsgTime;
 };
 
 #endif // MAINWINDOW_H

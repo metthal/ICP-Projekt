@@ -26,7 +26,8 @@ SOURCES += ../src/gui/main.cpp\
     ../src/gui/zoomgraphicsview.cpp \
     ../src/common/sentry.cpp \
     ../src/client/TcpClient.cpp \
-    ../src/common/Packet.cpp
+    ../src/common/Packet.cpp \
+    ../src/gui/dialoggamehistory.cpp
 
 HEADERS  += ../inc/gui/mainwindow.h \
     ../inc/gui/dialoggamemenu.h \
@@ -38,10 +39,12 @@ HEADERS  += ../inc/gui/mainwindow.h \
     ../inc/gui/zoomgraphicsview.h \
     ../inc/common/sentry.h \
     ../inc/client/TcpClient.h \
-    ../inc/common/Packet.h
+    ../inc/common/Packet.h \
+    ../inc/gui/dialoggamehistory.h
 
 FORMS    += mainwindow.ui \
-    dialoggamemenu.ui
+    dialoggamemenu.ui \
+    dialoggamehistory.ui
 
 LIBS += -lpthread -lboost_system -lboost_filesystem
 

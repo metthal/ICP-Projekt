@@ -27,7 +27,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="PageMainMenu">
        <property name="sizePolicy">
@@ -1220,6 +1220,22 @@
            </widget>
           </item>
          </layout>
+        </item>
+        <item>
+         <widget class="QLabel" name="LabelGameMsg">
+          <property name="font">
+           <font>
+            <pointsize>14</pointsize>
+            <kerning>true</kerning>
+           </font>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="ZoomGraphicsView" name="GameView">

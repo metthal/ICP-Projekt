@@ -18,8 +18,8 @@ void DialogGameMenu::on_ButtonLeave_clicked()
 {
     //TODO disconnect, change page to MainMenu and hide dialog
     MainWindow *main = (MainWindow *)this->parent();
-    main->leaveGame();
     hide();
+    main->leaveGame();
 }
 
 void DialogGameMenu::on_ButtonSaveGame_clicked()
