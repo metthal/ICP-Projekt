@@ -50,7 +50,16 @@ void ServerHandler::startImpl()
             }
 
             while (PacketPtr packet = session->getReceivedPacket())
-                (this->*_handlerTable[packet->getOpcode()])(session, packet);
+            {
+                try
+                {
+                    (this->*_handlerTable[packet->getOpcode()])(session, packet);
+                }
+                catch (...)
+                {
+                    sLog.out("Malformed packet from ", *session, " ignored!");
+                }
+            }
 
             // sGameMgr.Update();
         }
