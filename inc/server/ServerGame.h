@@ -14,7 +14,7 @@ class ServerGame
 public:
     ServerGame() = delete;
     ServerGame(const ServerGame&) = delete;
-    ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map);
+    ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map, uint16_t stepTime);
 
     ~ServerGame();
 
@@ -22,6 +22,7 @@ public:
     const std::string& getName() const;
     LevelMapPtr& getMap();
     uint8_t getPlayerCount() const;
+    uint16_t getStepTime() const;
 
     ServerPlayerPtr addPlayer(SessionPtr& session);
 
@@ -32,6 +33,7 @@ private:
     std::string _name;
     LevelMapPtr _map;
     PlayerList _players;
+    uint16_t _stepTime;
 };
 
 typedef std::shared_ptr<ServerGame> ServerGamePtr;

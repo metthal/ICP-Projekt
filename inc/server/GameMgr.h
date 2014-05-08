@@ -36,10 +36,10 @@ public:
         return itr->second;
     }
 
-    ServerGamePtr& newGame(const std::string& gameName, LevelMapPtr& map)
+    ServerGamePtr& newGame(const std::string& gameName, LevelMapPtr& map, uint16_t stepTime)
     {
         ++_maxGameId;
-        auto itr = _games.insert( { _maxGameId, ServerGamePtr(new ServerGame(_maxGameId, gameName, map)) } );
+        auto itr = _games.insert( { _maxGameId, ServerGamePtr(new ServerGame(_maxGameId, gameName, map, stepTime)) } );
         return itr.first->second;
     }
 
