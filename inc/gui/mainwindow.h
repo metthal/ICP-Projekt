@@ -117,7 +117,11 @@ private:
 
     void setGameMsg(std::string msg);
 
+    void displayMsg(QString msg);
+
     void sendCommand();
+
+    void handleServerDisconnected();
 
     QPoint tileToPoint(int x, int y, double xc = 0, double yc = 0);
 
