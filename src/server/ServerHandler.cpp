@@ -69,7 +69,7 @@ void ServerHandler::HandleUnknown(SessionPtr session, PacketPtr packet)
 
 void ServerHandler::HandleHandshakeRequest(SessionPtr session, PacketPtr /*packet*/)
 {
-    sLog.outDebug("HandleHandshakeRequest");
+    sLog.outDebug("HandleHandshakeRequest ", *session);
     // for now, ignore what is in the magic number of the received packet
 
     PacketPtr response = PacketPtr(new Packet(SMSG_HANDSHAKE_RESPONSE, 1));
@@ -79,7 +79,7 @@ void ServerHandler::HandleHandshakeRequest(SessionPtr session, PacketPtr /*packe
 
 void ServerHandler::HandleGameListRequest(SessionPtr session, PacketPtr /*packet*/)
 {
-    sLog.outDebug("HandleGameListRequest");
+    sLog.outDebug("HandleGameListRequest ", *session);
     uint32_t length = 4 + sGameMgr.getGamesCount() * (4 + 1 + 2 + 1 + 1);
 
     for (auto& itr : sGameMgr.getGames())
@@ -103,7 +103,7 @@ void ServerHandler::HandleGameListRequest(SessionPtr session, PacketPtr /*packet
 
 void ServerHandler::HandleGameJoinRequest(SessionPtr session, PacketPtr packet)
 {
-    sLog.outDebug("HandleGameJoinRequest");
+    sLog.outDebug("HandleGameJoinRequest ", *session);
     uint32_t gameId;
     *packet >> gameId;
 
@@ -117,7 +117,7 @@ void ServerHandler::HandleGameJoinRequest(SessionPtr session, PacketPtr packet)
     }
 
     bool success = false;
-    uint8_t length = 1 + 1;
+    uint32_t length = 1 + 1;
     std::string mapData = "";
 
     if (player && map)
@@ -138,7 +138,7 @@ void ServerHandler::HandleGameJoinRequest(SessionPtr session, PacketPtr packet)
 
 void ServerHandler::HandleMapListRequest(SessionPtr session, PacketPtr /*packet*/)
 {
-    sLog.outDebug("HandleMapListRequest");
+    sLog.outDebug("HandleMapListRequest ", *session);
     uint32_t length = 4 + sLevelMapMgr.getMapsCount() * (4 + 1 + 1);
 
     for (auto& itr : sLevelMapMgr.getMaps())
@@ -161,7 +161,7 @@ void ServerHandler::HandleMapListRequest(SessionPtr session, PacketPtr /*packet*
 
 void ServerHandler::HandleGameCreateRequest(SessionPtr session, PacketPtr packet)
 {
-    sLog.outDebug("HandleGameCreateRequest");
+    sLog.outDebug("HandleGameCreateRequest ", *session);
     uint32_t mapId;
     std::string gameName;
     uint16_t stepTime;

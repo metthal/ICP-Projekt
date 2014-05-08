@@ -23,7 +23,7 @@ public:
     void start();
     void stop();
 
-    std::list<SessionPtr> getSessions();
+    SessionList getSessions();
     void removeSessions(SessionList& sessionList);
 
 private:

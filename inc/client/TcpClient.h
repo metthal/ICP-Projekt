@@ -40,6 +40,7 @@ private:
     uint16_t _port;
     uint8_t _buffer[4096];
     TsQueue<PacketPtr>* _receivedPackets;
+    std::atomic_bool _connected;
 
     PacketPtr _pendingPacket;
     uint32_t _bytesReserved;

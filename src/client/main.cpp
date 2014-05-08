@@ -13,11 +13,21 @@ int main()
     client.start();
     PacketPtr response = nullptr;
 
+    PacketPtr handshake = PacketPtr(new Packet(CMSG_HANDSHAKE_REQUEST, 4));
+    *handshake << (uint32_t)1337;
+    client.send(handshake);
+
+    while (!(response = client.getReceivedPacket()))
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+
+    assert(response->getOpcode() == SMSG_HANDSHAKE_RESPONSE);
+    sLog.out("Handshake successful!!!");
+
     std::string command;
     while (std::cin.good())
     {
         std::getline(std::cin, command);
-        if (command == "handshake")
+        /*if (command == "handshake")
         {
             PacketPtr packet = PacketPtr(new Packet(CMSG_HANDSHAKE_REQUEST, 4));
             *packet << (uint32_t)1337;
@@ -29,7 +39,7 @@ int main()
             assert(response->getOpcode() == SMSG_HANDSHAKE_RESPONSE);
             sLog.out("Handshake successful!!!");
         }
-        else if (command == "gamelist")
+        else*/ if (command == "gamelist")
         {
             PacketPtr packet = PacketPtr(new Packet(CMSG_GAME_LIST_REQUEST, 0));
             client.send(packet);
