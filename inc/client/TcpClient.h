@@ -8,6 +8,8 @@
 #include "common/Packet.h"
 #include "common/TsQueue.h"
 
+#define PACKET_WAIT_TIME    100
+
 class TcpClient
 {
 public:
@@ -22,6 +24,7 @@ public:
     void send(PacketPtr packet);
 
     PacketPtr getReceivedPacket();
+    PacketPtr getReceivedPacket(uint32_t timeoutSecs);
 
 private:
     TcpClient& operator=(const TcpClient&);

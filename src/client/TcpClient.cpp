@@ -17,10 +17,11 @@ void TcpClient::start()
 {
     _thread = std::thread(&TcpClient::startImpl, this);
 
-    uint32_t timeoutCount = 50;
+    // wait 2 seconds
+    uint32_t timeoutCount = 20;
     while (!_connected)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(PACKET_WAIT_TIME));
         timeoutCount--;
         if (timeoutCount == 0)
             throw MsgException("TcpClient - unable to connect to the remote endpoint");
@@ -29,8 +30,16 @@ void TcpClient::start()
 
 void TcpClient::startImpl()
 {
-    startConnect();
-    _ioService.run();
+    try
+    {
+        startConnect();
+        _ioService.run();
+    }
+    catch (...)
+    {
+        _connected = false;
+        _ioService.stop();
+    }
 }
 
 void TcpClient::stop()
@@ -59,13 +68,16 @@ void TcpClient::handleConnect(const boost::system::error_code& error)
 
 void TcpClient::startReceive()
 {
+    if (!_connected)
+        throw MsgException("TcpClient::startReceive - unable to receive from the server due to the connection problems");
+
     _socket.async_receive(boost::asio::buffer(_buffer, 4096), boost::bind(&TcpClient::handleReceive, this, boost::asio::placeholders::bytes_transferred, boost::asio::placeholders::error));
 }
 
 void TcpClient::handleReceive(size_t bytesReceived, const boost::system::error_code& error)
 {
     if (error)
-        return;
+        throw MsgException("TcpClient::handleReceive - failed to receive from the server due to connection problems");
 
     uint32_t addedBytes;
     while (bytesReceived >= PACKET_HEADER_SIZE)
@@ -98,16 +110,38 @@ void TcpClient::handleReceive(size_t bytesReceived, const boost::system::error_c
 
 void TcpClient::send(PacketPtr packet)
 {
+    if (!_connected)
+        throw MsgException("TcpClient::send - unable to communicate with server due to connection problems");
+
     _socket.async_send(boost::asio::buffer(packet->getBufferCopy()), boost::bind(&TcpClient::handleSend, this, packet, boost::asio::placeholders::bytes_transferred, boost::asio::placeholders::error));
 }
 
 void TcpClient::handleSend(PacketPtr /*packet*/, size_t /*bytesSent*/, const boost::system::error_code& error)
 {
     if (error)
-        return;
+        throw MsgException("TcpClient::handleReceive - failed to receive from the server due to connection problems");
 }
 
 PacketPtr TcpClient::getReceivedPacket()
 {
     return _receivedPackets->dequeue();
+}
+
+PacketPtr TcpClient::getReceivedPacket(uint32_t timeoutMsec)
+{
+    if (!_connected)
+        throw MsgException("TcpClient::getReceivedPacket - client is not connected");
+
+    uint32_t timeoutCount = 0;
+    uint32_t maxTimeoutCount = timeoutMsec / PACKET_WAIT_TIME;
+    PacketPtr packet = nullptr;
+    while (!(packet = _receivedPackets->dequeue()))
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(PACKET_WAIT_TIME));
+
+        if (++timeoutCount == maxTimeoutCount)
+            throw MsgException("TcpClient::getReceivedPacket - timeout when receiving packet");
+    }
+
+    return packet;
 }

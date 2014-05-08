@@ -1,6 +1,7 @@
 #include <cstring>
 #include <iomanip>
 #include "common/Packet.h"
+#include "common/msgexception.h"
 
 Packet::Packet(uint8_t opcode, uint32_t length) : m_writePos(0), m_readPos(PACKET_HEADER_SIZE)
 {
@@ -86,18 +87,27 @@ bool Packet::isValid() const
 template <typename T> void Packet::write(const T& data)
 {
     size_t dataSize = sizeof(T);
+    if (m_writePos + dataSize > m_maxPacketLen)
+        throw MsgException("Packet::write - data exceeds packet length");
+
     memcpy(&m_buffer[m_writePos], &data, dataSize);
     m_writePos += dataSize;
 }
 
 void Packet::writeString(const std::string& str)
 {
+    if (m_writePos + str.length() + 1 > m_maxPacketLen)
+        throw MsgException("Packet::writeString - data exceeds packet length");
+
     memcpy(&m_buffer[m_writePos], str.c_str(), str.length() + 1);
     m_writePos += str.length() + 1;
 }
 
 template <typename T> T Packet::read()
 {
+    if (m_readPos + sizeof(T) > m_maxPacketLen)
+        throw MsgException("Packet::read - reading exceeds packet length");
+
     T& data = *((T*)&m_buffer[m_readPos]);
     m_readPos += sizeof(T);
     return data;
@@ -107,7 +117,11 @@ void Packet::readString(std::string& str)
 {
     str = std::string();
     while (m_buffer[m_readPos] != '\0')
+    {
         str += m_buffer[m_readPos++];
+        if (m_readPos > m_maxPacketLen)
+            throw MsgException("Packet::readString - reading exceeds packet length");
+    }
 
     m_readPos++;
 }

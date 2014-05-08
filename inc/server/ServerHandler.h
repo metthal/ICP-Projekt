@@ -8,6 +8,8 @@
 #include "server/Session.h"
 #include "common/Packet.h"
 
+#define SERVER_GAME_SPEED       16
+
 class ServerHandler;
 typedef std::unordered_map<uint8_t, void (ServerHandler::*)(SessionPtr, PacketPtr)> HandlerTable;
 

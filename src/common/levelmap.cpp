@@ -37,10 +37,10 @@ std::string LevelMap::serialize()
 {
     std::stringstream buffer;
 
-    for (unsigned int i = 0; i < _data.size(); i++)
+    for (uint32_t i = 0; i < _data.size(); i++)
     {
         buffer << tileToChar(_data[i]) << "1";
-        if (i % _width == _width - 1)
+        if ((uint8_t)(i % _width) == _width - 1)
             buffer << "\n";
         else
             buffer << " ";
@@ -56,7 +56,7 @@ void LevelMap::deserialize(const std::string& data)
     ssize_t newLinePos = data.find('\n');
     _width = (newLinePos + 1) / 3;
     _height = (data.length() / 3) / _width;
-    for (unsigned int i = 0; i < data.length(); i += 3)
+    for (uint32_t i = 0; i < data.length(); i += 3)
         _data.push_back(charToTile(data[i]));
 }
 
