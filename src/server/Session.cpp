@@ -7,6 +7,7 @@ Session::Session(boost::asio::io_service& ioService) : _socket(ioService)
     _receivedPackets = new TsQueue<PacketPtr>();
     _pendingPacket = nullptr;
     _connected = false;
+    _state = SESSION_STATE_AWAITING_HANDSHAKE;
 }
 
 Session::~Session()
@@ -25,6 +26,16 @@ void Session::startReceive()
 {
     _socket.async_receive(boost::asio::buffer(_buffer + _bytesReserved, 4096 - _bytesReserved), boost::bind(&Session::handleReceive, shared_from_this(),
                 boost::asio::placeholders::bytes_transferred, boost::asio::placeholders::error));
+}
+
+void Session::setState(SessionState state)
+{
+    _state = state;
+}
+
+SessionState Session::getState() const
+{
+    return _state;
 }
 
 bool Session::isConnected() const

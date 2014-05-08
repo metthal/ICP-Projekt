@@ -79,16 +79,29 @@ void ServerHandler::HandleUnknown(SessionPtr session, PacketPtr packet)
 void ServerHandler::HandleHandshakeRequest(SessionPtr session, PacketPtr /*packet*/)
 {
     sLog.outDebug("HandleHandshakeRequest ", *session);
+    if (session->getState() != SESSION_STATE_AWAITING_HANDSHAKE)
+    {
+        sLog.outDebug("Session ", *session, " already handshaken and asking for handshake. Ignored.");
+        return;
+    }
+
     // for now, ignore what is in the magic number of the received packet
 
     PacketPtr response = PacketPtr(new Packet(SMSG_HANDSHAKE_RESPONSE, 1));
     *response << true;
     session->send(response);
+    session->setState(SESSION_STATE_IN_LOBBY);
 }
 
 void ServerHandler::HandleGameListRequest(SessionPtr session, PacketPtr /*packet*/)
 {
     sLog.outDebug("HandleGameListRequest ", *session);
+    if (session->getState() != SESSION_STATE_IN_LOBBY)
+    {
+        sLog.outDebug("Session ", *session, " not in lobby. Ignored.");
+        return;
+    }
+
     uint32_t length = 4 + sGameMgr.getGamesCount() * (4 + 1 + 2 + 1 + 1);
 
     for (auto& itr : sGameMgr.getGames())
@@ -113,6 +126,12 @@ void ServerHandler::HandleGameListRequest(SessionPtr session, PacketPtr /*packet
 void ServerHandler::HandleGameJoinRequest(SessionPtr session, PacketPtr packet)
 {
     sLog.outDebug("HandleGameJoinRequest ", *session);
+    if (session->getState() != SESSION_STATE_IN_LOBBY)
+    {
+        sLog.outDebug("Session ", *session, " not in lobby. Ignored.");
+        return;
+    }
+
     uint32_t gameId;
     *packet >> gameId;
 
@@ -150,6 +169,12 @@ void ServerHandler::HandleGameJoinRequest(SessionPtr session, PacketPtr packet)
 void ServerHandler::HandleMapListRequest(SessionPtr session, PacketPtr /*packet*/)
 {
     sLog.outDebug("HandleMapListRequest ", *session);
+    if (session->getState() != SESSION_STATE_IN_LOBBY)
+    {
+        sLog.outDebug("Session ", *session, " not in lobby. Ignored.");
+        return;
+    }
+
     uint32_t length = 4 + sLevelMapMgr.getMapsCount() * (4 + 1 + 1);
 
     for (auto& itr : sLevelMapMgr.getMaps())
@@ -173,6 +198,12 @@ void ServerHandler::HandleMapListRequest(SessionPtr session, PacketPtr /*packet*
 void ServerHandler::HandleGameCreateRequest(SessionPtr session, PacketPtr packet)
 {
     sLog.outDebug("HandleGameCreateRequest ", *session);
+    if (session->getState() != SESSION_STATE_IN_LOBBY)
+    {
+        sLog.outDebug("Session ", *session, " not in lobby. Ignored.");
+        return;
+    }
+
     uint32_t mapId;
     std::string gameName;
     uint16_t stepTime;

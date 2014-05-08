@@ -36,22 +36,25 @@ public:
         return itr->second;
     }
 
-    ServerGamePtr& newGame(const std::string& gameName, LevelMapPtr& map, uint16_t stepTime)
+    ServerGamePtr newGame(const std::string& gameName, LevelMapPtr& map, uint16_t stepTime)
     {
-        ++_maxGameId;
-        auto itr = _games.insert( { _maxGameId, ServerGamePtr(new ServerGame(_maxGameId, gameName, map, stepTime)) } );
+        auto itr = _games.insert( { _nextGameId, ServerGamePtr(new ServerGame(_nextGameId, gameName, map)) } );
+        if (!(itr.first->second->setStepTime(stepTime)))
+            return nullptr;
+
+        ++_nextGameId;
         return itr.first->second;
     }
 
 private:
-    GameMgr() : _maxGameId(0) {}
+    GameMgr() : _nextGameId(1) {}
     GameMgr(const GameMgr&) = delete;
     ~GameMgr() {}
 
     GameMgr& operator =(const GameMgr&);
 
     GameMap _games;
-    uint32_t _maxGameId;
+    uint32_t _nextGameId;
 };
 
 #define sGameMgr GameMgr::getInstance()

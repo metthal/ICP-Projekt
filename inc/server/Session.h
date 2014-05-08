@@ -7,6 +7,13 @@
 #include "common/TsQueue.h"
 #include "common/Packet.h"
 
+enum SessionState
+{
+    SESSION_STATE_AWAITING_HANDSHAKE        = 0,
+    SESSION_STATE_IN_LOBBY,
+    SESSION_STATE_IN_GAME
+};
+
 class Session : public std::enable_shared_from_this<Session>
 {
 public:
@@ -19,8 +26,10 @@ public:
     void start();
     void send(PacketPtr packet);
 
-    bool isConnected() const;
+    void setState(SessionState state);
+    SessionState getState() const;
 
+    bool isConnected() const;
     PacketPtr getReceivedPacket();
     boost::asio::ip::tcp::socket& getSocket();
 
@@ -38,6 +47,8 @@ private:
     PacketPtr _pendingPacket;
     uint32_t _bytesReserved;
     std::atomic_bool _connected;
+    SessionState _state;
+
 };
 
 typedef std::shared_ptr<Session> SessionPtr;
