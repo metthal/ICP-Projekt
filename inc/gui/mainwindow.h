@@ -134,7 +134,7 @@ private:
 
     Ui::MainWindow *ui;
 
-    std::vector<QWidget*> pages;
+    std::vector<int> pages;
 
     QStandardItemModel *ModelServerSelection;
     QStandardItemModel *ModelLevelSelection;

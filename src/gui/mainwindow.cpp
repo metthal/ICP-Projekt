@@ -160,13 +160,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    delete ui; ui = nullptr;
-
-    for (auto it = pages.begin(); it != pages.end(); it++)
-    {
-        delete (*it); (*it) = nullptr;
-    }
-
     delete ModelServerSelection; ModelServerSelection = nullptr;
     delete ModelLevelSelection; ModelLevelSelection = nullptr;
     delete ModelSavedGames; ModelSavedGames = nullptr;
@@ -233,13 +226,14 @@ void MainWindow::on_ButtonNewGame_clicked()
 void MainWindow::changePage(QWidget *newPage, bool putInChain, void *object)
 {
     if (putInChain)
-        pages.push_back(ui->MainView->currentWidget());
+        pages.push_back(ui->MainView->currentIndex());
+
     loadPage(newPage, object);
 }
 
 void MainWindow::previousPage()
 {
-    loadPage(pages.back());
+    loadPage(ui->MainView->widget(pages.back()));
     pages.pop_back();
 }
 
