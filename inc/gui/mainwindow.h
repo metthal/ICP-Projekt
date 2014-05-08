@@ -50,6 +50,8 @@ private slots:
 
     void on_ButtonNewGame_clicked();
 
+    void checkGameJoined();
+
     void on_TableViewGeneral_doubleClicked(const QModelIndex &index);
 
     void on_ButtonTableViewBack_clicked();
@@ -154,8 +156,6 @@ private:
     TcpClient *tcpClient;
     uint32_t selectedLevelId;
 
-    bool creatingGame;
-    bool gameCreated;
     Game *game;
 };
 

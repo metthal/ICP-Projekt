@@ -134,6 +134,8 @@ void ServerHandler::HandleGameJoinRequest(SessionPtr session, PacketPtr packet)
         *response << player->getId();
         *response << mapData;
     }
+
+    session->send(response);
 }
 
 void ServerHandler::HandleMapListRequest(SessionPtr session, PacketPtr /*packet*/)
