@@ -10,6 +10,7 @@
 #include <QPixmap>
 #include <QTimer>
 #include "common/game.h"
+#include "client/TcpClient.h"
 
 namespace Ui {
 
@@ -93,6 +94,8 @@ private slots:
 
     void on_TableViewServers_doubleClicked(const QModelIndex &index);
 
+    void checkGameCreated();
+
     void on_ButtonStartGame_clicked();
 
 private:
@@ -102,9 +105,11 @@ private:
 
     void loadPage(QWidget *page, void *object = nullptr);
 
+    void loadGamePage();
+
     void loadTable(QStandardItemModel *table);
 
-    void loadGame();
+    void loadGame(const std::string &mapData);
 
     void sendCommand();
 
@@ -124,10 +129,11 @@ private:
     QStandardItemModel *ModelLevelSelection;
     QStandardItemModel *ModelSavedGames;
     QStandardItemModel *ModelRunningGames;
+    std::vector<uint32_t> tableItemIds;
 
     static const int maxPlayers = 4;
     PlayerLabel *playerLabels[maxPlayers];
-    int myPlayerId;
+    uint8_t myPlayerId;
 
     QGraphicsScene *gameScene;
 
@@ -145,6 +151,11 @@ private:
 
     QTimer *timer;
 
+    TcpClient *tcpClient;
+    uint32_t selectedLevelId;
+
+    bool creatingGame;
+    bool gameCreated;
     Game *game;
 };
 

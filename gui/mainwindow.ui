@@ -27,7 +27,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="PageMainMenu">
        <property name="sizePolicy">
@@ -211,7 +211,7 @@
           <item>
            <widget class="QLabel" name="LabelServerIP">
             <property name="text">
-             <string>255.255.255.255</string>
+             <string>No server selected</string>
             </property>
            </widget>
           </item>
@@ -378,12 +378,40 @@
               <height>0</height>
              </size>
             </property>
+            <property name="text">
+             <string>127.0.0.1</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="ServerSelectPort">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>60</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>60</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>11337</string>
+            </property>
            </widget>
           </item>
           <item>
            <widget class="QPushButton" name="ButtonServerManual">
             <property name="text">
-             <string>Find server manually</string>
+             <string>Connect to server manually</string>
             </property>
            </widget>
           </item>
@@ -753,7 +781,53 @@
              </spacer>
             </item>
             <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_12">
+              <property name="bottomMargin">
+               <number>10</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="LabelGameName">
+                <property name="font">
+                 <font>
+                  <pointsize>14</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Displayed game name</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="EditGameName">
+                <property name="font">
+                 <font>
+                  <pointsize>14</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>My new game</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
              <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <item>
+               <widget class="QLabel" name="StepTimeDescriptor">
+                <property name="font">
+                 <font>
+                  <pointsize>18</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Step time</string>
+                </property>
+                <property name="buddy">
+                 <cstring>StepTimeValue</cstring>
+                </property>
+               </widget>
+              </item>
               <item>
                <widget class="QLineEdit" name="StepTimeValue">
                 <property name="sizePolicy">
@@ -779,23 +853,11 @@
                 <property name="inputMethodHints">
                  <set>Qt::ImhNone</set>
                 </property>
+                <property name="text">
+                 <string>0.5</string>
+                </property>
                 <property name="maxLength">
                  <number>4</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="StepTimeDescriptor">
-                <property name="font">
-                 <font>
-                  <pointsize>18</pointsize>
-                 </font>
-                </property>
-                <property name="text">
-                 <string>Step time</string>
-                </property>
-                <property name="buddy">
-                 <cstring>StepTimeValue</cstring>
                 </property>
                </widget>
               </item>

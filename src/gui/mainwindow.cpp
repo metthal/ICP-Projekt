@@ -1,6 +1,8 @@
 #include "gui/mainwindow.h"
 #include "ui_mainwindow.h"
 #include "gui/dialoggamemenu.h"
+#include "common/Opcode.h"
+#include "common/msgexception.h"
 #include <QDateTime>
 #include <QHeaderView>
 #include <QScrollBar>
@@ -8,6 +10,9 @@
 #include <QBitmap>
 #include <QPainter>
 #include <QAbstractItemView>
+#include <QMessageBox>
+#include <QValidator>
+#include <chrono>
 
 QString formatTime(int seconds)
 {
@@ -20,8 +25,7 @@ QString formatTime(int seconds)
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    game()
+    ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
@@ -49,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ModelSavedGames->setHorizontalHeaderItem(2, new QStandardItem(QString("Level")));
     ModelSavedGames->setHorizontalHeaderItem(3, new QStandardItem(QString("Size")));
     ModelSavedGames->setHorizontalHeaderItem(4, new QStandardItem(QString("Speed")));
+    ModelSavedGames->setHorizontalHeaderItem(4, new QStandardItem(QString("Players connected")));
 
     ModelRunningGames = new QStandardItemModel(0, 4, this);
     ModelRunningGames->setHorizontalHeaderItem(0, new QStandardItem(QString("Host")));
@@ -61,8 +66,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->TableViewGeneral->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Stretch);
     ui->TableViewGeneral->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-    ui->StepTimeValue->setValidator(new QRegExpValidator(QRegExp("(0\\.|[1-9]\\d*\\.?)\\d*")));
-    ui->CommandInput->setValidator(new QRegExpValidator(QRegExp("[a-z]*")));
+    ui->StepTimeValue->setValidator(new QRegExpValidator(QRegExp("(0\\.|[1-9]\\d*\\.?)\\d*"), this));
+    ui->StepTimeValue->setValidator(new QRegExpValidator(QRegExp("(0\\.|[1-9]\\d*\\.?)\\d*"), this));
+    ui->ServerSelectIP->setValidator(new QRegExpValidator(QRegExp("(\\d{1,3}\\.){3}\\d{1,3}"), this));
+    ui->ServerSelectPort->setValidator(new QRegExpValidator(QRegExp("\\d{1,5}"), this));
 
     ui->playerLabel_1->setText("Player 1");
     ui->playerLabel_1->setStyleSheet("QLabel { background-color : blue; color : white;}");
@@ -139,10 +146,12 @@ MainWindow::MainWindow(QWidget *parent) :
     sentryTexture[(int)Direction::Right] = sentryTextureAll.copy(0, 2 * sentryTextureHeight, sentryTextureWidth, sentryTextureHeight);
     sentryTexture[(int)Direction::Up] = sentryTextureAll.copy(0, 3 * sentryTextureHeight, sentryTextureWidth, sentryTextureHeight);
 
-
     timer = new QTimer();
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
     timer->start(100);
+
+    game = nullptr;
+    tcpClient = nullptr;
 }
 
 MainWindow::~MainWindow()
@@ -159,14 +168,13 @@ MainWindow::~MainWindow()
     delete ModelLevelSelection; ModelLevelSelection = nullptr;
     delete ModelSavedGames; ModelSavedGames = nullptr;
     delete ModelRunningGames; ModelRunningGames = nullptr;
-    for (int i = 0; i < maxPlayers; i++)
-    {
-        delete playerLabels[i]; playerLabels[i] = nullptr;
-    }
-
-    delete gameScene; gameScene = nullptr;
     delete timer; timer = nullptr;
-    delete game; game = nullptr;
+
+    if (tcpClient != nullptr)
+    {
+        tcpClient->stop();
+        delete tcpClient; tcpClient = nullptr;
+    }
 }
 
 void MainWindow::leaveGame()
@@ -182,16 +190,43 @@ void MainWindow::leaveGame()
 
 void MainWindow::on_ButtonConnect_clicked()
 {
+    if (tcpClient == nullptr)
+    {
+        QMessageBox msgBox;
+        msgBox.setText("No server selected, please select one before continuing.");
+        msgBox.setModal(true);
+        msgBox.exec();
+        return;
+    }
+
     changePage(ui->PageTableView, true, ModelRunningGames);
 }
 
 void MainWindow::on_ButtonLoadGame_clicked()
 {
+    if (tcpClient == nullptr)
+    {
+        QMessageBox msgBox;
+        msgBox.setText("No server selected, please select one before continuing.");
+        msgBox.setModal(true);
+        msgBox.exec();
+        return;
+    }
+
     changePage(ui->PageTableView, true, ModelSavedGames);
 }
 
 void MainWindow::on_ButtonNewGame_clicked()
 {
+    if (tcpClient == nullptr)
+    {
+        QMessageBox msgBox;
+        msgBox.setText("No server selected, please select one before continuing.");
+        msgBox.setModal(true);
+        msgBox.exec();
+        return;
+    }
+
     changePage(ui->PageTableView, true, ModelLevelSelection);
 }
 
@@ -234,7 +269,7 @@ void MainWindow::loadPage(QWidget *page, void* object)
     {
         // Clear page history
         pages.clear();
-        loadGame();
+        loadGamePage();
     }
 
     page->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
@@ -244,9 +279,11 @@ void MainWindow::loadPage(QWidget *page, void* object)
 void MainWindow::loadTable(QStandardItemModel *table)
 {
     table->setRowCount(0);
+    tableItemIds.clear();
+
     if (table == ModelLevelSelection)
     {
-        table->appendRow(QList<QStandardItem*>({new QStandardItem(QString("Such level")), new QStandardItem(QString("25x25"))}));
+        tcpClient->send(PacketPtr(new Packet(CMSG_MAP_LIST_REQUEST, 0)));
         ui->TableViewTitle->setText(QString("Level selection"));
     }
     else if (table == ModelSavedGames)
@@ -261,24 +298,22 @@ void MainWindow::loadTable(QStandardItemModel *table)
 
     else if (table == ModelRunningGames)
     {
-        table->appendRow(QList<QStandardItem*>({new QStandardItem(QString("Doge")),
-                                                new QStandardItem(QString("Such level")),
-                                                new QStandardItem(QString("25x25")),
-                                                new QStandardItem(QString("Very running."))}));
-
-        table->appendRow(QList<QStandardItem*>({new QStandardItem(QString("Doge")),
-                                                new QStandardItem(QString("Such level")),
-                                                new QStandardItem(QString("25x25")),
-                                                new QStandardItem(QString("So waiting."))}));
+        tcpClient->send(PacketPtr(new Packet(CMSG_GAME_LIST_REQUEST, 0)));
         ui->TableViewTitle->setText(QString("Running games"));
     }
 
     ui->TableViewGeneral->setModel(table);
 }
 
-void MainWindow::loadGame()
+void MainWindow::loadGame(const std::string &mapData)
 {
     game = new Game();
+    game->loadMap(mapData);
+    //TODO: load player positions etc.
+}
+
+void MainWindow::loadGamePage()
+{
     const LevelMap &map = game->getMap();
     gameScene = new QGraphicsScene(ui->GameView);
     gameScene->setSceneRect(0, 0,
@@ -336,25 +371,85 @@ void MainWindow::sendCommand()
 
 void MainWindow::update()
 {
-    //TODO: Process server messages
+    if (tcpClient == nullptr)
+        return;
 
-    if (ui->MainView->currentWidget() == ui->PageTableView)
+    // Read server message
+    PacketPtr response = tcpClient->getReceivedPacket();
+
+    // Process server message
+    if (response)
     {
-        if (ui->TableViewGeneral->model() == ModelRunningGames)
+        if (ui->MainView->currentWidget() == ui->PageTableView)
         {
-            // Display running games
-            ModelRunningGames->appendRow(QList<QStandardItem*>({new QStandardItem(QString("Doge")),
-                                                                new QStandardItem(QString("Such level")),
-                                                                new QStandardItem(QString("25x25")),
-                                                                new QStandardItem(QString("Very running."))}));
+            if (ui->TableViewGeneral->model() == ModelRunningGames)
+            {
+                if (response->getOpcode() == SMSG_GAME_LIST_RESPONSE)
+                {
+                    uint32_t gamesCount;
+                    *response >> gamesCount;
+                    for (uint32_t i = 0; i < gamesCount; ++i)
+                    {
+                        uint32_t gameId;
+                        std::string gameName;
+                        uint8_t playerCount;
+                        *response >> gameId >> gameName >> playerCount;
+
+                        if (playerCount < maxPlayers)
+                        {
+                            tableItemIds.push_back(gameId);
+                            ModelRunningGames->appendRow(QList<QStandardItem*>({
+                                 new QStandardItem(QString::fromStdString(gameName)),
+                                 new QStandardItem(QString("Such level")),
+                                 new QStandardItem(QString("25x25")),
+                                 new QStandardItem(QString("Very running.")),
+                                 new QStandardItem(QString::number(playerCount))
+                            }));
+                        }
+                    }
+                }
+            }
+            else if (ui->TableViewGeneral->model() == ModelLevelSelection)
+            {
+                if(response->getOpcode() == SMSG_MAP_LIST_RESPONSE)
+                {
+                    uint32_t mapsCount;
+                    *response >> mapsCount;
+                    for (uint32_t i = 0; i < mapsCount; ++i)
+                    {
+                        uint32_t mapId;
+                        std::string mapName;
+                        *response >> mapId >> mapName;
+
+                        tableItemIds.push_back(mapId);
+                        ModelLevelSelection->appendRow(QList<QStandardItem*>({
+                            new QStandardItem(QString::fromStdString(mapName)),
+                            new QStandardItem(QString("25x25"))
+                        }));
+
+                    }
+                }
+            }
+            else if (ui->TableViewGeneral->model() == ModelSavedGames)
+            {
+                // Display games saved on server
+            }
         }
-        else if (ui->TableViewGeneral->model() == ModelLevelSelection)
+        else if(ui->MainView->currentWidget() == ui->PageLobby)
         {
-            // Display levels to choose from
-        }
-        else if (ui->TableViewGeneral->model() == ModelSavedGames)
-        {
-            // Display games saved on server
+            if (response->getOpcode() == SMSG_GAME_CREATE_RESPONSE && creatingGame)
+            {
+                bool success;
+                std::string mapData;
+                *response >> success;
+                if (success)
+                {
+                    *response >> myPlayerId >> mapData;
+                    loadGame(mapData);
+                    gameCreated = true;
+                    changePage(ui->PageGame, false);
+                }
+            }
         }
     }
 
@@ -456,7 +551,7 @@ void MainWindow::on_TableViewGeneral_doubleClicked(const QModelIndex &index)
 {
     if (ui->TableViewGeneral->model() == ModelLevelSelection)
     {
-        //TODO load level as such
+        selectedLevelId = tableItemIds.at(index.row());
         changePage(ui->PageLobby, false);
     }
     else if (ui->TableViewGeneral->model() == ModelSavedGames)
@@ -468,7 +563,7 @@ void MainWindow::on_TableViewGeneral_doubleClicked(const QModelIndex &index)
     {
         if (index.row() % 2 == 0)
         {
-            //TODO connect to running game
+            //TODO connect directly to running game
             changePage(ui->PageGame, false);
         }
         else
@@ -491,7 +586,7 @@ void MainWindow::on_ButtonLobbyBack_clicked()
 
 void MainWindow::on_ButtonLobbyLevelSelect_clicked()
 {
-    changePage(ui->PageTableView, true, ModelLevelSelection);
+    changePage(ui->PageTableView, false, ModelLevelSelection);
 }
 
 void MainWindow::on_StepTimeValue_editingFinished()
@@ -571,7 +666,71 @@ void MainWindow::on_actionMenuEsc_triggered()
 
 void MainWindow::on_ButtonServerManual_clicked()
 {
-    // Find server at ui->ServerSelectIP and display it
+    delete tcpClient;
+
+    QString address = ui->ServerSelectIP->text();
+    int port = ui->ServerSelectPort->text().toInt();
+
+    int pos = 0;
+    if(((const QRegExpValidator*)ui->ServerSelectIP->validator())->validate(address, pos) !=
+            QValidator::State::Acceptable)
+    {
+        QMessageBox msgBox;
+        msgBox.setText("Incorrect server IP.");
+        msgBox.setModal(true);
+        msgBox.exec();
+        return;
+    }
+
+    if (port < 10000 || port > 65535)
+    {
+        QMessageBox msgBox;
+        msgBox.setText("Server port must be number between 10000 and 65535.");
+        msgBox.setModal(true);
+        msgBox.exec();
+        return;
+    }
+
+    TcpClient *tmpClient = new TcpClient(address.toStdString(), port);
+    try
+    {
+        tmpClient->start();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+        // Handshake
+        PacketPtr packet = PacketPtr(new Packet(CMSG_HANDSHAKE_REQUEST, 4));
+        *packet << (uint32_t)1337;
+        tmpClient->send(packet);
+
+        // Wait second for response
+        PacketPtr response = nullptr;
+        for (int i = 0; i < 10 && !response; i++)
+        {
+            response = tmpClient->getReceivedPacket();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+
+        if (!response || response->getOpcode() != SMSG_HANDSHAKE_RESPONSE)
+            throw MsgException("Server unavailable.");
+    }
+    catch(...)
+    {
+        QMessageBox msgBox;
+        msgBox.setText("Unable to connect to server.");
+        msgBox.setModal(true);
+        msgBox.exec();
+        return;
+    }
+
+    if (tcpClient != nullptr)
+    {
+        tcpClient->stop();
+        delete tcpClient;
+    }
+
+    tcpClient = tmpClient;
+    ui->LabelServerIP->setText(address);
+    previousPage();
 }
 
 void MainWindow::on_actionCenterPlayer_triggered()
@@ -614,7 +773,7 @@ void MainWindow::on_actionGameAction_triggered()
 
 void MainWindow::on_ButtonServerConnect_clicked()
 {
-    loadGame();
+    loadGamePage();
 }
 
 void MainWindow::on_ButtonServerRefresh_clicked()
@@ -640,10 +799,27 @@ void MainWindow::on_TableViewServers_doubleClicked(const QModelIndex &index)
     previousPage();
 }
 
+void MainWindow::checkGameCreated()
+{
+    if (!gameCreated)
+    {
+        QMessageBox msgBox;
+        msgBox.setText("Failed to create new game.");
+        msgBox.setModal(true);
+        msgBox.exec();
+        creatingGame = false;
+    }
+}
+
 void MainWindow::on_ButtonStartGame_clicked()
 {
-    //TODO start new game on server with selected level
-    //TODO receive new game ID from server
-    //TODO connect to running game
-    changePage(ui->PageGame, false);
+    std::string gameName = ui->EditGameName->text().toStdString();
+    PacketPtr packet = PacketPtr(new Packet(CMSG_GAME_CREATE_REQUEST, 4 + gameName.length() + 1));
+    *packet << selectedLevelId << gameName;
+
+    creatingGame = true;
+    gameCreated = false;
+    tcpClient->send(packet);
+
+    QTimer::singleShot(1000, this, SLOT(checkGameCreated()));
 }

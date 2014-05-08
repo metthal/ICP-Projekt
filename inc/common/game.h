@@ -20,6 +20,8 @@ public:
     bool isPlankDropped() const;
     Position getPlankPos() const;
 
+    void loadMap(const std::string &mapData);
+
 protected:
 	LevelMap _map;
 	Position _plankPos;

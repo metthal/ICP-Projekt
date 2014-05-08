@@ -37,8 +37,15 @@ std::string LevelMap::serialize()
 {
     std::stringstream buffer;
 
-    for (Tile x : _data)
-        buffer << tileToChar(x) << "0 ";
+    for (unsigned int i = 0; i < _data.size(); i++)
+    {
+        buffer << tileToChar(_data[i]) << "1";
+        if (i % _width == _width - 1)
+            buffer << "\n";
+        else
+            buffer << " ";
+
+    }
 
     return buffer.str();
 }

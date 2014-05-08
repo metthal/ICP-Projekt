@@ -77,3 +77,8 @@ Position Game::getPlankPos() const
 {
     return _plankPos;
 }
+
+void Game::loadMap(const std::string &mapData)
+{
+    _map.deserialize(mapData);
+}
