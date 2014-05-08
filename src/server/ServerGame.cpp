@@ -1,6 +1,6 @@
 #include "server/ServerGame.h"
 
-ServerGame::ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map) : _id(id), _name(name), _map(map)
+ServerGame::ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map, uint16_t stepTime) : _id(id), _name(name), _map(map), _stepTime(stepTime)
 {
 }
 
@@ -26,6 +26,11 @@ LevelMapPtr& ServerGame::getMap()
 uint8_t ServerGame::getPlayerCount() const
 {
     return _players.size();
+}
+
+uint16_t ServerGame::getStepTime() const
+{
+    return _stepTime;
 }
 
 ServerPlayerPtr ServerGame::addPlayer(SessionPtr& session)

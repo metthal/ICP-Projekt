@@ -22,8 +22,8 @@ public:
     std::string serialize();
     void deserialize(const std::string& data);
 
-    int getWidth() const;
-    int getHeight() const;
+    uint8_t getWidth() const;
+    uint8_t getHeight() const;
     bool checkBounds(const Position &pos) const;
 
     void setId(uint32_t id);
@@ -40,8 +40,8 @@ private:
     uint32_t _id;
     std::string _filename;
     std::vector<Tile> _data;
-    int _width;
-    int _height;
+    uint8_t _width;
+    uint8_t _height;
 };
 
 typedef std::shared_ptr<LevelMap> LevelMapPtr;

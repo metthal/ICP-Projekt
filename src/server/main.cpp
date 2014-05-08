@@ -7,8 +7,6 @@
 
 int main()
 {
-    sLevelMapMgr.loadMaps("../examples");
-
     sLog.out("Welcome to the bludiste2014-server for ICP 2013/2014");
     sLog.out("Starting TCP service on port 11337");
 
@@ -19,6 +17,9 @@ int main()
     handler.start();
 
     sLog.out("TCP service running");
+
+    sLevelMapMgr.loadMaps("../examples");
+    sLog.out("Server running...");
 
     std::string command;
     while (std::cin.good())

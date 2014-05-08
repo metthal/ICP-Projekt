@@ -3,7 +3,7 @@
 #include "client/TcpClient.h"
 #include "common/msgexception.h"
 
-TcpClient::TcpClient(const std::string& hostname, uint16_t port) : _thread(), _ioService(), _socket(_ioService), _hostname(hostname), _port(port)
+TcpClient::TcpClient(const std::string& hostname, uint16_t port) : _thread(), _ioService(), _socket(_ioService), _hostname(hostname), _port(port), _connected(false)
 {
     _receivedPackets = new TsQueue<PacketPtr>();
 }
@@ -16,6 +16,15 @@ TcpClient::~TcpClient()
 void TcpClient::start()
 {
     _thread = std::thread(&TcpClient::startImpl, this);
+
+    uint32_t timeoutCount = 50;
+    while (!_connected)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        timeoutCount--;
+        if (timeoutCount == 0)
+            throw MsgException("TcpClient - unable to connect to the remote endpoint");
+    }
 }
 
 void TcpClient::startImpl()
@@ -44,6 +53,7 @@ void TcpClient::handleConnect(const boost::system::error_code& error)
     if (error)
         throw MsgException("TcpClient::handleConnect - failed to connect to the remote endpoint");
 
+    _connected = true;
     startReceive();
 }
 

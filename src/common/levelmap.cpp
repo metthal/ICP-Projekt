@@ -60,12 +60,12 @@ void LevelMap::deserialize(const std::string& data)
         _data.push_back(charToTile(data[i]));
 }
 
-int LevelMap::getWidth() const
+uint8_t LevelMap::getWidth() const
 {
     return _width;
 }
 
-int LevelMap::getHeight() const
+uint8_t LevelMap::getHeight() const
 {
     return _height;
 }

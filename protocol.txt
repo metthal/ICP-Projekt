@@ -103,6 +103,10 @@ SMSG_GAME_LIST_RESPONSE
     - uint32_t gameId - unique identifier of the game
     - string(31) gameName - name of the game which the player who created the game specified
     - uint8_t gamePlayerCount - number of players in the game
+    - uint16_t stepTime - speed of the step in the game (in milliseconds)
+    - string(11) mapName - name of the map running in the game
+    - uint8_t mapWidth - width of the map
+    - uint8_t mapHeight - height of the map
 
 CMSG_GAME_JOIN_REQUEST
     - uint32_t gameId - identifier of the game which player wants to join
@@ -120,10 +124,13 @@ SMSG_MAP_LIST_RESPONSE
     (here comes the info about every map, which is repeated "mapCount" times, if mapCount == 0, then there is end of packet)
     - uint32_t mapId - unique identifier of the map
     - string(11) mapName - name of the map
+    - uint8_t mapWidth - width of the map
+    - uint8_t mapHeight - height of the map
 
 CMSG_GAME_CREATE_REQUEST
     - uint32_t mapId - id of the map the player wants to create
     - string(31) gameName - name of the game
+    - uint16_t stepTime - speed of the step in the game (in milliseconds)
 
 SMSG_GAME_CREATE_RESPONSE
     - bool created - TRUE if the game was successfuly create, FALSE if error occured

@@ -2,6 +2,7 @@
 #define SESSION_H
 
 #include <memory>
+#include <atomic>
 #include <boost/asio.hpp>
 #include "common/TsQueue.h"
 #include "common/Packet.h"
@@ -17,6 +18,8 @@ public:
 
     void start();
     void send(PacketPtr packet);
+
+    bool isConnected() const;
 
     PacketPtr getReceivedPacket();
     boost::asio::ip::tcp::socket& getSocket();
@@ -34,6 +37,7 @@ private:
 
     PacketPtr _pendingPacket;
     uint32_t _bytesReserved;
+    std::atomic_bool _connected;
 };
 
 typedef std::shared_ptr<Session> SessionPtr;

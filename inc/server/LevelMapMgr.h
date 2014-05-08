@@ -20,6 +20,7 @@ public:
 
     void loadMaps(const std::string& pathStr)
     {
+        sLog.out("Loading maps");
         boost::filesystem::path path(pathStr);
         if (!boost::filesystem::exists(path))
             throw MsgException("LevelMapMgr::loadMaps - cannot find path " + pathStr);
@@ -37,7 +38,13 @@ public:
             auto mapItr = _maps.insert( { _maxMapId, LevelMapPtr(new LevelMap()) } );
             mapItr.first->second->setId(_maxMapId);
             mapItr.first->second->load(itr->path().string());
+            sLog.outDebug("Loading map: ", mapItr.first->second->getFilename());
         }
+
+        if (_maps.empty())
+            sLog.out("No maps loaded!");
+        else
+            sLog.out(_maps.size(), " maps loaded");
     }
 
     uint32_t getMapsCount() const

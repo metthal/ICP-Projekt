@@ -1,5 +1,6 @@
 #include <boost/bind.hpp>
 #include "server/TcpServer.h"
+#include "common/Log.h"
 
 TcpServer::TcpServer(uint16_t port) : _thread(), _ioService(), _localEndpoint(boost::asio::ip::tcp::v4(), port), _acceptor(_ioService, _localEndpoint)
 {
@@ -40,8 +41,8 @@ void TcpServer::handleAccept(SessionPtr session, const boost::system::error_code
 
     std::lock_guard<std::mutex> lock(_sessionsMutex);
 
-    _sessions.push_back(session);
     session->start();
+    _sessions.push_back(session);
 
     startAccept();
 }
@@ -50,4 +51,15 @@ SessionList TcpServer::getSessions()
 {
     std::lock_guard<std::mutex> lock(_sessionsMutex);
     return _sessions;
+}
+
+void TcpServer::removeSessions(SessionList& sessionList)
+{
+    std::lock_guard<std::mutex> lock(_sessionsMutex);
+
+    for (SessionPtr& session : sessionList)
+    {
+        sLog.out("Session ", *session, " dropped");
+        _sessions.remove(session);
+    }
 }
