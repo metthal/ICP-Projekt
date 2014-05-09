@@ -8,7 +8,7 @@
 class ServerPlayer : public Player
 {
 public:
-    ServerPlayer(uint8_t id = 0, SessionPtr _session = nullptr);
+    ServerPlayer(uint8_t id, SessionPtr& _session);
     void heartbeat();
 
 private:
@@ -17,7 +17,7 @@ private:
 
     bool _moving;
 
-    SessionPtr _session;
+    SessionWptr _session;
 };
 
 typedef std::shared_ptr<ServerPlayer> ServerPlayerPtr;

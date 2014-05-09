@@ -7,6 +7,8 @@
 #include "common/TsQueue.h"
 #include "common/Packet.h"
 
+#define DEFAULT_BUFFER_SIZE      4096
+
 enum SessionState
 {
     SESSION_STATE_AWAITING_HANDSHAKE        = 0,
@@ -41,7 +43,7 @@ private:
     void handleSend(PacketPtr packet, size_t bytesSent, const boost::system::error_code& error);
 
     boost::asio::ip::tcp::socket _socket;
-    uint8_t _buffer[4096];
+    uint8_t _buffer[DEFAULT_BUFFER_SIZE];
     TsQueue<PacketPtr>* _receivedPackets;
 
     PacketPtr _pendingPacket;
@@ -52,5 +54,6 @@ private:
 };
 
 typedef std::shared_ptr<Session> SessionPtr;
+typedef std::weak_ptr<Session> SessionWptr;
 
 #endif // SESSION_H

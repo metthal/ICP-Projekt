@@ -1,6 +1,6 @@
 #include "server/ServerPlayer.h"
 
-ServerPlayer::ServerPlayer(uint8_t id, SessionPtr session) : Player(), _session(session)
+ServerPlayer::ServerPlayer(uint8_t id, SessionPtr& session) : Player(), _session(session)
 {
     setId(id);
 }

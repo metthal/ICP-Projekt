@@ -8,6 +8,8 @@ Session::Session(boost::asio::io_service& ioService) : _socket(ioService)
     _pendingPacket = nullptr;
     _connected = false;
     _state = SESSION_STATE_AWAITING_HANDSHAKE;
+    _bytesReserved = 0;
+    memset(_buffer, 0, DEFAULT_BUFFER_SIZE);
 }
 
 Session::~Session()
@@ -24,7 +26,7 @@ void Session::start()
 
 void Session::startReceive()
 {
-    _socket.async_receive(boost::asio::buffer(_buffer + _bytesReserved, 4096 - _bytesReserved), boost::bind(&Session::handleReceive, shared_from_this(),
+    _socket.async_receive(boost::asio::buffer(_buffer + _bytesReserved, DEFAULT_BUFFER_SIZE - _bytesReserved), boost::bind(&Session::handleReceive, shared_from_this(),
                 boost::asio::placeholders::bytes_transferred, boost::asio::placeholders::error));
 }
 
@@ -101,7 +103,10 @@ void Session::send(PacketPtr packet)
 void Session::handleSend(PacketPtr /*packet*/, size_t /*bytesSent*/, const boost::system::error_code& error)
 {
     if (error)
+    {
+        _connected = false;
         return;
+    }
 }
 
 std::ostream& operator <<(std::ostream& stream, const Session& session)

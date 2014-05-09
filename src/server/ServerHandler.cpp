@@ -53,6 +53,9 @@ void ServerHandler::startImpl()
             {
                 try
                 {
+                    if (packet->getOpcode() >= MAX_OPCODE)
+                        throw MsgException("Invalid opcode received");
+
                     (this->*_handlerTable[packet->getOpcode()])(session, packet);
                 }
                 catch (...)
