@@ -1,9 +1,15 @@
 #include "server/ServerGame.h"
 #include "common/Log.h"
 #include "common/Opcode.h"
+#include "common/msgexception.h"
+#include <stack>
+#include <chrono>
+#include <cmath>
 
 ServerGame::ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map) : _id(id), _name(name), _map(map), _players(), _stepTime(0), _finished(false)
 {
+    _rng.seed(std::chrono::system_clock::now().time_since_epoch().count());
+    _firstSpawnPos = getFirstSpawnPos();
 }
 
 ServerGame::~ServerGame()
@@ -238,4 +244,132 @@ void ServerGame::removePlayer(uint8_t playerId)
 
     player->setState(PLAYER_STATE_LEFT_GAME);
     player->getSession()->setState(SESSION_STATE_IN_LOBBY);
+}
+
+void ServerGame::seedFill(std::vector<bool>& output, Position start, std::function<bool (const LevelMap::Tile&)> predicate)
+{
+    output.clear();
+    uint8_t height = _map->getHeight(), width = _map->getWidth();
+    output.resize((int)height * (int)width);
+    std::stack<Position> workingStack;
+    workingStack.push(start);
+
+    // Initialize output
+    for (auto it = output.begin(); it != output.end(); it++)
+        *it = false;
+
+    // Run seed filling
+    Position currentPos;
+    while (!workingStack.empty())
+    {
+        currentPos = workingStack.top();
+        workingStack.pop();
+
+        if (predicate(_map->getTileAt(currentPos)))
+            output[currentPos.linear(width)] = true;
+        else
+            continue;
+
+        // Add neighbors into stack
+        if (currentPos.x > 0)
+        {
+            Position newPos(currentPos.x - 1, currentPos.y);
+            if (!output[newPos.linear(width)])
+                workingStack.push(newPos);
+        }
+        if (currentPos.x < width - 1)
+        {
+            Position newPos(currentPos.x + 1, currentPos.y);
+            if (!output[newPos.linear(width)])
+                workingStack.push(newPos);
+        }
+        if (currentPos.y > 0)
+        {
+            Position newPos(currentPos.x, currentPos.y - 1);
+            if (!output[newPos.linear(width)])
+                workingStack.push(newPos);
+        }
+        if (currentPos.y < height - 1)
+        {
+            Position newPos(currentPos.x, currentPos.y + 1);
+            if (!output[newPos.linear(width)])
+                workingStack.push(newPos);
+        }
+    }
+}
+
+Position ServerGame::getFirstSpawnPos()
+{
+    std::vector<bool> available;
+    Position finishPos = _map->getFinishPos();
+    seedFill(available, finishPos, [](const LevelMap::Tile& x){return x != LevelMap::Tile::Forest;});
+
+    uint8_t height = _map->getHeight(), width = _map->getWidth();
+    int size = (int)height * (int)width;
+    for (int i = 0; i < 1000000; i++)
+    {
+        int linearPos = _rng() % size;
+        Position pos = Position::fromLinear(linearPos, width);
+
+        // Test if accessible from finish even over water
+        if (available[linearPos])
+        {
+            // Test if far enough
+            if (std::abs(finishPos.x - pos.x) + std::abs(finishPos.y - pos.y) > (height + width) / 4)
+            {
+                // Test if not already occupied
+                bool occupied = false;
+                for (auto it = _players.begin(); it != _players.end() && !occupied; it++)
+                    occupied = pos == it->second->getPosition();
+
+                //TODO enable these
+                /*for (auto it = _sentries.begin(); it != _sentries.end() && !occupied; it++)
+                    occupied = pos == it->getPos();
+                occupied |= pos == _plankPos;*/
+
+                if (!occupied)
+                    return pos;
+            }
+        }
+    }
+
+    throw MsgException("Unable to find first spawn place (bad design of level)");
+}
+
+Position ServerGame::getAvailablePos()
+{
+    std::vector<bool> available;
+    Position finishPos = _map->getFinishPos();
+    seedFill(available, _firstSpawnPos, [](const LevelMap::Tile& x){return x != LevelMap::Tile::Forest && x != LevelMap::Tile::Water;});
+
+    uint8_t height = _map->getHeight(), width = _map->getWidth();
+    int size = (int)height * (int)width;
+    for (int i = 0; i < 1000000; i++)
+    {
+        int linearPos = _rng() % size;
+        Position pos = Position::fromLinear(linearPos, width);
+
+        // Test if accessible from finish even over water
+        if (available[linearPos])
+        {
+            // Test if far enough
+            if (std::abs(finishPos.x - pos.x) + std::abs(finishPos.y - pos.y) > (height + width) / 4)
+            {
+                // Test if not already occupied
+                bool occupied = false;
+                for (auto it = _players.begin(); it != _players.end() && !occupied; it++)
+                    occupied = pos == it->second->getPosition();
+
+                //TODO enable these
+                /*for (auto it = _sentries.begin(); it != _sentries.end() && !occupied; it++)
+                    occupied = pos == it->getPos();
+                occupied |= pos == _plankPos;*/
+
+                if (!occupied)
+                    return pos;
+            }
+        }
+    }
+
+    throw MsgException("Unable to find additional spawn place for next object (bad design of level)");
 }

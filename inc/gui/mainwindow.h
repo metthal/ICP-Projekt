@@ -11,7 +11,7 @@
 #include <QPixmap>
 #include <QTimer>
 #include <chrono>
-#include "common/game.h"
+#include "client/clientGame.h"
 #include "client/TcpClient.h"
 
 namespace Ui {
@@ -165,7 +165,10 @@ private:
     TcpClient *tcpClient;
     uint32_t selectedLevelId;
 
-    Game *game;
+    int totalCommands;
+    int failedCommands;
+
+    ClientGame *game;
     std::chrono::time_point<std::chrono::high_resolution_clock> lastGameMsgTime;
 };
 

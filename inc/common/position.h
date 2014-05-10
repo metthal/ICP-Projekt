@@ -16,6 +16,7 @@ public:
 	Position();
 	Position(int xx, int yy);
 	int linear(int width) const;
+	static Position fromLinear(int linearPos, int width);
 	Position next(Direction dir);
 
 	bool operator ==(const Position& other) const;

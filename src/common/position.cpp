@@ -18,6 +18,11 @@ int Position::linear(int width) const
     return x + y * width;
 }
 
+Position Position::fromLinear(int linearPos, int width)
+{
+    return Position(linearPos % width, linearPos / width);
+}
+
 Position Position::next(Direction dir)
 {
 	switch(dir)

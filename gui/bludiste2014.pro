@@ -27,7 +27,8 @@ SOURCES += ../src/gui/main.cpp\
     ../src/common/sentry.cpp \
     ../src/client/TcpClient.cpp \
     ../src/common/Packet.cpp \
-    ../src/gui/dialoggamehistory.cpp
+    ../src/gui/dialoggamehistory.cpp \
+    ../src/client/clientGame.cpp
 
 HEADERS  += ../inc/gui/mainwindow.h \
     ../inc/gui/dialoggamemenu.h \
@@ -40,7 +41,8 @@ HEADERS  += ../inc/gui/mainwindow.h \
     ../inc/common/sentry.h \
     ../inc/client/TcpClient.h \
     ../inc/common/Packet.h \
-    ../inc/gui/dialoggamehistory.h
+    ../inc/gui/dialoggamehistory.h \
+    ../inc/client/clientGame.h
 
 FORMS    += mainwindow.ui \
     dialoggamemenu.ui \

@@ -1,5 +1,15 @@
 #include "common/sentry.h"
 
+Sentry::Sentry(uint8_t id)
+{
+    _id = id;
+}
+
+uint8_t Sentry::getId() const
+{
+    return _id;
+}
+
 Direction Sentry::getDirection() const
 {
     return _faceDir;

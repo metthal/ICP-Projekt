@@ -13,6 +13,7 @@
 #include <QAbstractItemView>
 #include <QMessageBox>
 #include <QValidator>
+#include <QGraphicsSimpleTextItem>
 
 QString formatTime(int seconds)
 {
@@ -71,8 +72,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->StepTimeValue->setValidator(new QRegExpValidator(QRegExp("(0\\.|[1-9]\\d*\\.?)\\d*"), this));
     ui->ServerSelectIP->setValidator(new QRegExpValidator(QRegExp("(\\d{1,3}\\.){3}\\d{1,3}"), this));
     ui->ServerSelectPort->setValidator(new QRegExpValidator(QRegExp("\\d{1,5}"), this));
-
-    ui->LabelGameMsg->setStyleSheet("QLabel { background-color : white; color : grey;}");
 
     ui->playerLabel_1->setText("Player 1");
     ui->playerLabel_1->setStyleSheet("QLabel { background-color : blue; color : white;}");
@@ -177,6 +176,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::leaveGame()
 {
+    changePage(ui->PageMainMenu, false);
+
     delete game; game = nullptr;
     delete gameScene; gameScene = nullptr;
     for (int i = 0; i < maxPlayers; i++)
@@ -187,7 +188,9 @@ void MainWindow::leaveGame()
     delete gameMenu; gameMenu = nullptr;
     delete gameHistory; gameHistory = nullptr;
 
-    changePage(ui->PageMainMenu, false);
+    PacketPtr packet = PacketPtr(new Packet(CMSG_PLAYER_LEFT_GAME, 0));
+    try { tcpClient->send(packet); }
+    catch (...) { handleServerDisconnected(); return; }
 }
 
 void MainWindow::on_ButtonConnect_clicked()
@@ -307,10 +310,11 @@ void MainWindow::loadTable(QStandardItemModel *table)
 
 void MainWindow::loadGame(uint8_t playerId, const std::string &mapData)
 {
-    game = new Game();
+    game = new ClientGame();
     game->loadMap(mapData);
     myPlayerId = playerId;
-    //TODO: load player positions etc.
+    totalCommands = 0;
+    failedCommands = 0;
 }
 
 void MainWindow::loadGamePage()
@@ -331,6 +335,8 @@ void MainWindow::loadGamePage()
 
     gameMenu = new DialogGameMenu(this);
     gameHistory = new DialogGameHistory(this);
+
+    ui->LabelGameMsg->setStyleSheet("QLabel { background-color : white; color : grey;}");
 
     ui->GameView->setScene(gameScene);
 }
@@ -355,38 +361,34 @@ void MainWindow::sendCommand()
     ui->LabelCommandStatus->setText("Waiting");
     ui->LabelCommandStatus->setStyleSheet("QLabel { background-color : orange; color : white;}");
 
-    if (ui->CommandInput->text() == "left")
+    try
     {
+        PacketPtr packet = PacketPtr(new Packet(CMSG_PERFORM_ACTION_REQUEST, 1));
 
+        if (ui->CommandInput->text() == "left")         *packet << (uint8_t)PLAYER_ACTION_ROTATE_LEFT;
+        else if (ui->CommandInput->text() == "right")   *packet << (uint8_t)PLAYER_ACTION_ROTATE_RIGHT;
+        else if (ui->CommandInput->text() == "up")      *packet << (uint8_t)PLAYER_ACTION_ROTATE_UP;
+        else if (ui->CommandInput->text() == "down")    *packet << (uint8_t)PLAYER_ACTION_ROTATE_DOWN;
+        else if (ui->CommandInput->text() == "go")      *packet << (uint8_t)PLAYER_ACTION_GO;
+        else if (ui->CommandInput->text() == "action")  *packet << (uint8_t)PLAYER_ACTION_ACTION;
+        else if (ui->CommandInput->text() == "stop")    *packet << (uint8_t)PLAYER_ACTION_STOP;
+        else if (ui->CommandInput->text() == "take")    *packet << (uint8_t)PLAYER_ACTION_TAKE;
+        else if (ui->CommandInput->text() == "open")    *packet << (uint8_t)PLAYER_ACTION_OPEN;
+        else
+        {
+            ui->LabelCommandStatus->setText("Failed");
+            ui->LabelCommandStatus->setStyleSheet("QLabel { background-color : red; color : white; font-weight:bold;}");
+            failedCommands++;
+        }
+
+        tcpClient->send(packet);
     }
-    else if (ui->CommandInput->text() == "right")
+    catch(...)
     {
-
-    }
-    else if (ui->CommandInput->text() == "up")
-    {
-
-    }
-    else if (ui->CommandInput->text() == "down")
-    {
-
-    }
-    else if (ui->CommandInput->text() == "action")
-    {
-
-    }
-    else
-    {
-        ui->LabelCommandStatus->setText("Failed");
-        ui->LabelCommandStatus->setStyleSheet("QLabel { background-color : red; color : white; font-weight:bold;}");
-        return;
+        handleServerDisconnected(); return;
     }
 
-    //TODO send this
-    ui->CommandInput->text();
-
-    ui->LabelCommandStatus->setText("O.K.");
-    ui->LabelCommandStatus->setStyleSheet("QLabel { background-color : green; color : white;}");
+    totalCommands++;
 }
 
 void MainWindow::handleServerDisconnected()
@@ -505,13 +507,136 @@ void MainWindow::update()
                 }
             }
         }
+        else if (ui->MainView->currentWidget() == ui->PageGame && game->isRunning())
+        {
+            if (response->getOpcode() == SMSG_GAME_END)
+            {
+                uint8_t winPlayerId;
+                *response >> winPlayerId;
+
+                game->end();
+
+                if (winPlayerId == myPlayerId)
+                {
+                    ui->LabelGameMsg->setStyleSheet("QLabel { background-color : green; color : white;}");
+                    ui->LabelGameMsg->setText("You've won, congratulations!");
+                }
+                else
+                {
+                    ui->LabelGameMsg->setStyleSheet("QLabel { background-color : red; color : white;}");
+                    ui->LabelGameMsg->setText("You've lost, better luck next time");
+                }
+            }
+            else if (response->getOpcode() == SMSG_GAME_CREATE_OBJECT)
+            {
+                uint32_t count;
+                *response >> count;
+
+                uint8_t objType;
+                uint8_t posX, posY;
+                uint8_t rotation;
+                uint8_t objId;
+
+                for (uint32_t i = 0; i < count; i++)
+                {
+                    *response >> objType >> posX >> posY >> rotation;
+                    if (objType == OBJECT_TYPE_PLAYER)
+                    {
+                        *response >> objId;
+                        game->addPlayer(objId);
+                        game->movePlayer(objId, Position(posX, posY), (Direction)rotation);
+
+                    }
+                    else if (objType == OBJECT_TYPE_SENTRY)
+                    {
+                        *response >> objId;
+                        game->addSentry(objId);
+                        game->moveSentry(objId, Position(posX, posY), (Direction)rotation);
+                    }
+                    else if (objType == OBJECT_TYPE_PLANK)
+                    {
+                        game->placePlank(Position(posX, posY));
+                    }
+                    else if (objType == OBJECT_TYPE_BRIDGE)
+                    {
+                        game->placeBridge(Position(posX, posY));
+                    }
+                }
+            }
+            else if (response->getOpcode() == SMSG_GAME_UPDATE_OBJECT)
+            {
+                uint32_t count;
+                *response >> count;
+
+                uint8_t objType;
+                uint8_t posX, posY;
+                uint8_t rotation;
+                uint8_t objId;
+
+                for (uint32_t i = 0; i < count; i++)
+                {
+                    *response >> objType >> objId >> posX >> posY >> rotation;
+                    if (objType == OBJECT_TYPE_PLAYER)
+                    {
+                        *response >> objId;
+                        game->movePlayer(objId, Position(posX, posY), (Direction)rotation);
+
+                    }
+                    else if (objType == OBJECT_TYPE_SENTRY)
+                    {
+                        *response >> objId;
+                        game->moveSentry(objId, Position(posX, posY), (Direction)rotation);
+                    }
+                }
+            }
+            else if (response->getOpcode() == SMSG_GAME_DELETE_OBJECT)
+            {
+                uint32_t count;
+                *response >> count;
+
+                uint8_t objType;
+                uint8_t objId;
+
+                for (uint32_t i = 0; i < count; i++)
+                {
+                    *response >> objType;
+                    if (objType == OBJECT_TYPE_PLAYER)
+                    {
+                        *response >> objId;
+                        game->removePlayer(objId);
+
+                    }
+                    else if (objType == OBJECT_TYPE_PLANK)
+                    {
+                        game->removePlank();
+                    }
+                }
+            }
+            else if (response->getOpcode() == SMSG_PERFORM_ACTION_RESPONSE)
+            {
+                bool success;
+                *response >> success;
+
+                if (success)
+                {
+                    ui->LabelCommandStatus->setText("O.K.");
+                    ui->LabelCommandStatus->setStyleSheet("QLabel { background-color : green; color : white;}");
+                }
+                else
+                {
+                    ui->LabelCommandStatus->setText("Failed");
+                    ui->LabelCommandStatus->setStyleSheet("QLabel { background-color : red; color : white; font-weight:bold;}");
+                    failedCommands++;
+                }
+            }
+        }
 
         try { response = tcpClient->getReceivedPacket(); }
         catch (...) { handleServerDisconnected(); return; }
     }
 
-    // If in-game, redraw scene and update game time
-    if (ui->MainView->currentWidget() == ui->PageGame)
+
+    if (ui->MainView->currentWidget() == ui->PageGame && game->isRunning())
     {
         // Clear game message if too old
         if (ui->LabelGameMsg->text() != "")
@@ -522,6 +647,11 @@ void MainWindow::update()
                 ui->LabelGameMsg->setText("");
         }
 
+        // Refresh commands count
+        ui->LabelTotalCommands->setText(QString::number(totalCommands));
+        ui->LabelFailedCommands->setText(QString::number(failedCommands));
+
+        // Redraw scene and update game time
         redrawScene();
         ui->LabelGameTime->setText(formatTime(game->getTime()));
     }
@@ -875,7 +1005,7 @@ void MainWindow::checkGameCreated()
 void MainWindow::on_ButtonStartGame_clicked()
 {
     std::string gameName = ui->EditGameName->text().toStdString();
-    PacketPtr packet = PacketPtr(new Packet(CMSG_GAME_CREATE_REQUEST, 4 + gameName.length() + 2 + 1));
+    PacketPtr packet = PacketPtr(new Packet(CMSG_GAME_CREATE_REQUEST, 4 + gameName.length() + 1 + 2));
     uint16_t stepTime = (uint16_t)(ui->StepTimeValue->text().toFloat() * 1000);
     *packet << selectedLevelId << gameName << stepTime;
 

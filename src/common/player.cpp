@@ -1,5 +1,10 @@
 #include "common/player.h"
 
+Player::Player(uint8_t id)
+{
+    _id = id;
+}
+
 uint8_t Player::getId() const
 {
     return _id;
@@ -28,11 +33,6 @@ uint32_t Player::getKills() const
 bool Player::hasPlank() const
 {
     return _hasPlank;
-}
-
-void Player::setId(uint8_t id)
-{
-    _id = id;
 }
 
 void Player::setDirection(Direction dir)

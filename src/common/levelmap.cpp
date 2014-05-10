@@ -57,7 +57,14 @@ void LevelMap::deserialize(const std::string& data)
     _width = (newLinePos + 1) / 3;
     _height = (data.length() / 3) / _width;
     for (uint32_t i = 0; i < data.length(); i += 3)
-        _data.push_back(charToTile(data[i]));
+    {
+        Tile tile = charToTile(data[i]);
+
+        if (tile == Tile::Finish)
+            _finishPos = Position::fromLinear(_data.size(), _width);
+
+        _data.push_back(tile);
+    }
 }
 
 uint8_t LevelMap::getWidth() const
@@ -99,6 +106,11 @@ LevelMap::Tile LevelMap::getTileAt(const Position &pos) const
 void LevelMap::setTileAt(const Position &pos, Tile tile)
 {
     _data[pos.linear(_width)] = tile;
+}
+
+Position LevelMap::getFinishPos()
+{
+    return _finishPos;
 }
 
 char LevelMap::tileToChar(Tile tile)

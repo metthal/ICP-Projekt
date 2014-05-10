@@ -33,6 +33,9 @@ public:
     enum class Tile {Forest = 0, Water, Bridge, Grass, Path, Finish, Count};
     Tile getTileAt(const Position &pos) const;
     void setTileAt(const Position &pos, Tile tile);
+
+    Position getFinishPos();
+
 private:
     char tileToChar(Tile tile);
     Tile charToTile(char c);
@@ -40,6 +43,7 @@ private:
     uint32_t _id;
     std::string _filename;
     std::vector<Tile> _data;
+    Position _finishPos;
     uint8_t _width;
     uint8_t _height;
 };

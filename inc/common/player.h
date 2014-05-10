@@ -20,12 +20,15 @@ enum PlayerAction
     PLAYER_ACTION_GO,
     PLAYER_ACTION_STOP,
     PLAYER_ACTION_TAKE,
-    PLAYER_ACTION_OPEN
+    PLAYER_ACTION_OPEN,
+    PLAYER_ACTION_ACTION
 };
 
 class Player
 {
 public:
+    Player(uint8_t id);
+
     uint8_t getId() const;
     Direction getDirection() const;
     Position getPosition() const;
@@ -33,7 +36,6 @@ public:
     uint32_t getKills() const;
     bool hasPlank() const;
 
-    void setId(uint8_t id);
     void setDirection(Direction dir);
     void setPosition(Position pos);
 

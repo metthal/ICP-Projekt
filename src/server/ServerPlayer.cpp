@@ -1,9 +1,8 @@
 #include "server/ServerPlayer.h"
 #include "common/Log.h"
 
-ServerPlayer::ServerPlayer(uint8_t id, SessionPtr& session) : Player(), _session(session)
+ServerPlayer::ServerPlayer(uint8_t id, SessionPtr& session) : Player(id), _session(session)
 {
-    setId(id);
     _state = PLAYER_STATE_JUST_JOINED;
     _moveTime = _maxMoveTime = 0;
     _respawnTime = 0;

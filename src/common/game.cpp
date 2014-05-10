@@ -1,37 +1,34 @@
 #include "common/game.h"
 
 Game::Game() :
-    _plankDropped(true)
+    _plankDropped(true),
+    _running(true)
 {
     _map.load("../examples/level1");
 
-    _players.push_back(Player());
-    _players.back().setId(0);
+    _players.push_back(Player(0));
     _players.back().setPosition(Position(2, 2));
     _players.back().setDirection(Direction::Right);
-    _players.push_back(Player());
-    _players.back().setId(1);
+    _players.push_back(Player(1));
     _players.back().setPosition(Position(5, 2));
     _players.back().setDirection(Direction::Down);
-    _players.push_back(Player());
-    _players.back().setId(2);
+    _players.push_back(Player(2));
     _players.back().setPosition(Position(2, 5));
     _players.back().setDirection(Direction::Up);
-    _players.push_back(Player());
-    _players.back().setId(3);
+    _players.push_back(Player(3));
     _players.back().setPosition(Position(5, 5));
     _players.back().setDirection(Direction::Left);
 
-    _sentries.push_back(Sentry());
+    _sentries.push_back(Sentry(0));
     _sentries.back().setPosition(Position(3, 2));
     _sentries.back().setDirection(Direction::Right);
-    _sentries.push_back(Sentry());
+    _sentries.push_back(Sentry(1));
     _sentries.back().setPosition(Position(6, 2));
     _sentries.back().setDirection(Direction::Down);
-    _sentries.push_back(Sentry());
+    _sentries.push_back(Sentry(2));
     _sentries.back().setPosition(Position(3, 5));
     _sentries.back().setDirection(Direction::Up);
-    _sentries.push_back(Sentry());
+    _sentries.push_back(Sentry(3));
     _sentries.back().setPosition(Position(6, 5));
     _sentries.back().setDirection(Direction::Left);
 }
@@ -62,6 +59,17 @@ const std::list<Sentry>& Game::getSentries() const
     return _sentries;
 }
 
+const Sentry* Game::getSentry(int id) const
+{
+    for (auto it = _sentries.begin(); it != _sentries.end(); it++)
+    {
+        if (it->getId() == id)
+            return &(*it);
+    }
+
+    return nullptr;
+}
+
 int Game::getTime() const
 {
     return _time;
@@ -78,7 +86,17 @@ Position Game::getPlankPos() const
     return _plankPos;
 }
 
+bool Game::isRunning() const
+{
+    return _running;
+}
+
 void Game::loadMap(const std::string &mapData)
 {
     _map.deserialize(mapData);
+}
+
+void Game::end()
+{
+    _running = false;
 }
