@@ -59,7 +59,7 @@ void ServerGame::update(uint32_t diffTime)
             << (uint8_t)player->getId();
     }
 
-    // cout the length for CREATE, DELETE and UPDATE packets
+    // count the length for CREATE, DELETE and UPDATE packets
     for (auto itr = _players.begin(); itr != _players.end(); ++itr)
     {
         ServerPlayerPtr& player = itr->second;
@@ -115,15 +115,23 @@ void ServerGame::update(uint32_t diffTime)
     for (auto itr = _players.begin(); itr != _players.end(); ++itr)
     {
         ServerPlayerPtr& player = itr->second;
-        if (delObjCount)
-            player->getSession()->send(deletePacket);
-
-        if (player->getState() == PLAYER_STATE_JUST_JOINED)
-            player->getSession()->send(snapshotPacket);
-        else
+        try
         {
-            if (crObjCount)
-                player->getSession()->send(createPacket);
+            if (delObjCount)
+                player->getSession()->send(deletePacket);
+
+            if (player->getState() == PLAYER_STATE_JUST_JOINED)
+                player->getSession()->send(snapshotPacket);
+            else
+            {
+                if (crObjCount)
+                    player->getSession()->send(createPacket);
+            }
+        }
+        catch (...)
+        {
+            removePlayer(player->getId());
+            continue;
         }
 
         player->update(diffTime);
@@ -137,7 +145,16 @@ void ServerGame::update(uint32_t diffTime)
 
     // after update, send UPDATE packets
     for (auto itr = _players.begin(); itr != _players.end(); ++itr)
-        itr->second->getSession()->send(updatePacket);
+    {
+        try
+        {
+            itr->second->getSession()->send(updatePacket);
+        }
+        catch (...)
+        {
+            removePlayer(itr->second->getId());
+        }
+    }
 }
 
 void ServerGame::endGame(uint8_t winnerId)
@@ -207,7 +224,7 @@ ServerPlayerPtr ServerGame::addPlayer(SessionPtr& session)
         return nullptr;
 
     uint8_t newPlayerId;
-    for (newPlayerId = 1; newPlayerId < MAX_PLAYER_COUNT; ++newPlayerId)
+    for (newPlayerId = 0; newPlayerId < MAX_PLAYER_COUNT; ++newPlayerId)
     {
         if (!getPlayer(newPlayerId))
             break;
@@ -222,20 +239,13 @@ ServerPlayerPtr ServerGame::addPlayer(SessionPtr& session)
 
 void ServerGame::spawnPlayer(uint8_t playerId)
 {
-    // TODO spawn algorithm
     ServerPlayerPtr player = getPlayer(playerId);
-    uint8_t count = getPlayerCount();
-    for (uint8_t x = 0; x < _map->getWidth(); ++x)
-    {
-        for (uint8_t y = 0; y < _map->getHeight(); ++y)
-        {
-            if (_map->getTileAt(Position(x, y)) == LevelMap::Tile::Path)
-                if (--count == 0)
-                    player->setPosition(Position(x, y));
-        }
-    }
+    if (!player)
+        return;
 
     player->setState(PLAYER_STATE_ALIVE);
+    player->setPosition(getAvailablePos());
+    player->setDirection(Direction::Down);
 }
 
 void ServerGame::removePlayer(uint8_t playerId)
@@ -342,7 +352,7 @@ Position ServerGame::getAvailablePos()
 {
     std::vector<bool> available;
     Position finishPos = _map->getFinishPos();
-    seedFill(available, _firstSpawnPos, [](const LevelMap::Tile& x){return x != LevelMap::Tile::Forest && x != LevelMap::Tile::Water;});
+    seedFill(available, _firstSpawnPos, [](const LevelMap::Tile& x){return x != LevelMap::Tile::Forest && x != LevelMap::Tile::Water && x != LevelMap::Tile::Finish;});
 
     uint8_t height = _map->getHeight(), width = _map->getWidth();
     int size = (int)height * (int)width;
@@ -381,7 +391,7 @@ bool ServerGame::playerCanMoveTo(ServerPlayerPtr& player, const Position& pos)
     if (!_map->checkBounds(pos))
         return false;
 
-    if (_map->getTileAt(pos) != LevelMap::Tile::Path)
+    if (!_map->canWalkOnTile(_map->getTileAt(pos)))
         return false;
 
     for (auto itr = _players.begin(); itr != _players.end(); ++itr)
@@ -412,6 +422,9 @@ void ServerGame::movePlayer(ServerPlayerPtr& player, uint32_t diffTime)
 
             player->setPosition(newPos);
             player->setMoveTime(0);
+
+            if (_map->getTileAt(newPos) == LevelMap::Tile::Finish)
+                endGame(player->getId());
         }
         else
             player->setMoveTime(player->getMoveTime() + diffTime);

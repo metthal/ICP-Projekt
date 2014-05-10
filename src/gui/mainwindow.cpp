@@ -915,7 +915,6 @@ void MainWindow::on_ButtonServerManual_clicked()
     try
     {
         tmpClient->start();
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
         // Handshake
         PacketPtr packet = PacketPtr(new Packet(CMSG_HANDSHAKE_REQUEST, 4));

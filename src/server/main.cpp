@@ -13,27 +13,38 @@ int main()
     TcpServerPtr server = std::shared_ptr<TcpServer>(new TcpServer(11337));
     ServerHandler handler(server);
 
-    server->start();
-    handler.start();
-
-    sLog.out("TCP service running");
-
-    sLevelMapMgr.loadMaps("../examples");
-    sLog.out("Server running...");
-
-    std::string command;
-    while (std::cin.good())
+    try
     {
-        std::getline(std::cin, command);
-        if (command == "exit")
-            break;
-        else
-            sLog.out("Unknown command '", command, "'");
+
+        server->start();
+        handler.start();
+
+        sLog.out("TCP service running");
+
+        sLevelMapMgr.loadMaps("../examples");
+        sLog.out("Server running...");
+
+        std::string command;
+        while (std::cin.good())
+        {
+            std::getline(std::cin, command);
+            if (command == "exit")
+                break;
+            else
+                sLog.out("Unknown command '", command, "'");
+        }
+
+        sLog.out("Stopping TCP service");
+        handler.stop();
+        server->stop();
+        sLog.out("Terminating server");
+    }
+    catch (...)
+    {
+        handler.stop();
+        server->stop();
+        return 1;
     }
 
-    sLog.out("Stopping TCP service");
-    handler.stop();
-    server->stop();
-    sLog.out("Terminating server");
     return 0;
 }

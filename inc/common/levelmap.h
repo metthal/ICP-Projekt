@@ -33,6 +33,7 @@ public:
     enum class Tile {Forest = 0, Water, Bridge, Grass, Path, Finish, Count};
     Tile getTileAt(const Position &pos) const;
     void setTileAt(const Position &pos, Tile tile);
+    bool canWalkOnTile(const Tile& tile) const;
 
     Position getFinishPos();
 

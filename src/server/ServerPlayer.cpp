@@ -93,15 +93,23 @@ bool ServerPlayer::doAction(uint8_t action)
     {
         case PLAYER_ACTION_ROTATE_LEFT:
             setDirection(Direction::Left);
+            _moving = true;
+            _moveTime = 0;
             break;
         case PLAYER_ACTION_ROTATE_RIGHT:
             setDirection(Direction::Right);
+            _moving = true;
+            _moveTime = 0;
             break;
         case PLAYER_ACTION_ROTATE_UP:
             setDirection(Direction::Up);
+            _moving = true;
+            _moveTime = 0;
             break;
         case PLAYER_ACTION_ROTATE_DOWN:
             setDirection(Direction::Down);
+            _moving = true;
+            _moveTime = 0;
             break;
         case PLAYER_ACTION_GO:
             _moving = true;
@@ -113,6 +121,8 @@ bool ServerPlayer::doAction(uint8_t action)
         case PLAYER_ACTION_TAKE:
         case PLAYER_ACTION_OPEN:
             break;
+        default:
+            return false;
     }
 
     return true;

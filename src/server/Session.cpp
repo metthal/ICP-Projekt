@@ -12,6 +12,8 @@ Session::Session(boost::asio::io_service& ioService) : _socket(ioService)
     memset(_buffer, 0, DEFAULT_BUFFER_SIZE);
     _gameId = 0;
     _playerId = 0;
+    _ipAddr = "";
+    _port = 0;
 }
 
 Session::~Session()
@@ -22,6 +24,8 @@ Session::~Session()
 void Session::start()
 {
     _connected = true;
+    _ipAddr = _socket.remote_endpoint().address().to_string();
+    _port = _socket.remote_endpoint().port();
     sLog.out("Starting new session ", *this);
     startReceive();
 }
@@ -133,6 +137,6 @@ void Session::handleSend(PacketPtr /*packet*/, size_t /*bytesSent*/, const boost
 
 std::ostream& operator <<(std::ostream& stream, const Session& session)
 {
-    stream << session._socket.remote_endpoint().address().to_string() << ":" << session._socket.remote_endpoint().port();
+    stream << session._ipAddr << ":" << session._port;
     return stream;
 }
