@@ -15,7 +15,7 @@ public:
     explicit DialogGameHistory(QWidget *parent = 0);
     ~DialogGameHistory();
 
-    void addToHistory(std::string str);
+    void addToHistory(QString str);
 
 private:
     Ui::DialogGameHistory *ui;

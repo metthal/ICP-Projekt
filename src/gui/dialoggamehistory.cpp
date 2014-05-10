@@ -13,7 +13,7 @@ DialogGameHistory::~DialogGameHistory()
     delete ui;
 }
 
-void DialogGameHistory::addToHistory(std::string str)
+void DialogGameHistory::addToHistory(QString str)
 {
-    ui->History->append(QString::fromStdString(str));
+    ui->History->append(str);
 }

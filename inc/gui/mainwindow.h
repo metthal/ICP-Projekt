@@ -115,7 +115,7 @@ private:
 
     void loadGame(uint8_t playerId, const std::string &mapData);
 
-    void setGameMsg(std::string msg);
+    void setGameMsg(QString msg);
 
     void displayMsg(QString msg);
 
@@ -163,6 +163,7 @@ private:
     QTimer *timer;
 
     TcpClient *tcpClient;
+    std::mutex tcpClientMutex;
     uint32_t selectedLevelId;
 
     int totalCommands;

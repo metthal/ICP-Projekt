@@ -159,6 +159,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    if (game != nullptr)
+    {
+        leaveGame();
+    }
+
     delete ModelServerSelection; ModelServerSelection = nullptr;
     delete ModelLevelSelection; ModelLevelSelection = nullptr;
     delete ModelSavedGames; ModelSavedGames = nullptr;
@@ -341,11 +346,11 @@ void MainWindow::loadGamePage()
     ui->GameView->setScene(gameScene);
 }
 
-void MainWindow::setGameMsg(std::string msg)
+void MainWindow::setGameMsg(QString msg)
 {
     lastGameMsgTime = std::chrono::high_resolution_clock::now();
-    ui->LabelGameMsg->setText(QString::fromStdString(msg));
-    gameHistory->addToHistory(msg + ".\n");
+    ui->LabelGameMsg->setText(msg);
+    gameHistory->addToHistory(msg);
 }
 
 void MainWindow::displayMsg(QString msg)
@@ -360,35 +365,39 @@ void MainWindow::sendCommand()
 {
     ui->LabelCommandStatus->setText("Waiting");
     ui->LabelCommandStatus->setStyleSheet("QLabel { background-color : orange; color : white;}");
+    QString commandText = ui->CommandInput->text();
 
     try
     {
+        totalCommands++;
+
         PacketPtr packet = PacketPtr(new Packet(CMSG_PERFORM_ACTION_REQUEST, 1));
 
-        if (ui->CommandInput->text() == "left")         *packet << (uint8_t)PLAYER_ACTION_ROTATE_LEFT;
-        else if (ui->CommandInput->text() == "right")   *packet << (uint8_t)PLAYER_ACTION_ROTATE_RIGHT;
-        else if (ui->CommandInput->text() == "up")      *packet << (uint8_t)PLAYER_ACTION_ROTATE_UP;
-        else if (ui->CommandInput->text() == "down")    *packet << (uint8_t)PLAYER_ACTION_ROTATE_DOWN;
-        else if (ui->CommandInput->text() == "go")      *packet << (uint8_t)PLAYER_ACTION_GO;
-        else if (ui->CommandInput->text() == "action")  *packet << (uint8_t)PLAYER_ACTION_ACTION;
-        else if (ui->CommandInput->text() == "stop")    *packet << (uint8_t)PLAYER_ACTION_STOP;
-        else if (ui->CommandInput->text() == "take")    *packet << (uint8_t)PLAYER_ACTION_TAKE;
-        else if (ui->CommandInput->text() == "open")    *packet << (uint8_t)PLAYER_ACTION_OPEN;
+        if (commandText == "left")         *packet << (uint8_t)PLAYER_ACTION_ROTATE_LEFT;
+        else if (commandText == "right")   *packet << (uint8_t)PLAYER_ACTION_ROTATE_RIGHT;
+        else if (commandText == "up")      *packet << (uint8_t)PLAYER_ACTION_ROTATE_UP;
+        else if (commandText == "down")    *packet << (uint8_t)PLAYER_ACTION_ROTATE_DOWN;
+        else if (commandText == "go")      *packet << (uint8_t)PLAYER_ACTION_GO;
+        else if (commandText == "action")  *packet << (uint8_t)PLAYER_ACTION_ACTION;
+        else if (commandText == "stop")    *packet << (uint8_t)PLAYER_ACTION_STOP;
+        else if (commandText == "take")    *packet << (uint8_t)PLAYER_ACTION_TAKE;
+        else if (commandText == "open")    *packet << (uint8_t)PLAYER_ACTION_OPEN;
         else
         {
+            gameHistory->addToHistory("Invalid command inputted.");
             ui->LabelCommandStatus->setText("Failed");
             ui->LabelCommandStatus->setStyleSheet("QLabel { background-color : red; color : white; font-weight:bold;}");
             failedCommands++;
+            return;
         }
 
+        gameHistory->addToHistory("Sending command: " + commandText);
         tcpClient->send(packet);
     }
     catch(...)
     {
         handleServerDisconnected(); return;
     }
-
-    totalCommands++;
 }
 
 void MainWindow::handleServerDisconnected()
@@ -405,9 +414,11 @@ void MainWindow::handleServerDisconnected()
 }
 
 void MainWindow::update()
-{
+{    
     if (tcpClient == nullptr)
         return;
+
+    std::lock_guard<std::mutex> lock(tcpClientMutex);
 
     // Read server message
     PacketPtr response;
@@ -545,7 +556,7 @@ void MainWindow::update()
                         *response >> objId;
                         game->addPlayer(objId);
                         game->movePlayer(objId, Position(posX, posY), (Direction)rotation);
-
+                        setGameMsg("Player " + QString::number(objId) + " connected into game.");
                     }
                     else if (objType == OBJECT_TYPE_SENTRY)
                     {
@@ -556,10 +567,12 @@ void MainWindow::update()
                     else if (objType == OBJECT_TYPE_PLANK)
                     {
                         game->placePlank(Position(posX, posY));
+                        setGameMsg("Plank has been dropped.");
                     }
                     else if (objType == OBJECT_TYPE_BRIDGE)
                     {
                         game->placeBridge(Position(posX, posY));
+                        setGameMsg("Bridge has been built.");
                     }
                 }
             }
@@ -578,13 +591,11 @@ void MainWindow::update()
                     *response >> objType >> objId >> posX >> posY >> rotation;
                     if (objType == OBJECT_TYPE_PLAYER)
                     {
-                        *response >> objId;
                         game->movePlayer(objId, Position(posX, posY), (Direction)rotation);
 
                     }
                     else if (objType == OBJECT_TYPE_SENTRY)
                     {
-                        *response >> objId;
                         game->moveSentry(objId, Position(posX, posY), (Direction)rotation);
                     }
                 }
@@ -604,11 +615,12 @@ void MainWindow::update()
                     {
                         *response >> objId;
                         game->removePlayer(objId);
-
+                        setGameMsg("Player " + QString::number(objId) + " has disconnected.");
                     }
                     else if (objType == OBJECT_TYPE_PLANK)
                     {
                         game->removePlank();
+                        setGameMsg("Plank has been picked up.");
                     }
                 }
             }
@@ -619,11 +631,13 @@ void MainWindow::update()
 
                 if (success)
                 {
+                    gameHistory->addToHistory("Command successful.");
                     ui->LabelCommandStatus->setText("O.K.");
                     ui->LabelCommandStatus->setStyleSheet("QLabel { background-color : green; color : white;}");
                 }
                 else
                 {
+                    gameHistory->addToHistory("Failed to execute command.");
                     ui->LabelCommandStatus->setText("Failed");
                     ui->LabelCommandStatus->setStyleSheet("QLabel { background-color : red; color : white; font-weight:bold;}");
                     failedCommands++;
@@ -634,7 +648,6 @@ void MainWindow::update()
         try { response = tcpClient->getReceivedPacket(); }
         catch (...) { handleServerDisconnected(); return; }
     }
-
 
     if (ui->MainView->currentWidget() == ui->PageGame && game->isRunning())
     {
@@ -879,7 +892,7 @@ void MainWindow::on_actionMenuEsc_triggered()
 
 void MainWindow::on_ButtonServerManual_clicked()
 {
-    delete tcpClient;
+    timer->stop();
 
     QString address = ui->ServerSelectIP->text();
     int port = ui->ServerSelectPort->text().toInt();
@@ -918,18 +931,21 @@ void MainWindow::on_ButtonServerManual_clicked()
     catch(...)
     {
         displayMsg("Unable to connect to server.");
+        tmpClient->stop();
+        delete tmpClient; tmpClient = nullptr;
         return;
     }
 
     if (tcpClient != nullptr)
     {
         tcpClient->stop();
-        delete tcpClient;
+        delete tcpClient; tcpClient = nullptr;
     }
 
     tcpClient = tmpClient;
     ui->LabelServerIP->setText(address);
     previousPage();
+    timer->start();
 }
 
 void MainWindow::on_actionCenterPlayer_triggered()
