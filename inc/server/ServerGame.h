@@ -28,7 +28,6 @@ public:
     ~ServerGame();
 
     void update(uint32_t diffTime);
-    void endGame(uint8_t winnerId);
 
     bool setStepTime(uint16_t stepTime);
 
@@ -47,6 +46,10 @@ public:
 private:
     ServerGame& operator =(const ServerGame&);
 
+    void endGame(uint8_t winnerId);
+    void movePlayer(ServerPlayerPtr& player, uint32_t diffTime);
+    bool playerCanMoveTo(ServerPlayerPtr& player, const Position& pos);
+
     uint32_t _id;
     std::string _name;
     LevelMapPtr _map;
@@ -56,5 +59,6 @@ private:
 };
 
 typedef std::shared_ptr<ServerGame> ServerGamePtr;
+typedef std::weak_ptr<ServerGame>   ServerGameWptr;
 
 #endif // SERVER_GAME_H

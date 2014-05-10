@@ -211,8 +211,8 @@ int main()
         }
         else if (command == "go")
         {
-            PacketPtr packet = PacketPtr(new Packet(CMSG_PERFORM_ACTION_REQUEST, 2));
-            *packet << (uint8_t)1 << (uint8_t)PLAYER_ACTION_GO;
+            PacketPtr packet = PacketPtr(new Packet(CMSG_PERFORM_ACTION_REQUEST, 1));
+            *packet << (uint8_t)PLAYER_ACTION_GO;
             client.send(packet);
 
             uint8_t x = 255, y = 255;
@@ -238,9 +238,32 @@ int main()
                         }
                     }
                 }
-
-                std::this_thread::sleep_for(std::chrono::milliseconds(16));
+                //std::this_thread::sleep_for(std::chrono::milliseconds(16));
             }
+        }
+        else if (command == "down")
+        {
+            PacketPtr packet = PacketPtr(new Packet(CMSG_PERFORM_ACTION_REQUEST, 2));
+            *packet << (uint8_t)PLAYER_ACTION_ROTATE_DOWN;
+            client.send(packet);
+        }
+        else if (command == "up")
+        {
+            PacketPtr packet = PacketPtr(new Packet(CMSG_PERFORM_ACTION_REQUEST, 2));
+            *packet << (uint8_t)PLAYER_ACTION_ROTATE_UP;
+            client.send(packet);
+        }
+        else if (command == "left")
+        {
+            PacketPtr packet = PacketPtr(new Packet(CMSG_PERFORM_ACTION_REQUEST, 2));
+            *packet << (uint8_t)PLAYER_ACTION_ROTATE_LEFT;
+            client.send(packet);
+        }
+        else if (command == "right")
+        {
+            PacketPtr packet = PacketPtr(new Packet(CMSG_PERFORM_ACTION_REQUEST, 2));
+            *packet << (uint8_t)PLAYER_ACTION_ROTATE_RIGHT;
+            client.send(packet);
         }
         else if (command == "exit")
             break;

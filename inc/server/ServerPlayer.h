@@ -23,9 +23,16 @@ public:
 
     void update(uint32_t diffTime);
     bool doAction(uint8_t action);
+    Position getPositionAfterMove();
 
-    void setMaxMoveTime(uint32_t moveTime);
+    void setMoving(bool set);
+    void setMoveTime(uint32_t time);
+    void setRespawnTime(uint32_t time);
     void setState(PlayerState state);
+
+    bool isMoving() const;
+    uint32_t getMoveTime() const;
+    uint32_t getRespawnTime() const;
     PlayerState getState() const;
 
     SessionPtr getSession();
@@ -34,7 +41,7 @@ private:
     void move();
 
     bool _moving;
-    uint32_t _moveTime, _maxMoveTime;
+    uint32_t _moveTime;
     uint32_t _respawnTime;
 
     SessionWptr _session;
