@@ -6,6 +6,7 @@
 #include <random>
 #include "server/Session.h"
 #include "server/ServerPlayer.h"
+#include "server/ServerSentry.h"
 #include "common/levelmap.h"
 #include "common/game.h"
 
@@ -14,6 +15,7 @@
 #define MAX_PLAYER_COUNT        4
 
 typedef std::unordered_map<uint8_t, ServerPlayerPtr> PlayerMap;
+typedef std::unordered_map<uint8_t, ServerSentryPtr> SentryMap;
 
 class ServerGame
 {
@@ -53,10 +55,14 @@ private:
     void movePlayer(ServerPlayerPtr& player, uint32_t diffTime);
     bool playerCanMoveTo(ServerPlayerPtr& player, const Position& pos);
 
+    void moveSentry(ServerSentryPtr& sentry, uint32_t diffTime);
+    bool sentryCanMoveTo(ServerSentryPtr& player, const Position& pos);
+
     uint32_t _id;
     std::string _name;
     LevelMapPtr _map;
     PlayerMap _players;
+    SentryMap _sentries;
     uint16_t _stepTime;
     bool _finished;
     int8_t _winnerId;

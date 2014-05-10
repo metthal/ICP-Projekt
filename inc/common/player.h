@@ -33,7 +33,7 @@ public:
     Direction getDirection() const;
     Position getPosition() const;
     uint32_t getJoinTime() const;
-    uint32_t getKills() const;
+    uint32_t getDeaths() const;
     bool hasPlank() const;
 
     void setDirection(Direction dir);
@@ -44,7 +44,7 @@ protected:
     Direction _faceDir;
     Position _pos;
     uint32_t _joinTime;
-    uint32_t _kills;
+    uint32_t _deaths;
     bool _hasPlank;
 };
 

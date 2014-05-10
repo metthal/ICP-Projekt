@@ -25,9 +25,9 @@ uint32_t Player::getJoinTime() const
     return _joinTime;
 }
 
-uint32_t Player::getKills() const
+uint32_t Player::getDeaths() const
 {
-    return _kills;
+    return _deaths;
 }
 
 bool Player::hasPlank() const

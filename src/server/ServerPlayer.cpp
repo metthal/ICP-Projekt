@@ -7,6 +7,7 @@ ServerPlayer::ServerPlayer(uint8_t id, SessionPtr& session) : Player(id), _sessi
     _moving = false;
     _moveTime = 0;
     _respawnTime = 0;
+    _deaths = 0;
 }
 
 void ServerPlayer::update(uint32_t diffTime)
@@ -52,6 +53,11 @@ void ServerPlayer::setRespawnTime(uint32_t time)
 void ServerPlayer::setState(PlayerState state)
 {
     _state = state;
+}
+
+bool ServerPlayer::isAlive() const
+{
+    return (getState() != PLAYER_STATE_DEAD);
 }
 
 bool ServerPlayer::isMoving() const
@@ -126,4 +132,14 @@ bool ServerPlayer::doAction(uint8_t action)
     }
 
     return true;
+}
+
+void ServerPlayer::kill()
+{
+    if (!isAlive())
+        return;
+
+    setState(PLAYER_STATE_DEAD);
+    _respawnTime = 0;
+    _deaths++;
 }

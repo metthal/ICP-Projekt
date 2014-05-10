@@ -856,7 +856,7 @@ bool PlayerLabel::eventFilter(QObject *object, QEvent *event)
             {
                 int gameTime = labelPlayer->getJoinTime() - _game->getTime();
                 text.append("Game time: " + formatTime(gameTime) + "\n");
-                text.append("Kills: " + QString::number(labelPlayer->getKills()));
+                text.append("Deaths: " + QString::number(labelPlayer->getDeaths()));
             }
             QToolTip::showText(label->mapToGlobal(QPoint( 0, 10 ) ), text);
             return true;
