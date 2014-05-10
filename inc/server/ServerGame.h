@@ -25,6 +25,7 @@ public:
     ~ServerGame();
 
     void update(uint32_t diffTime);
+    void endGame();
 
     bool setStepTime(uint16_t stepTime);
 
@@ -49,7 +50,6 @@ private:
     // For spawning players and plank (sentries are spawning at random places path / grass / bridge)
     Position getAvailablePos();
 
-    void endGame(uint8_t winnerId);
     void movePlayer(ServerPlayerPtr& player, uint32_t diffTime);
     bool playerCanMoveTo(ServerPlayerPtr& player, const Position& pos);
 
@@ -59,6 +59,7 @@ private:
     PlayerMap _players;
     uint16_t _stepTime;
     bool _finished;
+    int8_t _winnerId;
     std::mt19937 _rng;
     Position _firstSpawnPos;
 };

@@ -55,6 +55,7 @@ public:
             ServerGamePtr& game = itr->second;
             if (game->hasFinished() || game->getPlayerCount() == 0)
             {
+                game->endGame();
                 sLog.out("Game ID ", game->getId(), " removed from the game list");
                 itr = _games.erase(itr);
                 continue;

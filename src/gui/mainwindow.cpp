@@ -414,7 +414,7 @@ void MainWindow::handleServerDisconnected()
 }
 
 void MainWindow::update()
-{    
+{
     if (tcpClient == nullptr)
         return;
 
@@ -435,6 +435,7 @@ void MainWindow::update()
             {
                 if (response->getOpcode() == SMSG_GAME_LIST_RESPONSE)
                 {
+                    redrawScene(); // last scene redraw
                     uint32_t gamesCount;
                     *response >> gamesCount;
                     for (uint32_t i = 0; i < gamesCount; ++i)
@@ -592,7 +593,6 @@ void MainWindow::update()
                     if (objType == OBJECT_TYPE_PLAYER)
                     {
                         game->movePlayer(objId, Position(posX, posY), (Direction)rotation);
-
                     }
                     else if (objType == OBJECT_TYPE_SENTRY)
                     {
