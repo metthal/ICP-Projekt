@@ -62,6 +62,7 @@ void ServerHandler::startImpl()
                     catch (...)
                     {
                         sLog.out("Malformed packet from ", *session, " ignored!");
+                        sLog.out(*packet);
                     }
                 }
             }

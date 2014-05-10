@@ -6,7 +6,7 @@
 #include <chrono>
 #include <cmath>
 
-ServerGame::ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map) : _id(id), _name(name), _map(map), _players(), _stepTime(0), _finished(false)
+ServerGame::ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map) : _id(id), _name(name), _map(map), _players(), _stepTime(0), _finished(false), _winnerId(-1)
 {
     _rng.seed(std::chrono::system_clock::now().time_since_epoch().count());
     _firstSpawnPos = getFirstSpawnPos();
@@ -157,17 +157,19 @@ void ServerGame::update(uint32_t diffTime)
     }
 }
 
-void ServerGame::endGame(uint8_t winnerId)
+void ServerGame::endGame()
 {
     // send SMSG_GAME_END to all players
     PacketPtr packet = PacketPtr(new Packet(SMSG_GAME_END, 1));
-    *packet << winnerId;
+    *packet << _winnerId;
 
     for (auto itr = _players.begin(); itr != _players.end(); ++itr)
         itr->second->getSession()->send(packet);
 
-    sLog.out("Game ID ", getId(), " finished with winner ID ", winnerId);
-    _finished = true;
+    if (_winnerId == -1)
+        sLog.out("Game ID ", getId(), " finished with no winner");
+    else
+        sLog.out("Game ID ", getId(), " finished with winner ID ", (uint16_t)_winnerId);
 }
 
 bool ServerGame::setStepTime(uint16_t stepTime)
@@ -459,7 +461,10 @@ void ServerGame::movePlayer(ServerPlayerPtr& player, uint32_t diffTime)
             player->setMoveTime(0);
 
             if (_map->getTileAt(newPos) == LevelMap::Tile::Finish)
-                endGame(player->getId());
+            {
+                _finished = true;
+                _winnerId = player->getId();
+            }
         }
         else
             player->setMoveTime(player->getMoveTime() + diffTime);
