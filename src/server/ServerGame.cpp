@@ -224,7 +224,7 @@ ServerPlayerPtr ServerGame::addPlayer(SessionPtr& session)
         return nullptr;
 
     uint8_t newPlayerId;
-    for (newPlayerId = 1; newPlayerId < MAX_PLAYER_COUNT; ++newPlayerId)
+    for (newPlayerId = 0; newPlayerId < MAX_PLAYER_COUNT; ++newPlayerId)
     {
         if (!getPlayer(newPlayerId))
             break;
