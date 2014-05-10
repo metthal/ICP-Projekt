@@ -167,7 +167,6 @@ SMSG_GAME_UPDATE_OBJECT
     - uint8_t rotation - rotation in which the player/sentry is oriented
 
 CMSG_PERFORM_ACTION_REQUEST
-    - uint8_t playerId - ID of the player who performed the action
     - uint8_t action - action which was performed
 
 SMSG_PERFORM_ACTION_RESPONSE
@@ -177,7 +176,7 @@ SMSG_GAME_END
     - uint8_t winnerId - ID of the player who won
 
 CMSG_PLAYER_LEFT_GAME
-    - uint8_t playerId - ID of the player who left the game
+    - no data
 
 6. COMMUNICATION
 

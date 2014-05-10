@@ -4,7 +4,8 @@
 ServerPlayer::ServerPlayer(uint8_t id, SessionPtr& session) : Player(id), _session(session)
 {
     _state = PLAYER_STATE_JUST_JOINED;
-    _moveTime = _maxMoveTime = 0;
+    _moving = false;
+    _moveTime = 0;
     _respawnTime = 0;
 }
 
@@ -15,20 +16,6 @@ void ServerPlayer::update(uint32_t diffTime)
         case PLAYER_STATE_JUST_JOINED:
             setState(PLAYER_STATE_ALIVE);
             break;
-        case PLAYER_STATE_ALIVE:
-            if (_moving)
-            {
-                if (_moveTime + diffTime > _maxMoveTime)
-                {
-                    move();
-                    _moveTime = 0;
-                }
-                else
-                    _moveTime += diffTime;
-            }
-            else
-                _moveTime = 0;
-            break;
         case PLAYER_STATE_DEAD:
             if (_respawnTime + diffTime > PLAYER_RESPAWN_TIME)
             {
@@ -38,6 +25,8 @@ void ServerPlayer::update(uint32_t diffTime)
             else
                 _respawnTime += diffTime;
             break;
+        // these handled in ServerGame::update
+        case PLAYER_STATE_ALIVE:
         case PLAYER_STATE_ABOUT_TO_RESPAWN:
         case PLAYER_STATE_LEFT_GAME:
         default:
@@ -45,14 +34,39 @@ void ServerPlayer::update(uint32_t diffTime)
     }
 }
 
-void ServerPlayer::setMaxMoveTime(uint32_t moveTime)
+void ServerPlayer::setMoving(bool set)
 {
-    _maxMoveTime = moveTime;
+    _moving = set;
+}
+
+void ServerPlayer::setMoveTime(uint32_t time)
+{
+    _moveTime = time;
+}
+
+void ServerPlayer::setRespawnTime(uint32_t time)
+{
+    _respawnTime = time;
 }
 
 void ServerPlayer::setState(PlayerState state)
 {
     _state = state;
+}
+
+bool ServerPlayer::isMoving() const
+{
+    return _moving;
+}
+
+uint32_t ServerPlayer::getMoveTime() const
+{
+    return _moveTime;
+}
+
+uint32_t ServerPlayer::getRespawnTime() const
+{
+    return _respawnTime;
 }
 
 PlayerState ServerPlayer::getState() const
@@ -65,14 +79,9 @@ SessionPtr ServerPlayer::getSession()
     return _session.lock();
 }
 
-void ServerPlayer::move()
+Position ServerPlayer::getPositionAfterMove()
 {
-    Position newPos = _pos.next(_faceDir);
-
-//    if (!canMoveTo(newPos))
-//        return;
-
-    _pos = newPos;
+    return _pos.next(_faceDir);
 }
 
 bool ServerPlayer::doAction(uint8_t action)

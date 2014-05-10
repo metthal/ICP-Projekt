@@ -267,13 +267,10 @@ void ServerHandler::HandlePerformActionRequest(SessionPtr session, PacketPtr pac
     if (!game)
         return;
 
-    uint8_t playerId, action;
-    *packet >> playerId >> action;
+    uint8_t action;
+    *packet >> action;
 
-    if (playerId != session->getPlayerId())
-        return;
-
-    ServerPlayerPtr player = game->getPlayer(playerId);
+    ServerPlayerPtr player = game->getPlayer(session->getPlayerId());
     bool success = player->doAction(action);
 
     PacketPtr response = PacketPtr(new Packet(SMSG_PERFORM_ACTION_RESPONSE, 1));
@@ -281,7 +278,7 @@ void ServerHandler::HandlePerformActionRequest(SessionPtr session, PacketPtr pac
     session->send(response);
 }
 
-void ServerHandler::HandlePlayerLeftGame(SessionPtr session, PacketPtr packet)
+void ServerHandler::HandlePlayerLeftGame(SessionPtr session, PacketPtr /*packet*/)
 {
     sLog.outDebug("HandlePlayerLeftGame ", *session);
     if (session->getState() != SESSION_STATE_IN_GAME)
@@ -289,16 +286,9 @@ void ServerHandler::HandlePlayerLeftGame(SessionPtr session, PacketPtr packet)
         sLog.outDebug("Session ", *session, " not in game. Ignored.");
         return;
     }
-
-    uint8_t playerId;
-    *packet >> playerId;
-
-    if (session->getPlayerId() != playerId)
-        return;
-
     ServerGamePtr game = sGameMgr.getGame(session->getGameId());
     if (!game)
         return;
 
-    game->removePlayer(playerId);
+    game->removePlayer(session->getPlayerId());
 }

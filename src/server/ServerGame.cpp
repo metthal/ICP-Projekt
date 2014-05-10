@@ -49,6 +49,8 @@ void ServerGame::update(uint32_t diffTime)
         // respawn players that are about to respawn
         if (player->getState() == PLAYER_STATE_ABOUT_TO_RESPAWN)
             spawnPlayer(player->getId());
+        else if (!player->getSession()->isConnected() || player->getState() == PLAYER_STATE_LEFT_GAME) // don't include people which are about to leave to snapshot
+            continue;
 
         *snapshotPacket << (uint8_t)OBJECT_TYPE_PLAYER
             << (uint8_t)player->getPosition().x
@@ -125,6 +127,7 @@ void ServerGame::update(uint32_t diffTime)
         }
 
         player->update(diffTime);
+        movePlayer(player, diffTime);
         *updatePacket << (uint8_t)OBJECT_TYPE_PLAYER
             << (uint8_t)player->getId()
             << (uint8_t)player->getPosition().x
@@ -214,7 +217,6 @@ ServerPlayerPtr ServerGame::addPlayer(SessionPtr& session)
     auto itr = _players.insert( { newPlayerId, ServerPlayerPtr(new ServerPlayer(newPlayerId, session)) } );
     sLog.out("Player ID ", (uint16_t)itr.first->second->getId(), " (", *(itr.first->second->getSession()), ") joined the game ID ", (uint16_t)getId());
     spawnPlayer(newPlayerId);
-    itr.first->second->setMaxMoveTime(_stepTime);
     return itr.first->second;
 }
 
@@ -372,4 +374,46 @@ Position ServerGame::getAvailablePos()
     }
 
     throw MsgException("Unable to find additional spawn place for next object (bad design of level)");
+}
+
+bool ServerGame::playerCanMoveTo(ServerPlayerPtr& player, const Position& pos)
+{
+    if (!_map->checkBounds(pos))
+        return false;
+
+    if (_map->getTileAt(pos) != LevelMap::Tile::Path)
+        return false;
+
+    for (auto itr = _players.begin(); itr != _players.end(); ++itr)
+    {
+        if (itr->second->getPosition() == pos)
+            return false;
+    }
+
+    return true;
+}
+
+void ServerGame::movePlayer(ServerPlayerPtr& player, uint32_t diffTime)
+{
+    if (player->getState() != PLAYER_STATE_ALIVE)
+        return;
+
+    if (player->isMoving())
+    {
+        if (player->getMoveTime() + diffTime > _stepTime)
+        {
+            Position newPos = player->getPositionAfterMove();
+            if (!playerCanMoveTo(player, newPos))
+            {
+                player->setMoving(false);
+                player->setMoveTime(0);
+                return;
+            }
+
+            player->setPosition(newPos);
+            player->setMoveTime(0);
+        }
+        else
+            player->setMoveTime(player->getMoveTime() + diffTime);
+    }
 }

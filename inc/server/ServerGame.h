@@ -25,7 +25,6 @@ public:
     ~ServerGame();
 
     void update(uint32_t diffTime);
-    void endGame(uint8_t winnerId);
 
     bool setStepTime(uint16_t stepTime);
 
@@ -45,10 +44,14 @@ private:
     ServerGame& operator =(const ServerGame&);
 
     void seedFill(std::vector<bool>& output, Position start, std::function<bool (const LevelMap::Tile&)> predicate);
-    // For first player
+    // First spawn position, around which everything other spawns
     Position getFirstSpawnPos();
-    // For next players and plank
+    // For spawning players and plank (sentries are spawning at random places path / grass / bridge)
     Position getAvailablePos();
+
+    void endGame(uint8_t winnerId);
+    void movePlayer(ServerPlayerPtr& player, uint32_t diffTime);
+    bool playerCanMoveTo(ServerPlayerPtr& player, const Position& pos);
 
     uint32_t _id;
     std::string _name;
@@ -61,5 +64,6 @@ private:
 };
 
 typedef std::shared_ptr<ServerGame> ServerGamePtr;
+typedef std::weak_ptr<ServerGame>   ServerGameWptr;
 
 #endif // SERVER_GAME_H
