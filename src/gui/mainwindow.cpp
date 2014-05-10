@@ -435,7 +435,6 @@ void MainWindow::update()
             {
                 if (response->getOpcode() == SMSG_GAME_LIST_RESPONSE)
                 {
-                    redrawScene(); // last scene redraw
                     uint32_t gamesCount;
                     *response >> gamesCount;
                     for (uint32_t i = 0; i < gamesCount; ++i)
@@ -523,6 +522,7 @@ void MainWindow::update()
         {
             if (response->getOpcode() == SMSG_GAME_END)
             {
+                redrawScene(); // last scene redraw
                 uint8_t winPlayerId;
                 *response >> winPlayerId;
 
