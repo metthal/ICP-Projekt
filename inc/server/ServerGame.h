@@ -49,6 +49,8 @@ private:
     void seedFill(std::vector<bool>& output, Position start, std::function<bool (const LevelMap::Tile&)> predicate);
     // First spawn position, around which everything other spawns
     Position getFirstSpawnPos();
+    // For spawning sentries
+    Position getSentrySpawn();
     // For spawning players and plank (sentries are spawning at random places path / grass / bridge)
     Position getAvailablePos();
 

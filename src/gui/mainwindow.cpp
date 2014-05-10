@@ -363,6 +363,9 @@ void MainWindow::displayMsg(QString msg)
 
 void MainWindow::sendCommand()
 {
+    if (!game->isRunning())
+        return;
+
     ui->LabelCommandStatus->setText("Waiting");
     ui->LabelCommandStatus->setStyleSheet("QLabel { background-color : orange; color : white;}");
     QString commandText = ui->CommandInput->text();
@@ -531,12 +534,12 @@ void MainWindow::update()
                 if (winPlayerId == myPlayerId)
                 {
                     ui->LabelGameMsg->setStyleSheet("QLabel { background-color : green; color : white;}");
-                    ui->LabelGameMsg->setText("You've won, congratulations!");
+                    setGameMsg("You've won, congratulations!");
                 }
                 else
                 {
                     ui->LabelGameMsg->setStyleSheet("QLabel { background-color : red; color : white;}");
-                    ui->LabelGameMsg->setText("You've lost, better luck next time");
+                    setGameMsg("You've lost, better luck next time");
                 }
             }
             else if (response->getOpcode() == SMSG_GAME_CREATE_OBJECT)
@@ -557,7 +560,10 @@ void MainWindow::update()
                         *response >> objId;
                         game->addPlayer(objId);
                         game->movePlayer(objId, Position(posX, posY), (Direction)rotation);
-                        setGameMsg("Player " + QString::number(objId) + " connected into game.");
+                        if (objId == myPlayerId)
+                            setGameMsg("You have connected into game.");
+                        else
+                            setGameMsg("Player " + QString::number(objId + 1) + " connected into game.");
                     }
                     else if (objType == OBJECT_TYPE_SENTRY)
                     {

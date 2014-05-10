@@ -25,7 +25,7 @@ GUI_WORK_FOLDER = gui-work
 TAR_FILE = xmilko01.tgz
 PACKED_FILES = $(SRC_FOLDER) $(HEADER_FOLDER) Makefile $(DOXYFILE) $(GUI_FOLDER)
 DOXYFILE = doxyconfig
-DOXY_DIR = doc
+DOXY_DIR = doxydoc
 
 INCLUDES = -Iinc
 

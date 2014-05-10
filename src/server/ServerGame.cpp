@@ -366,8 +366,8 @@ Position ServerGame::getFirstSpawnPos()
         int linearPos = _rng() % size;
         Position pos = Position::fromLinear(linearPos, width);
 
-        // Test if accessible from finish even over water
-        if (available[linearPos])
+        // Test if accessible from finish even over water but not on water!
+        if (available[linearPos] && _map->getTileAt(pos) != LevelMap::Tile::Water)
         {
             // Test if far enough
             if (std::abs(finishPos.x - pos.x) + std::abs(finishPos.y - pos.y) > (height + width) / 4)
@@ -389,6 +389,40 @@ Position ServerGame::getFirstSpawnPos()
     }
 
     throw MsgException("Unable to find first spawn place (bad design of level)");
+}
+
+Position ServerGame::getSentrySpawn()
+{
+    std::vector<bool> available;
+    Position finishPos = _map->getFinishPos();
+    seedFill(available, finishPos, [](const LevelMap::Tile& x){return x != LevelMap::Tile::Forest;});
+
+    uint8_t height = _map->getHeight(), width = _map->getWidth();
+    int size = (int)height * (int)width;
+    for (int i = 0; i < 1000000; i++)
+    {
+        int linearPos = _rng() % size;
+        Position pos = Position::fromLinear(linearPos, width);
+
+        // Test if accessible from finish even over water but not on water!
+        if (available[linearPos] && _map->getTileAt(pos) != LevelMap::Tile::Water)
+        {
+            // Test if not already occupied
+            bool occupied = false;
+            for (auto it = _players.begin(); it != _players.end() && !occupied; it++)
+                occupied = pos == it->second->getPosition();
+
+            //TODO enable these
+            /*for (auto it = _sentries.begin(); it != _sentries.end() && !occupied; it++)
+                occupied = pos == it->getPos();
+            occupied |= pos == _plankPos;*/
+
+            if (!occupied)
+                return pos;
+        }
+    }
+
+    throw MsgException("Unable to find spawn place for sentry (bad design of level)");
 }
 
 Position ServerGame::getAvailablePos()
