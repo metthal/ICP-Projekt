@@ -131,6 +131,7 @@ CMSG_GAME_CREATE_REQUEST
     - uint32_t mapId - id of the map the player wants to create
     - string(31) gameName - name of the game
     - uint16_t stepTime - speed of the step in the game (in milliseconds)
+    - uint8_t sentriesCount - number of sentries for game
 
 SMSG_GAME_CREATE_RESPONSE
     - bool created - TRUE if the game was successfuly create, FALSE if error occured

@@ -1,10 +1,18 @@
 /*
- * player.h
- *
- *  Created on: Apr 22, 2014
- *      Author: raven
- */
-
+* Project name:
+* Bludiste 2014
+*
+* Description:
+* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
+* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
+*
+* Project's GitHub repository:
+* https://github.com/metthal/ICP-Projekt
+*
+* Team:
+* Marek Milkovič (xmilko01)
+* Ivan Ševčík (xsevci50)
+*/
 #ifndef PLAYER_H_
 #define PLAYER_H_
 
@@ -33,7 +41,8 @@ public:
     Direction getDirection() const;
     Position getPosition() const;
     uint32_t getJoinTime() const;
-    uint32_t getKills() const;
+    uint32_t getDeaths() const;
+    void addDeath();
     bool hasPlank() const;
 
     void setDirection(Direction dir);
@@ -44,7 +53,7 @@ protected:
     Direction _faceDir;
     Position _pos;
     uint32_t _joinTime;
-    uint32_t _kills;
+    uint32_t _deaths;
     bool _hasPlank;
 };
 

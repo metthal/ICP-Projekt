@@ -1,3 +1,19 @@
+/*
+* Project name:
+* Bludiste 2014
+*
+* Description:
+* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
+* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
+*
+* Project's GitHub repository:
+* https://github.com/metthal/ICP-Projekt
+*
+* Team:
+* Marek Milkovič (xmilko01)
+* Ivan Ševčík (xsevci50)
+*/
+
 #include "gui/mainwindow.h"
 #include "ui_mainwindow.h"
 #include "gui/dialoggamemenu.h"
@@ -862,7 +878,7 @@ bool PlayerLabel::eventFilter(QObject *object, QEvent *event)
             {
                 int gameTime = labelPlayer->getJoinTime() - _game->getTime();
                 text.append("Game time: " + formatTime(gameTime) + "\n");
-                text.append("Kills: " + QString::number(labelPlayer->getKills()));
+                text.append("Deaths: " + QString::number(labelPlayer->getDeaths()));
             }
             QToolTip::showText(label->mapToGlobal(QPoint( 0, 10 ) ), text);
             return true;
@@ -1026,9 +1042,10 @@ void MainWindow::checkGameCreated()
 void MainWindow::on_ButtonStartGame_clicked()
 {
     std::string gameName = ui->EditGameName->text().toStdString();
-    PacketPtr packet = PacketPtr(new Packet(CMSG_GAME_CREATE_REQUEST, 4 + gameName.length() + 1 + 2));
+    PacketPtr packet = PacketPtr(new Packet(CMSG_GAME_CREATE_REQUEST, 4 + gameName.length() + 1 + 2 + 1));
     uint16_t stepTime = (uint16_t)(ui->StepTimeValue->text().toFloat() * 1000);
-    *packet << selectedLevelId << gameName << stepTime;
+    uint8_t sentriesCount = (uint8_t)QString::number(ui->EditSentriesCount->text());
+    *packet << selectedLevelId << gameName << stepTime << sentriesCount;
 
     changePage(ui->PageGameLoading, false);
 
