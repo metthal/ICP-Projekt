@@ -141,7 +141,6 @@ void ServerGame::update(uint32_t diffTime)
             << (uint8_t)player->getPosition().x
             << (uint8_t)player->getPosition().y
             << (uint8_t)player->getDirection();
-        sLog.out("POS [",(uint16_t)player->getPosition().x,",",(uint16_t)player->getPosition().y,"]");
     }
 
     // after update, send UPDATE packets
