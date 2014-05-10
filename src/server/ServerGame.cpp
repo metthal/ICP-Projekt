@@ -234,6 +234,7 @@ ServerPlayerPtr ServerGame::addPlayer(SessionPtr& session)
     auto itr = _players.insert( { newPlayerId, ServerPlayerPtr(new ServerPlayer(newPlayerId, session)) } );
     sLog.out("Player ID ", (uint16_t)itr.first->second->getId(), " (", *(itr.first->second->getSession()), ") joined the game ID ", (uint16_t)getId());
     spawnPlayer(newPlayerId);
+    itr.first->second->setState(PLAYER_STATE_JUST_JOINED);
     return itr.first->second;
 }
 
