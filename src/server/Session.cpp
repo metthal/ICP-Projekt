@@ -10,6 +10,8 @@ Session::Session(boost::asio::io_service& ioService) : _socket(ioService)
     _state = SESSION_STATE_AWAITING_HANDSHAKE;
     _bytesReserved = 0;
     memset(_buffer, 0, DEFAULT_BUFFER_SIZE);
+    _gameId = 0;
+    _playerId = 0;
 }
 
 Session::~Session()
@@ -35,9 +37,29 @@ void Session::setState(SessionState state)
     _state = state;
 }
 
+void Session::setGameId(uint32_t gameId)
+{
+    _gameId = gameId;
+}
+
+void Session::setPlayerId(uint32_t playerId)
+{
+    _playerId = playerId;
+}
+
 SessionState Session::getState() const
 {
     return _state;
+}
+
+uint32_t Session::getGameId() const
+{
+    return _gameId;
+}
+
+uint32_t Session::getPlayerId() const
+{
+    return _playerId;
 }
 
 bool Session::isConnected() const

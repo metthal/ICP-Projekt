@@ -128,13 +128,15 @@ void Packet::readString(std::string& str)
 
 std::ostream& operator <<(std::ostream& stream, const Packet& packet)
 {
-    stream << "OPCODE: " << (uint16_t)packet.getOpcode() << "LENGTH: " << packet.getDataLength() << std::endl;
+    std::ios_base::fmtflags flags = stream.flags();
+    stream << "OPCODE: " << (uint16_t)packet.getOpcode() << " LENGTH: " << packet.getDataLength() << std::endl;
     for (uint32_t i = PACKET_HEADER_SIZE; i < packet.getDataLength(); ++i)
     {
         stream << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << (uint16_t)packet.m_buffer[i] << " ";
         if (i % 16 == 0)
             stream << std::endl;
     }
+    stream.flags(flags);
 
     return stream;
 }

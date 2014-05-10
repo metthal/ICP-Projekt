@@ -5,6 +5,7 @@
 #include <list>
 #include "server/ServerGame.h"
 #include "common/levelmap.h"
+#include "common/Log.h"
 
 typedef std::unordered_map<uint32_t, ServerGamePtr> GameMap;
 
@@ -27,7 +28,7 @@ public:
         return _games;
     }
 
-    ServerGamePtr getGameId(uint32_t gameId)
+    ServerGamePtr getGame(uint32_t gameId)
     {
         auto itr = _games.find(gameId);
         if (itr == _games.end())
@@ -42,8 +43,26 @@ public:
         if (!(itr.first->second->setStepTime(stepTime)))
             return nullptr;
 
+        sLog.out("New game with ID ", itr.first->second->getId(), " running");
         ++_nextGameId;
         return itr.first->second;
+    }
+
+    void update(uint32_t diffTime)
+    {
+        for (auto itr = _games.begin(); itr != _games.end(); )
+        {
+            ServerGamePtr& game = itr->second;
+            if (game->hasFinished() || game->getPlayerCount() == 0)
+            {
+                sLog.out("Game ID ", game->getId(), " removed from the game list");
+                itr = _games.erase(itr);
+                continue;
+            }
+
+            game->update(diffTime);
+            ++itr;
+        }
     }
 
 private:

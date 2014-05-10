@@ -7,14 +7,16 @@
 
 ServerHandler::ServerHandler(TcpServerPtr& server) : _thread(), _running(false), _server(server)
 {
-    for (uint8_t opcode = FIRST_OPCODE; opcode < MAX_OPCODES; ++opcode)
+    for (uint8_t opcode = FIRST_OPCODE; opcode < MAX_OPCODE; ++opcode)
         _handlerTable[opcode] = &ServerHandler::HandleUnknown;
 
-    _handlerTable[CMSG_HANDSHAKE_REQUEST]   = &ServerHandler::HandleHandshakeRequest;
-    _handlerTable[CMSG_GAME_LIST_REQUEST]   = &ServerHandler::HandleGameListRequest;
-    _handlerTable[CMSG_GAME_JOIN_REQUEST]   = &ServerHandler::HandleGameJoinRequest;
-    _handlerTable[CMSG_MAP_LIST_REQUEST]    = &ServerHandler::HandleMapListRequest;
-    _handlerTable[CMSG_GAME_CREATE_REQUEST] = &ServerHandler::HandleGameCreateRequest;
+    _handlerTable[CMSG_HANDSHAKE_REQUEST]       = &ServerHandler::HandleHandshakeRequest;
+    _handlerTable[CMSG_GAME_LIST_REQUEST]       = &ServerHandler::HandleGameListRequest;
+    _handlerTable[CMSG_GAME_JOIN_REQUEST]       = &ServerHandler::HandleGameJoinRequest;
+    _handlerTable[CMSG_MAP_LIST_REQUEST]        = &ServerHandler::HandleMapListRequest;
+    _handlerTable[CMSG_GAME_CREATE_REQUEST]     = &ServerHandler::HandleGameCreateRequest;
+    _handlerTable[CMSG_PERFORM_ACTION_REQUEST]  = &ServerHandler::HandlePerformActionRequest;
+    _handlerTable[CMSG_PLAYER_LEFT_GAME]        = &ServerHandler::HandlePlayerLeftGame;
 }
 
 ServerHandler::~ServerHandler()
@@ -35,6 +37,9 @@ void ServerHandler::stop()
 
 void ServerHandler::startImpl()
 {
+    uint64_t currentTime = 0;
+    uint64_t prevTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+
     while (_running)
     {
         SessionList sessions = _server->getSessions();
@@ -43,29 +48,30 @@ void ServerHandler::startImpl()
         for (auto itr = sessions.begin(); itr != sessions.end(); ++itr)
         {
             SessionPtr& session = *itr;
-            if (!session->isConnected())
+            if (session->isConnected())
             {
+                while (PacketPtr packet = session->getReceivedPacket())
+                {
+                    try
+                    {
+                        if (packet->getOpcode() >= MAX_OPCODE)
+                            throw MsgException("Invalid opcode received");
+
+                        (this->*_handlerTable[packet->getOpcode()])(session, packet);
+                    }
+                    catch (...)
+                    {
+                        sLog.out("Malformed packet from ", *session, " ignored!");
+                    }
+                }
+            }
+            else
                 toErase.push_back(session);
-                continue;
-            }
-
-            while (PacketPtr packet = session->getReceivedPacket())
-            {
-                try
-                {
-                    if (packet->getOpcode() >= MAX_OPCODE)
-                        throw MsgException("Invalid opcode received");
-
-                    (this->*_handlerTable[packet->getOpcode()])(session, packet);
-                }
-                catch (...)
-                {
-                    sLog.out("Malformed packet from ", *session, " ignored!");
-                }
-            }
-
-            // sGameMgr.Update();
         }
+
+        currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+        sGameMgr.update(currentTime - prevTime);
+        prevTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
         if (!toErase.empty())
             _server->removeSessions(toErase);
@@ -138,7 +144,7 @@ void ServerHandler::HandleGameJoinRequest(SessionPtr session, PacketPtr packet)
     uint32_t gameId;
     *packet >> gameId;
 
-    ServerGamePtr game = sGameMgr.getGameId(gameId);
+    ServerGamePtr game = sGameMgr.getGame(gameId);
     LevelMapPtr map = nullptr;
     ServerPlayerPtr player = nullptr;
     if (game)
@@ -164,6 +170,8 @@ void ServerHandler::HandleGameJoinRequest(SessionPtr session, PacketPtr packet)
     {
         *response << player->getId();
         *response << mapData;
+        session->setGameId(game->getId());
+        session->setPlayerId(player->getId());
     }
 
     session->send(response);
@@ -239,7 +247,58 @@ void ServerHandler::HandleGameCreateRequest(SessionPtr session, PacketPtr packet
     {
         *response << player->getId();
         *response << mapData;
+        session->setGameId(game->getId());
+        session->setPlayerId(player->getId());
     }
 
     session->send(response);
+}
+
+void ServerHandler::HandlePerformActionRequest(SessionPtr session, PacketPtr packet)
+{
+    sLog.outDebug("HandlePerformActionRequest ", *session);
+    if (session->getState() != SESSION_STATE_IN_GAME)
+    {
+        sLog.outDebug("Session ", *session, " not in game. Ignored.");
+        return;
+    }
+
+    ServerGamePtr game = sGameMgr.getGame(session->getGameId());
+    if (!game)
+        return;
+
+    uint8_t playerId, action;
+    *packet >> playerId >> action;
+
+    if (playerId != session->getPlayerId())
+        return;
+
+    ServerPlayerPtr player = game->getPlayer(playerId);
+    bool success = player->doAction(action);
+
+    PacketPtr response = PacketPtr(new Packet(SMSG_PERFORM_ACTION_RESPONSE, 1));
+    *response << success;
+    session->send(response);
+}
+
+void ServerHandler::HandlePlayerLeftGame(SessionPtr session, PacketPtr packet)
+{
+    sLog.outDebug("HandlePlayerLeftGame ", *session);
+    if (session->getState() != SESSION_STATE_IN_GAME)
+    {
+        sLog.outDebug("Session ", *session, " not in game. Ignored.");
+        return;
+    }
+
+    uint8_t playerId;
+    *packet >> playerId;
+
+    if (session->getPlayerId() != playerId)
+        return;
+
+    ServerGamePtr game = sGameMgr.getGame(session->getGameId());
+    if (!game)
+        return;
+
+    game->removePlayer(playerId);
 }

@@ -29,7 +29,12 @@ public:
     void send(PacketPtr packet);
 
     void setState(SessionState state);
+    void setGameId(uint32_t gameId);
+    void setPlayerId(uint32_t playerId);
+
     SessionState getState() const;
+    uint32_t getGameId() const;
+    uint32_t getPlayerId() const;
 
     bool isConnected() const;
     PacketPtr getReceivedPacket();
@@ -50,10 +55,10 @@ private:
     uint32_t _bytesReserved;
     std::atomic_bool _connected;
     SessionState _state;
-
+    uint32_t _gameId, _playerId;
 };
 
-typedef std::shared_ptr<Session> SessionPtr;
-typedef std::weak_ptr<Session> SessionWptr;
+typedef std::shared_ptr<Session>    SessionPtr;
+typedef std::weak_ptr<Session>      SessionWptr;
 
 #endif // SESSION_H

@@ -95,6 +95,58 @@ int main()
 
             while (!(response = client.getReceivedPacket()))
                 std::this_thread::sleep_for(std::chrono::milliseconds(16));
+
+            assert(response->getOpcode() == SMSG_GAME_CREATE_RESPONSE);
+            bool success;
+            *response >> success;
+            if (!success)
+            {
+                sLog.out("Join to the game failed");
+                continue;
+            }
+
+            uint8_t playerId;
+            std::string mapData;
+            *response >> playerId >> mapData;
+            sLog.out("Succesfully connected as player ", (uint16_t)playerId);
+            sLog.out(mapData);
+
+            /*while (1)
+            {
+                if (response = client.getReceivedPacket())
+                {
+                    uint32_t objCount;
+                    uint8_t type,id,x,y,rot;
+                    if (response->getOpcode() == SMSG_GAME_CREATE_OBJECT)
+                    {
+                        *response >> objCount;
+                        sLog.out("------------CREATE OBJECT-------------");
+                        sLog.out("Number of objects: ", objCount);
+
+                        for (uint32_t i = 0; i < objCount; ++i)
+                        {
+                            *response >> type >> x >> y >> rot >> id;
+                            sLog.out("TYPE(", (uint16_t)type, ") [", (uint16_t)x, ",", (uint16_t)y, ",", (uint16_t)rot, "] ID(", (uint16_t)id, ")");
+                        }
+                        sLog.out("-----------END OF CREATE--------------");
+                    }
+                    else if (response->getOpcode() == SMSG_GAME_DELETE_OBJECT)
+                    {
+                        *response >> objCount;
+                        sLog.out("------------DELETE OBJECT-------------");
+                        sLog.out("Number of objects: ", objCount);
+
+                        for (uint32_t i = 0; i < objCount; ++i)
+                        {
+                            *response >> type >> id;
+                            sLog.out("TYPE(", (uint16_t)type, ") ID(", (uint16_t)id, ")");
+                        }
+                        sLog.out("-----------END OF DELETE--------------");
+                    }
+                }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(16));
+            }*/
         }
         else if (command == "join")
         {
@@ -104,6 +156,91 @@ int main()
 
             while (!(response = client.getReceivedPacket()))
                 std::this_thread::sleep_for(std::chrono::milliseconds(16));
+
+            assert(response->getOpcode() == SMSG_GAME_JOIN_RESPONSE);
+            bool success;
+            *response >> success;
+            if (!success)
+            {
+                sLog.out("Join to the game failed");
+                continue;
+            }
+
+            uint8_t playerId;
+            std::string mapData;
+            *response >> playerId >> mapData;
+            sLog.out("Succesfully connected as player ", (uint16_t)playerId);
+            sLog.out(mapData);
+
+            /*while (1)
+            {
+                if (response = client.getReceivedPacket())
+                {
+                    uint32_t objCount;
+                    uint8_t type,id,x,y,rot;
+                    if (response->getOpcode() == SMSG_GAME_CREATE_OBJECT)
+                    {
+                        *response >> objCount;
+                        sLog.out("------------CREATE OBJECT-------------");
+                        sLog.out("Number of objects: ", objCount);
+
+                        for (uint32_t i = 0; i < objCount; ++i)
+                        {
+                            *response >> type >> x >> y >> rot >> id;
+                            sLog.out("TYPE(", (uint16_t)type, ") [", (uint16_t)x, ",", (uint16_t)y, ",", (uint16_t)rot, "] ID(", (uint16_t)id, ")");
+                        }
+                        sLog.out("-----------END OF CREATE--------------");
+                    }
+                    else if (response->getOpcode() == SMSG_GAME_DELETE_OBJECT)
+                    {
+                        *response >> objCount;
+                        sLog.out("------------DELETE OBJECT-------------");
+                        sLog.out("Number of objects: ", objCount);
+
+                        for (uint32_t i = 0; i < objCount; ++i)
+                        {
+                            *response >> type >> id;
+                            sLog.out("TYPE(", (uint16_t)type, ") ID(", (uint16_t)id, ")");
+                        }
+                        sLog.out("-----------END OF DELETE--------------");
+                    }
+                }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(16));
+            }*/
+        }
+        else if (command == "go")
+        {
+            PacketPtr packet = PacketPtr(new Packet(CMSG_PERFORM_ACTION_REQUEST, 2));
+            *packet << (uint8_t)1 << (uint8_t)PLAYER_ACTION_GO;
+            client.send(packet);
+
+            uint8_t x = 255, y = 255;
+            uint8_t newX, newY;
+            uint64_t currentTime = 0;
+            uint64_t oldTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+            while (1)
+            {
+                if (response = client.getReceivedPacket())
+                {
+                    if (response->getOpcode() == SMSG_GAME_UPDATE_OBJECT)
+                    {
+                        uint32_t count;
+                        *response >> count >> newX >> newY; // placeholders
+                        *response >> newX >> newY;
+                        if (newX != x || newY != y)
+                        {
+                            x = newX;
+                            y = newY;
+                            currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+                            sLog.out("Position updated to [",(uint16_t)x,",",(uint16_t)y,"] in ", currentTime - oldTime, " ms");
+                            oldTime = currentTime;
+                        }
+                    }
+                }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(16));
+            }
         }
         else if (command == "exit")
             break;

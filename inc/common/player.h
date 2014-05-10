@@ -11,6 +11,18 @@
 #include <cstdint>
 #include "common/position.h"
 
+enum PlayerAction
+{
+    PLAYER_ACTION_ROTATE_LEFT   = 0,
+    PLAYER_ACTION_ROTATE_RIGHT,
+    PLAYER_ACTION_ROTATE_UP,
+    PLAYER_ACTION_ROTATE_DOWN,
+    PLAYER_ACTION_GO,
+    PLAYER_ACTION_STOP,
+    PLAYER_ACTION_TAKE,
+    PLAYER_ACTION_OPEN
+};
+
 class Player
 {
 public:

@@ -25,12 +25,15 @@ public:
     void start();
     void stop();
 
+protected:
     void HandleUnknown(SessionPtr session, PacketPtr packet);
     void HandleHandshakeRequest(SessionPtr session, PacketPtr packet);
     void HandleGameListRequest(SessionPtr session, PacketPtr packet);
     void HandleGameJoinRequest(SessionPtr session, PacketPtr packet);
     void HandleMapListRequest(SessionPtr session, PacketPtr packet);
     void HandleGameCreateRequest(SessionPtr session, PacketPtr packet);
+    void HandlePerformActionRequest(SessionPtr session, PacketPtr packet);
+    void HandlePlayerLeftGame(SessionPtr session, PacketPtr packet);
 
 private:
     ServerHandler& operator =(const ServerHandler&);

@@ -8,7 +8,7 @@
 #ifndef POSITION_H_
 #define POSITION_H_
 
-enum class Direction {Left = 0, Right, Up, Down, Count};
+enum Direction {Left = 0, Right, Up, Down, Count};
 
 class Position
 {

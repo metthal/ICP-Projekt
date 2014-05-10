@@ -140,7 +140,7 @@ SMSG_GAME_CREATE_RESPONSE
 SMSG_GAME_CREATE_OBJECT
     - uint32_t objectCount - number of objects to create on the scene
     (these information are repeated objectCount times)
-    - uint8_t objectType - whether it is player/sentry/planck/bridge/finish
+    - uint8_t objectType - whether it is player/sentry/plank/bridge/finish
     - uint8_t posX - X position on the map
     - uint8_t posY - Y position on the map
     - uint8_t rotation - rotation in which the object is oriented
@@ -150,10 +150,10 @@ SMSG_GAME_CREATE_OBJECT
 SMSG_GAME_DELETE_OBJECT
     - uint32_t objectCount - number of objects to delete from the scene
     (these information are repeated objectCount times)
-    - uint8_t objectType - whether it is player/sentry/planck/bridge/finish
-    for player/sentry:
-        - uint8_t id - ID of the player or sentry to delete
-    for everything else:
+    - uint8_t objectType - whether it is player/plank
+    for player:
+        - uint8_t id - ID of the player to delete
+    for plank:
         - uint8_t posX - X position of the object
         - uint8_t posY - Y position of the object
 

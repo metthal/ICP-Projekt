@@ -11,6 +11,11 @@
 #define MAX_STEP_TIME           5000
 #define MAX_PLAYER_COUNT        4
 
+enum ObjectType
+{
+    OBJECT_TYPE_PLAYER      = 0
+};
+
 typedef std::unordered_map<uint8_t, ServerPlayerPtr> PlayerMap;
 
 class ServerGame
@@ -22,6 +27,9 @@ public:
 
     ~ServerGame();
 
+    void update(uint32_t diffTime);
+    void endGame(uint8_t winnerId);
+
     bool setStepTime(uint16_t stepTime);
 
     uint32_t getId() const;
@@ -29,8 +37,12 @@ public:
     LevelMapPtr& getMap();
     uint8_t getPlayerCount() const;
     uint16_t getStepTime() const;
+    bool hasFinished() const;
+    ServerPlayerPtr getPlayer(uint8_t playerId);
 
     ServerPlayerPtr addPlayer(SessionPtr& session);
+    void spawnPlayer(uint8_t playerId);
+    void removePlayer(uint8_t playerId);
 
 private:
     ServerGame& operator =(const ServerGame&);
@@ -40,6 +52,7 @@ private:
     LevelMapPtr _map;
     PlayerMap _players;
     uint16_t _stepTime;
+    bool _finished;
 };
 
 typedef std::shared_ptr<ServerGame> ServerGamePtr;
