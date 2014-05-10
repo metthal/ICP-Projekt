@@ -578,13 +578,11 @@ void MainWindow::update()
                     *response >> objType >> objId >> posX >> posY >> rotation;
                     if (objType == OBJECT_TYPE_PLAYER)
                     {
-                        *response >> objId;
                         game->movePlayer(objId, Position(posX, posY), (Direction)rotation);
 
                     }
                     else if (objType == OBJECT_TYPE_SENTRY)
                     {
-                        *response >> objId;
                         game->moveSentry(objId, Position(posX, posY), (Direction)rotation);
                     }
                 }
@@ -879,8 +877,6 @@ void MainWindow::on_actionMenuEsc_triggered()
 
 void MainWindow::on_ButtonServerManual_clicked()
 {
-    delete tcpClient;
-
     QString address = ui->ServerSelectIP->text();
     int port = ui->ServerSelectPort->text().toInt();
 
@@ -902,7 +898,6 @@ void MainWindow::on_ButtonServerManual_clicked()
     try
     {
         tmpClient->start();
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
         // Handshake
         PacketPtr packet = PacketPtr(new Packet(CMSG_HANDSHAKE_REQUEST, 4));

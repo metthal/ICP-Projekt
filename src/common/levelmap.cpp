@@ -108,6 +108,11 @@ void LevelMap::setTileAt(const Position &pos, Tile tile)
     _data[pos.linear(_width)] = tile;
 }
 
+bool LevelMap::canWalkOnTile(const Tile& tile) const
+{
+    return (tile != LevelMap::Tile::Forest && tile != LevelMap::Tile::Water);
+}
+
 Position LevelMap::getFinishPos()
 {
     return _finishPos;

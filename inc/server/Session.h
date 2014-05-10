@@ -56,6 +56,8 @@ private:
     std::atomic_bool _connected;
     SessionState _state;
     uint32_t _gameId, _playerId;
+    std::string _ipAddr;
+    uint16_t _port;
 };
 
 typedef std::shared_ptr<Session>    SessionPtr;
