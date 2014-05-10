@@ -141,5 +141,7 @@ void ServerPlayer::kill()
 
     setState(PLAYER_STATE_DEAD);
     _respawnTime = 0;
+    _moving = false;
+    _moveTime = 0;
     _deaths++;
 }

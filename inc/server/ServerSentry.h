@@ -9,8 +9,9 @@ class ServerSentry : public Sentry
 public:
     ServerSentry(uint8_t id);
 
-    void generateMovement();
     void randomizeMovement();
+    void randomizeDirection();
+    void randomizeStop();
     Position getPositionAfterMove();
 
     void setMoving(bool set);

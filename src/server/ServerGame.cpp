@@ -15,8 +15,8 @@ ServerGame::ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map) :
     for (uint8_t i = 0; i < 2; ++i)
     {
         _sentries[i] = ServerSentryPtr(new ServerSentry(i));
-        //_sentries[i]->setPosition(getSentrySpawnPos());
-        _sentries[i]->generateMovement();
+        _sentries[i]->setPosition(getSentrySpawn());
+        _sentries[i]->randomizeDirection();
     }
 }
 
@@ -559,11 +559,11 @@ void ServerGame::moveSentry(ServerSentryPtr& sentry, uint32_t diffTime)
 
             sentry->setPosition(newPos);
             sentry->setMoveTime(0);
-            sentry->randomizeMovement();
+            sentry->randomizeStop();
         }
         else
             sentry->setMoveTime(sentry->getMoveTime() + diffTime);
     }
     else
-        sentry->generateMovement();
+        sentry->randomizeMovement();
 }
