@@ -27,6 +27,9 @@
 #include <boost/asio.hpp>
 #include "server/Session.h"
 
+#define MIN_SERVER_PORT             10000
+#define DEFAULT_SERVER_PORT         11337
+
 typedef std::list<SessionPtr> SessionList;
 
 class TcpServer
@@ -34,7 +37,7 @@ class TcpServer
 public:
     TcpServer() = delete;
     TcpServer(const TcpServer&) = delete;
-    TcpServer(uint16_t port);
+    TcpServer(uint16_t port = DEFAULT_SERVER_PORT);
 
     ~TcpServer();
 

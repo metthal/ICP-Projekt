@@ -17,16 +17,36 @@
  */
 
 #include <memory>
+#include <sstream>
 #include "server/TcpServer.h"
 #include "server/ServerHandler.h"
 #include "server/LevelMapMgr.h"
 #include "common/Packet.h"
 #include "common/Log.h"
 
-int main()
+template <typename T> static inline T toNumber(const char* str)
 {
+    std::stringstream ss(str);
+    T val;
+    ss >> val;
+    return val;
+}
+
+int main(int argc, char** argv)
+{
+    uint16_t port = DEFAULT_SERVER_PORT;
+    if (argc >= 2)
+    {
+        port = toNumber<uint16_t>(argv[1]);
+        if (port < MIN_SERVER_PORT)
+        {
+            sLog.out("Port must be 10000+");
+            return 1;
+        }
+    }
+
     sLog.out("Welcome to the bludiste2014-server for ICP 2013/2014");
-    sLog.out("Starting TCP service on port 11337");
+    sLog.out("Starting TCP service on port ", port);
 
     TcpServerPtr server = std::shared_ptr<TcpServer>(new TcpServer(11337));
     ServerHandler handler(server);
