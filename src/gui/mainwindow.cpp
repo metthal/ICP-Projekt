@@ -88,6 +88,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->StepTimeValue->setValidator(new QRegExpValidator(QRegExp("(0\\.|[1-9]\\d*\\.?)\\d*"), this));
     ui->ServerSelectIP->setValidator(new QRegExpValidator(QRegExp("(\\d{1,3}\\.){3}\\d{1,3}"), this));
     ui->ServerSelectPort->setValidator(new QRegExpValidator(QRegExp("\\d{1,5}"), this));
+    ui->EditSentriesCount->setValidator(new QRegExpValidator(QRegExp("\\d{1,2}"), this));
 
     ui->playerLabel_1->setText("Player 1");
     ui->playerLabel_1->setStyleSheet("QLabel { background-color : blue; color : white;}");
@@ -573,9 +574,12 @@ void MainWindow::update()
                     *response >> objType >> posX >> posY >> rotation;
                     if (objType == OBJECT_TYPE_PLAYER)
                     {
-                        *response >> objId;
+                        bool alive;
+                        uint32_t deaths;
+                        *response >> objId >> alive >> deaths;
                         game->addPlayer(objId);
                         game->movePlayer(objId, Position(posX, posY), (Direction)rotation);
+                        game->setPlayerState(objId, alive, deaths);
                         if (objId == myPlayerId)
                             setGameMsg("You have connected into game.");
                         else
@@ -614,7 +618,29 @@ void MainWindow::update()
                     *response >> objType >> objId >> posX >> posY >> rotation;
                     if (objType == OBJECT_TYPE_PLAYER)
                     {
+                        bool alive, wasAlive;
+                        uint32_t deaths;
+                        *response >> alive >> deaths;
                         game->movePlayer(objId, Position(posX, posY), (Direction)rotation);
+                        wasAlive = game->getPlayer(objId)->isAlive();
+                        if (alive != wasAlive)
+                        {
+                            if (myPlayerId == objId)
+                            {
+                                if (alive)
+                                    setGameMsg("You have respawned.");
+                                else
+                                    setGameMsg("You have been killed.");
+                            }
+                            else
+                            {
+                                if (alive)
+                                    setGameMsg("Player " + QString::number(objId + 1) + " has respawned,");
+                                else
+                                    setGameMsg("Player " + QString::number(objId + 1) + " has been killed.");
+                            }
+                        }
+                        game->setPlayerState(objId, alive, deaths);
                     }
                     else if (objType == OBJECT_TYPE_SENTRY)
                     {
@@ -739,6 +765,9 @@ void MainWindow::redrawScene()
     const std::list<Player> &players = game->getPlayers();
     for (auto it = players.begin(); it != players.end(); it++)
     {
+        if (!it->isAlive())
+            continue;
+
         item = new QGraphicsPixmapItem();
         item->setPixmap(playerTexture[it->getId()][(int)it->getDirection()]);
         Position pos = it->getPosition();
@@ -878,6 +907,7 @@ bool PlayerLabel::eventFilter(QObject *object, QEvent *event)
             {
                 int gameTime = labelPlayer->getJoinTime() - _game->getTime();
                 text.append("Game time: " + formatTime(gameTime) + "\n");
+                text.append(QString("Alive: ") + (labelPlayer->isAlive() ? "Yes" : "No") + "\n");
                 text.append("Deaths: " + QString::number(labelPlayer->getDeaths()));
             }
             QToolTip::showText(label->mapToGlobal(QPoint( 0, 10 ) ), text);
@@ -1044,7 +1074,7 @@ void MainWindow::on_ButtonStartGame_clicked()
     std::string gameName = ui->EditGameName->text().toStdString();
     PacketPtr packet = PacketPtr(new Packet(CMSG_GAME_CREATE_REQUEST, 4 + gameName.length() + 1 + 2 + 1));
     uint16_t stepTime = (uint16_t)(ui->StepTimeValue->text().toFloat() * 1000);
-    uint8_t sentriesCount = (uint8_t)QString::number(ui->EditSentriesCount->text());
+    uint8_t sentriesCount = (uint8_t)(ui->EditSentriesCount->text().toInt());
     *packet << selectedLevelId << gameName << stepTime << sentriesCount;
 
     changePage(ui->PageGameLoading, false);

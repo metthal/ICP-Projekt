@@ -22,10 +22,18 @@
 #include <chrono>
 #include <cmath>
 
-ServerGame::ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map) : _id(id), _name(name), _map(map), _players(), _stepTime(0), _finished(false), _winnerId(-1)
+ServerGame::ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map) : _id(id), _name(name), _map(map), _players(), _sentries(),
+    _stepTime(0), _finished(false), _winnerId(-1)
 {
     _rng.seed(std::chrono::system_clock::now().time_since_epoch().count());
     _firstSpawnPos = getFirstSpawnPos();
+
+    for (uint8_t i = 0; i < 2; ++i)
+    {
+        _sentries[i] = ServerSentryPtr(new ServerSentry(i));
+        _sentries[i]->setPosition(getSentrySpawn());
+        _sentries[i]->randomizeDirection();
+    }
 }
 
 ServerGame::~ServerGame()
@@ -54,8 +62,8 @@ void ServerGame::update(uint32_t diffTime)
     uint32_t upObjLen = 4;
 
     // make the current game create-snapshot
-    uint32_t snapObjCount = _players.size();
-    uint32_t snapObjLen = 4 + 5 * snapObjCount;
+    uint32_t snapObjCount = _players.size() + _sentries.size();
+    uint32_t snapObjLen = 4 + (10 * _players.size()) + (5 * _sentries.size());
     PacketPtr snapshotPacket = PacketPtr(new Packet(SMSG_GAME_CREATE_OBJECT, snapObjLen));
     *snapshotPacket << snapObjCount;
     for (auto itr = _players.begin(); itr != _players.end(); ++itr)
@@ -72,7 +80,20 @@ void ServerGame::update(uint32_t diffTime)
             << (uint8_t)player->getPosition().x
             << (uint8_t)player->getPosition().y
             << (uint8_t)player->getDirection()
-            << (uint8_t)player->getId();
+            << (uint8_t)player->getId()
+            << (bool)player->isAlive()
+            << (uint32_t)player->getDeaths();
+    }
+
+    for (auto itr = _sentries.begin(); itr != _sentries.end(); ++itr)
+    {
+        ServerSentryPtr& sentry = itr->second;
+
+        *snapshotPacket << (uint8_t)OBJECT_TYPE_SENTRY
+            << (uint8_t)sentry->getPosition().x
+            << (uint8_t)sentry->getPosition().y
+            << (uint8_t)sentry->getDirection()
+            << (uint8_t)sentry->getId();
     }
 
     // count the length for CREATE, DELETE and UPDATE packets
@@ -88,12 +109,15 @@ void ServerGame::update(uint32_t diffTime)
         else if (player->getState() == PLAYER_STATE_JUST_JOINED)
         {
             crObjCount++;
-            crObjLen += 5;
+            crObjLen += 10;
         }
 
         upObjCount++;
-        upObjLen += 5;
+        upObjLen += 10;
     }
+
+    upObjCount += _sentries.size();
+    upObjLen += (_sentries.size() * 5);
 
     PacketPtr deletePacket = PacketPtr(new Packet(SMSG_GAME_DELETE_OBJECT, delObjLen));
     *deletePacket << delObjCount;
@@ -120,7 +144,9 @@ void ServerGame::update(uint32_t diffTime)
                 << (uint8_t)player->getPosition().x
                 << (uint8_t)player->getPosition().y
                 << (uint8_t)player->getDirection()
-                << (uint8_t)player->getId();
+                << (uint8_t)player->getId()
+                << (bool)player->isAlive()
+                << (uint32_t)player->getDeaths();
         }
 
         ++itr;
@@ -156,7 +182,21 @@ void ServerGame::update(uint32_t diffTime)
             << (uint8_t)player->getId()
             << (uint8_t)player->getPosition().x
             << (uint8_t)player->getPosition().y
-            << (uint8_t)player->getDirection();
+            << (uint8_t)player->getDirection()
+            << (bool)player->isAlive()
+            << (uint32_t)player->getDeaths();
+    }
+
+    for (auto itr = _sentries.begin(); itr != _sentries.end(); ++itr)
+    {
+        ServerSentryPtr& sentry = itr->second;
+
+        moveSentry(sentry, diffTime);
+        *updatePacket << (uint8_t)OBJECT_TYPE_SENTRY
+            << (uint8_t)sentry->getId()
+            << (uint8_t)sentry->getPosition().x
+            << (uint8_t)sentry->getPosition().y
+            << (uint8_t)sentry->getDirection();
     }
 
     // after update, send UPDATE packets
@@ -453,6 +493,12 @@ bool ServerGame::playerCanMoveTo(ServerPlayerPtr& player, const Position& pos)
             return false;
     }
 
+    for (auto itr = _sentries.begin(); itr != _sentries.end(); ++itr)
+    {
+        if (itr->second->getPosition() == pos)
+            player->kill();
+    }
+
     return true;
 }
 
@@ -485,4 +531,55 @@ void ServerGame::movePlayer(ServerPlayerPtr& player, uint32_t diffTime)
         else
             player->setMoveTime(player->getMoveTime() + diffTime);
     }
+}
+
+bool ServerGame::sentryCanMoveTo(ServerSentryPtr& sentry, const Position& pos)
+{
+    if (!_map->checkBounds(pos))
+        return false;
+
+    if (!_map->canWalkOnTile(_map->getTileAt(pos)))
+        return false;
+
+    for (auto itr = _sentries.begin(); itr != _sentries.end(); ++itr)
+    {
+        if (itr->second->getPosition() == pos)
+            return false;
+    }
+
+    for (auto itr = _players.begin(); itr != _players.end(); ++itr)
+    {
+        if (itr->second->getPosition() == pos)
+        {
+            itr->second->kill();
+            return true;
+        }
+    }
+
+    return true;
+}
+
+void ServerGame::moveSentry(ServerSentryPtr& sentry, uint32_t diffTime)
+{
+    if (sentry->isMoving())
+    {
+        if (sentry->getMoveTime() + diffTime > _stepTime)
+        {
+            Position newPos = sentry->getPositionAfterMove();
+            if (!sentryCanMoveTo(sentry, newPos))
+            {
+                sentry->setMoving(false);
+                sentry->setMoveTime(0);
+                return;
+            }
+
+            sentry->setPosition(newPos);
+            sentry->setMoveTime(0);
+            sentry->randomizeStop();
+        }
+        else
+            sentry->setMoveTime(sentry->getMoveTime() + diffTime);
+    }
+    else
+        sentry->randomizeMovement();
 }

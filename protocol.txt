@@ -147,6 +147,9 @@ SMSG_GAME_CREATE_OBJECT
     - uint8_t rotation - rotation in which the object is oriented
     (this information filled only for player and sentry)
     - uint8_t id - playerId when it is player, sentryId for sentry otherwise missing
+    (this information filled only for player)
+    - bool alive - TRUE if player is alive, FALSE if he is dead
+    - uint32_t deaths - number of deaths of player
 
 SMSG_GAME_DELETE_OBJECT
     - uint32_t objectCount - number of objects to delete from the scene
@@ -166,6 +169,9 @@ SMSG_GAME_UPDATE_OBJECT
     - uint8_t posX - X position on the map
     - uint8_t posY - Y position on the map
     - uint8_t rotation - rotation in which the player/sentry is oriented
+    (this information filled only for player)
+    - bool alive - TRUE if player is alive, FALSE if he is dead
+    - uint32_t deaths - number of deaths of player
 
 CMSG_PERFORM_ACTION_REQUEST
     - uint8_t action - action which was performed

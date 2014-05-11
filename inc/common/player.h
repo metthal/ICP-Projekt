@@ -42,11 +42,13 @@ public:
     Position getPosition() const;
     uint32_t getJoinTime() const;
     uint32_t getDeaths() const;
-    void addDeath();
     bool hasPlank() const;
+    bool isAlive() const;
 
     void setDirection(Direction dir);
     void setPosition(Position pos);
+    void setAlive(bool alive);
+    void setDeaths(uint32_t deaths);
 
 protected:
     uint8_t _id;
@@ -54,6 +56,7 @@ protected:
     Position _pos;
     uint32_t _joinTime;
     uint32_t _deaths;
+    bool _isAlive;
     bool _hasPlank;
 };
 

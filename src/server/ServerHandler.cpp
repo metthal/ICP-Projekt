@@ -180,6 +180,8 @@ void ServerHandler::HandleGameJoinRequest(SessionPtr session, PacketPtr packet)
         mapData = map->serialize();
         length += mapData.length() + 1;
     }
+    else
+        session->setState(SESSION_STATE_IN_LOBBY);
 
     PacketPtr response = PacketPtr(new Packet(SMSG_GAME_JOIN_RESPONSE, length));
     *response << success;
@@ -190,6 +192,8 @@ void ServerHandler::HandleGameJoinRequest(SessionPtr session, PacketPtr packet)
         session->setGameId(game->getId());
         session->setPlayerId(player->getId());
     }
+    else
+        session->setState(SESSION_STATE_IN_LOBBY);
 
     session->send(response);
 }
@@ -246,6 +250,8 @@ void ServerHandler::HandleGameCreateRequest(SessionPtr session, PacketPtr packet
         if (game)
             player = game->addPlayer(session);
     }
+    else
+        session->setState(SESSION_STATE_IN_LOBBY);
 
     bool success = false;
     uint32_t length = 1 + 1;
@@ -257,6 +263,8 @@ void ServerHandler::HandleGameCreateRequest(SessionPtr session, PacketPtr packet
         mapData = map->serialize();
         length += mapData.length() + 1;
     }
+    else
+        session->setState(SESSION_STATE_IN_LOBBY);
 
     PacketPtr response = PacketPtr(new Packet(SMSG_GAME_CREATE_RESPONSE, length));
     *response << success;
@@ -267,6 +275,8 @@ void ServerHandler::HandleGameCreateRequest(SessionPtr session, PacketPtr packet
         session->setGameId(game->getId());
         session->setPlayerId(player->getId());
     }
+    else
+        session->setState(SESSION_STATE_IN_LOBBY);
 
     session->send(response);
 }

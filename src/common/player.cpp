@@ -47,14 +47,14 @@ uint32_t Player::getDeaths() const
     return _deaths;
 }
 
-void Player::addDeath()
-{
-    _deaths++;
-}
-
 bool Player::hasPlank() const
 {
     return _hasPlank;
+}
+
+bool Player::isAlive() const
+{
+    return _isAlive;
 }
 
 void Player::setDirection(Direction dir)
@@ -65,4 +65,14 @@ void Player::setDirection(Direction dir)
 void Player::setPosition(Position pos)
 {
     _pos = pos;
+}
+
+void Player::setAlive(bool alive)
+{
+    _isAlive = alive;
+}
+
+void Player::setDeaths(uint32_t deaths)
+{
+    _deaths = deaths;
 }

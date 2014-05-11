@@ -30,6 +30,8 @@ public:
     void movePlayer(uint8_t id, Position pos, Direction dir);
     void moveSentry(uint8_t id, Position pos, Direction dir);
 
+    void setPlayerState(uint8_t id, bool alive, uint32_t deaths);
+
     void removePlayer(uint8_t id);
     void removeSentry(uint8_t id);
 

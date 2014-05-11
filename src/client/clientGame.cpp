@@ -56,6 +56,19 @@ void ClientGame::moveSentry(uint8_t id, Position pos, Direction dir)
     }
 }
 
+void ClientGame::setPlayerState(uint8_t id, bool alive, uint32_t deaths)
+{
+    for (auto it = _players.begin(); it != _players.end(); it++)
+    {
+        if (it->getId() == id)
+        {
+            it->setAlive(alive);
+            it->setDeaths(deaths);
+            break;
+        }
+    }
+}
+
 void ClientGame::removePlayer(uint8_t id)
 {
     _players.remove_if([id](const Player& x){return x.getId() == id;});

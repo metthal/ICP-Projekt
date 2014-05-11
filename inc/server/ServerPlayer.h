@@ -40,12 +40,14 @@ public:
     void update(uint32_t diffTime);
     bool doAction(uint8_t action);
     Position getPositionAfterMove();
+    void kill();
 
     void setMoving(bool set);
     void setMoveTime(uint32_t time);
     void setRespawnTime(uint32_t time);
     void setState(PlayerState state);
 
+    bool isAlive() const;
     bool isMoving() const;
     uint32_t getMoveTime() const;
     uint32_t getRespawnTime() const;
@@ -62,6 +64,8 @@ private:
 
     SessionWptr _session;
     PlayerState _state;
+
+    uint32_t _deaths;
 };
 
 typedef std::shared_ptr<ServerPlayer>   ServerPlayerPtr;
