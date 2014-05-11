@@ -25,6 +25,7 @@ DialogGameMenu::DialogGameMenu(QWidget *parent) :
     ui(new Ui::DialogGameMenu)
 {
     ui->setupUi(this);
+    ui->ButtonSaveGame->hide();
 }
 
 DialogGameMenu::~DialogGameMenu()

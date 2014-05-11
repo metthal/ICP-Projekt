@@ -53,6 +53,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->GameView->verticalScrollBar()->setStyleSheet("QScrollBar {width:0px;}");
     ui->GameView->verticalScrollBar()->hide();
 
+    ui->ButtonLoadGame->hide();
+
     loadPage(ui->PageMainMenu);
     gameScene = nullptr;
 
