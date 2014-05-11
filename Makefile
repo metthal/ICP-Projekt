@@ -78,15 +78,15 @@ pack:
 
 run:
 	@./$(BIN_FOLDER)/$(BIN_SERVER) &
-	@./$(BIN_FOLDER)/$(BIN_CLIENT)
-
-run-gui:
-	@./$(BIN_FOLDER)/$(BIN_SERVER) &
 	@./$(BIN_FOLDER)/$(PROJECT)
+
+run-cli:
+	@./$(BIN_FOLDER)/$(BIN_SERVER) &
+	@./$(BIN_FOLDER)/$(BIN_CLIENT)
 
 doxygen:
 	@command -v doxygen >/dev/null 2>&1 \
 		&& { doxygen $(DOXYFILE); true; } \
 		|| echo "icp-make: Doxygen not installed."
 
-.PHONY: build release debug server client gui run run-gui clean pack doxygen
+.PHONY: build release debug server client gui run run-cli clean pack doxygen

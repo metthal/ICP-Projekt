@@ -18,14 +18,18 @@
 #define CLIENT_H_
 
 #include <list>
+#include <string>
 #include <atomic>
+#include <mutex>
 
-#include "common/levelmap.h"
-#include "common/player.h"
+#include "client/TcpClient.h"
+#include "client/clientGame.h"
+
 
 class Client
 {
 public:
+    Client();
 
     /**
      * Starts client.
@@ -33,14 +37,30 @@ public:
 	void start();
 
 private:
-	//TODO Connection _con;
 	/**
 	 * A control loop function to process commands
 	 * from standard input intended to run in separate thread.
 	 */
 	void controlLoop();
-	LevelMap _map;
-	std::list<Player> _players;
+
+	void createGame(int id);
+
+	void joinGame(int id);
+
+	void leaveGame();
+
+	void leaveServer();
+
+	void handleServerDisconnected();
+
+	TcpClient *_tcpClient;
+
+	int totalCommands;
+    int failedCommands;
+
+    uint8_t _myPlayerId;
+    ClientGame *_game;
+
 	std::atomic_bool _close;
 };
 

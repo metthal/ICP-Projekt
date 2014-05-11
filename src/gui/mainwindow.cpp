@@ -433,7 +433,7 @@ void MainWindow::handleServerDisconnected()
     displayMsg("Server closed unexpectedly.");
 }
 
-void MainWindow::update()
+void MainWindow::()
 {
     if (tcpClient == nullptr)
         return;
