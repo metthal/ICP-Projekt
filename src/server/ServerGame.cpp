@@ -646,7 +646,7 @@ bool ServerGame::sentryCanMoveTo(ServerSentryPtr& sentry, const Position& pos)
         if (itr->second->getPosition() == pos)
         {
             killPlayer(itr->second);
-            return true;
+            return !itr->second->hasPlank();
         }
     }
 
