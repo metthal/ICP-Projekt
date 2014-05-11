@@ -1,18 +1,20 @@
 /*
-* Project name:
-* Bludiste 2014
-*
-* Description:
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
-*
-* Project's GitHub repository:
-* https://github.com/metthal/ICP-Projekt
-*
-* Team:
-* Marek Milkovič (xmilko01)
-* Ivan Ševčík (xsevci50)
-*/
+ * @file ServerHandler.h
+ *
+ * Project name:
+ * Bludiste 2014
+ *
+ * Description:
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
+ *
+ * Project's GitHub repository:
+ * https://github.com/metthal/ICP-Projekt
+ *
+ * Team:
+ * @author Marek Milkovič (xmilko01)
+ * @author Ivan Ševčík (xsevci50)
+ */
 
 #ifndef SERVER_HANDLER_H
 #define SERVER_HANDLER_H
@@ -38,8 +40,20 @@ public:
 
     ~ServerHandler();
 
+    /**
+     * Starts the handler in its own thread.
+     */
     void start();
+
+    /**
+     * Stops the handler.
+     */
     void stop();
+
+    /**
+     * Waits until handler exits.
+     */
+    void wait();
 
 protected:
     void HandleUnknown(SessionPtr session, PacketPtr packet);

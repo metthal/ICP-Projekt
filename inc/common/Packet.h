@@ -1,18 +1,20 @@
 /*
-* Project name:
-* Bludiste 2014
-*
-* Description:
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
-*
-* Project's GitHub repository:
-* https://github.com/metthal/ICP-Projekt
-*
-* Team:
-* Marek Milkovič (xmilko01)
-* Ivan Ševčík (xsevci50)
-*/
+ * @file Packet.h
+ *
+ * Project name:
+ * Bludiste 2014
+ *
+ * Description:
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
+ *
+ * Project's GitHub repository:
+ * https://github.com/metthal/ICP-Projekt
+ *
+ * Team:
+ * @author Marek Milkovič (xmilko01)
+ * @author Ivan Ševčík (xsevci50)
+ */
 
 #ifndef PACKET_H
 #define PACKET_H
@@ -22,7 +24,6 @@
 #include <string>
 #include <iostream>
 #include <memory>
-#include <boost/asio.hpp>
 
 #define PACKET_HEADER_OPCODE_POS    0
 #define PACKET_HEADER_LENGTH_POS    (sizeof(uint8_t))
@@ -41,18 +42,54 @@ public:
 
     Packet& operator=(const Packet& packet);
 
+    /**
+     * Appends buffer to the packet with the specified size of the buffer. If the size is greater than maximum packet length, only that much data is appended.
+     * @param buffer Buffer to append.
+     * @param bufferSize Size of the buffer.
+     */
     void appendBuffer(const uint8_t* buffer, uint32_t bufferSize);
-    std::vector<uint8_t> getBufferCopy() const;
-    const uint8_t* getBuffer() const;
-    uint8_t getOpcode() const;
-    uint32_t getCurrentLength() const;
-    uint32_t getLength() const;
-    uint32_t getDataLength() const;
-    uint32_t getBufferSize() const;
-    bool isValid() const;
 
-    void setPacketSender(const boost::asio::ip::udp::endpoint& sender);
-    boost::asio::ip::udp::endpoint getPacketSender() const;
+    /**
+     * Return the copy of the packet data.
+     * @return The packet buffer copy.
+     */
+    std::vector<uint8_t> getBufferCopy() const;
+
+    /**
+     * Returns the pointer directly to the buffer of the packet.
+     * @return Pointer to the packet buffer.
+     */
+    const uint8_t* getBuffer() const;
+
+    /**
+     * Returns the opcode of the packet.
+     * @return Opcode of the packet.
+     */
+    uint8_t getOpcode() const;
+
+    /**
+     * Returns the current length of the filled data in the packet.
+     * @return Length of the filled data.
+     */
+    uint32_t getCurrentLength() const;
+
+    /**
+     * Returns the length of the whole packet with header.
+     * @return Length of the packet.
+     */
+    uint32_t getLength() const;
+
+    /**
+     * Returns the length of the data in the packet.
+     * @return Length of the data in the packet.
+     */
+    uint32_t getDataLength() const;
+
+    /**
+     * Tells whether the packet is whole filled or not.
+     * @return True if fully filled, false if not.
+     */
+    bool isValid() const;
 
     /**
      * Various insertion operators for adding
@@ -85,8 +122,6 @@ public:
     Packet& operator>>(bool& data);
     Packet& operator>>(std::string& data);
 
-    template <typename T> void skip();
-
     friend std::ostream& operator <<(std::ostream& stream, const Packet& packet);
 
 private:
@@ -98,8 +133,6 @@ private:
     uint32_t m_writePos, m_readPos;
     uint32_t m_maxPacketLen;
     std::vector<uint8_t> m_buffer;
-
-    boost::asio::ip::udp::endpoint m_sender;
 };
 
 typedef std::shared_ptr<Packet> PacketPtr;

@@ -1,18 +1,20 @@
 /*
-* Project name:
-* Bludiste 2014
-*
-* Description:
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
-*
-* Project's GitHub repository:
-* https://github.com/metthal/ICP-Projekt
-*
-* Team:
-* Marek Milkovič (xmilko01)
-* Ivan Ševčík (xsevci50)
-*/
+ * @file ServerGame.cpp
+ *
+ * Project name:
+ * Bludiste 2014
+ *
+ * Description:
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
+ *
+ * Project's GitHub repository:
+ * https://github.com/metthal/ICP-Projekt
+ *
+ * Team:
+ * @author Marek Milkovič (xmilko01)
+ * @author Ivan Ševčík (xsevci50)
+ */
 
 #include "server/ServerGame.h"
 #include "common/Log.h"
@@ -580,7 +582,7 @@ void ServerGame::movePlayer(ServerPlayerPtr& player, uint32_t diffTime)
     }
 }
 
-bool ServerGame::sentryCanMoveTo(ServerSentryPtr& sentry, const Position& pos)
+bool ServerGame::sentryCanMoveTo(ServerSentryPtr& /*sentry*/, const Position& pos)
 {
     if (!_map.checkBounds(pos))
         return false;

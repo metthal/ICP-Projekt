@@ -1,18 +1,20 @@
 /*
-* Project name:
-* Bludiste 2014
-*
-* Description:
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
-*
-* Project's GitHub repository:
-* https://github.com/metthal/ICP-Projekt
-*
-* Team:
-* Marek Milkovič (xmilko01)
-* Ivan Ševčík (xsevci50)
-*/
+ * @file Session.h
+ *
+ * Project name:
+ * Bludiste 2014
+ *
+ * Description:
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
+ *
+ * Project's GitHub repository:
+ * https://github.com/metthal/ICP-Projekt
+ *
+ * Team:
+ * @author Marek Milkovič (xmilko01)
+ * @author Ivan Ševčík (xsevci50)
+ */
 
 #ifndef SESSION_H
 #define SESSION_H
@@ -41,19 +43,64 @@ public:
 
     ~Session();
 
+    /**
+     * Starts receiving from the sesssion.
+     */
     void start();
+
+    /**
+     * Sends the packet to the session.
+     * @param packet Packet to send.
+     */
     void send(PacketPtr packet);
 
+    /**
+     * Sets the state of the session (if it is in lobby, in the game etc)
+     * @param SessionState to set.
+     */
     void setState(SessionState state);
+
+    /**
+     * Sets the ID of the game in which the session has asociated player.
+     * @param gameId ID of the game to set.
+     */
     void setGameId(uint32_t gameId);
+
+    /**
+     * Sets the ID of the player which the session is asociated with.
+     */
     void setPlayerId(uint32_t playerId);
 
+    /**
+     * Returns the state of the session.
+     * @return SessionState of the session.
+     */
     SessionState getState() const;
+
+    /**
+     * Returns the ID of the game in which the session has asociated player.
+     * @return ID of the game.
+     */
     uint32_t getGameId() const;
+
+    /**
+     * Returns the ID of the player which the session is asociated with.
+     * @return ID of the player.
+     */
     uint32_t getPlayerId() const;
 
+    /**
+     * Tells whether the session is connected or not.
+     * @return True if connected, false if not.
+     */
     bool isConnected() const;
+
+    /**
+     * Returns the first received packet from the queue.
+     * @return First receive packet, nullptr if no packet received.
+     */
     PacketPtr getReceivedPacket();
+
     boost::asio::ip::tcp::socket& getSocket();
 
     friend std::ostream& operator <<(std::ostream& stream, const Session& session);

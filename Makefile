@@ -5,7 +5,7 @@ BIN_SERVER = $(PROJECT)-server
 
 CXX = $(shell command -v g++-4.8 >/dev/null 2>&1 && echo -n "g++-4.8" || echo -n "g++")
 RM = rm -rf
-TAR = tar -czf
+ZIP = zip -r
 
 CFLAGS = -Wall -Wextra -c --std=c++11
 CFLAGS_RELEASE = -O2
@@ -22,8 +22,8 @@ OBJ_FOLDER = obj
 GUI_FOLDER = gui
 GUI_WORK_FOLDER = gui-work
 
-TAR_FILE = xmilko01.tgz
-PACKED_FILES = $(SRC_FOLDER) $(HEADER_FOLDER) Makefile $(DOXYFILE) $(GUI_FOLDER)
+ZIP_FILE = xmilko01.zip
+PACKED_FILES = src/* inc/* art/* gui/* examples/* Makefile README.txt
 DOXYFILE = doxyconfig
 DOXY_DIR = doc
 
@@ -71,18 +71,18 @@ $(OBJ_FOLDER)/common/%.o: $(SRC_FOLDER)/common/%.cpp
 	$(CXX) $(INCLUDES) $(CFLAGS) $< -o $@
 
 clean:
-	$(RM) $(BIN_FOLDER) $(OBJ_FOLDER) $(TAR_FILE) $(DOXY_DIR) $(GUI_WORK_FOLDER)
+	$(RM) $(BIN_FOLDER) $(OBJ_FOLDER) $(ZIP_FILE) $(DOXY_DIR) $(GUI_WORK_FOLDER)
 
 pack:
-	$(TAR) $(TAR_FILE) $(PACKED_FILES)
+	$(ZIP) $(ZIP_FILE) $(PACKED_FILES)
 
-run:
-	@./$(BIN_FOLDER)/$(BIN_SERVER) &
-	@./$(BIN_FOLDER)/$(PROJECT)
+run: server gui
+	@cd ./$(BIN_FOLDER) && ./$(BIN_SERVER) &
+	@cd ./$(BIN_FOLDER) && ./$(PROJECT)
 
-run-cli:
-	@./$(BIN_FOLDER)/$(BIN_SERVER) &
-	@./$(BIN_FOLDER)/$(BIN_CLIENT)
+run-cli: server client
+	@cd ./$(BIN_FOLDER) && ./$(BIN_SERVER) &
+	@cd ./$(BIN_FOLDER) && ./$(BIN_CLIENT)
 
 doxygen:
 	@command -v doxygen >/dev/null 2>&1 \

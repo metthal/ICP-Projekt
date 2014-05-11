@@ -1,18 +1,20 @@
 /*
-* Project name:
-* Bludiste 2014
-*
-* Description:
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
-*
-* Project's GitHub repository:
-* https://github.com/metthal/ICP-Projekt
-*
-* Team:
-* Marek Milkovič (xmilko01)
-* Ivan Ševčík (xsevci50)
-*/
+ * @file mainwindow.cpp
+ *
+ * Project name:
+ * Bludiste 2014
+ *
+ * Description:
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
+ *
+ * Project's GitHub repository:
+ * https://github.com/metthal/ICP-Projekt
+ *
+ * Team:
+ * @author Marek Milkovič (xmilko01)
+ * @author Ivan Ševčík (xsevci50)
+ */
 
 #include "gui/mainwindow.h"
 #include "ui_mainwindow.h"
@@ -1068,7 +1070,7 @@ void MainWindow::on_ButtonChangeServer_clicked()
     changePage(ui->PageServerSelect);
 }
 
-void MainWindow::on_TableViewServers_doubleClicked(const QModelIndex &index)
+void MainWindow::on_TableViewServers_doubleClicked(const QModelIndex &/*index*/)
 {
     //TODO: get ip from data loaded
     ui->LabelServerIP->setText("127.0.0.1");

@@ -1,18 +1,20 @@
 /*
-* Project name:
-* Bludiste 2014
-*
-* Description:
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
-*
-* Project's GitHub repository:
-* https://github.com/metthal/ICP-Projekt
-*
-* Team:
-* Marek Milkovič (xmilko01)
-* Ivan Ševčík (xsevci50)
-*/
+ * @file main.cpp
+ *
+ * Project name:
+ * Bludiste 2014
+ *
+ * Description:
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
+ *
+ * Project's GitHub repository:
+ * https://github.com/metthal/ICP-Projekt
+ *
+ * Team:
+ * @author Marek Milkovič (xmilko01)
+ * @author Ivan Ševčík (xsevci50)
+ */
 
 #include <memory>
 #include "server/TcpServer.h"
@@ -31,7 +33,6 @@ int main()
 
     try
     {
-
         server->start();
         handler.start();
 
@@ -40,15 +41,7 @@ int main()
         sLevelMapMgr.loadMaps("../examples");
         sLog.out("Server running...");
 
-        std::string command;
-        while (std::cin.good())
-        {
-            std::getline(std::cin, command);
-            if (command == "exit")
-                break;
-            else
-                sLog.out("Unknown command '", command, "'");
-        }
+        handler.wait();
 
         sLog.out("Stopping TCP service");
         handler.stop();

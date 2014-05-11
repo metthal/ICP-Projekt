@@ -6,7 +6,7 @@ obj
 build
 
 # Doxydoc
-doxydoc
+doc
 
 # Hidden files
 .*

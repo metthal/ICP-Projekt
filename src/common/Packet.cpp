@@ -1,18 +1,20 @@
 /*
-* Project name:
-* Bludiste 2014
-*
-* Description:
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
-*
-* Project's GitHub repository:
-* https://github.com/metthal/ICP-Projekt
-*
-* Team:
-* Marek Milkovič (xmilko01)
-* Ivan Ševčík (xsevci50)
-*/
+ * @file Packet.cpp
+ *
+ * Project name:
+ * Bludiste 2014
+ *
+ * Description:
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
+ *
+ * Project's GitHub repository:
+ * https://github.com/metthal/ICP-Projekt
+ *
+ * Team:
+ * @author Marek Milkovič (xmilko01)
+ * @author Ivan Ševčík (xsevci50)
+ */
 
 #include <cstring>
 #include <iomanip>
@@ -90,11 +92,6 @@ uint32_t Packet::getDataLength() const
     return *((uint32_t*)&m_buffer[PACKET_HEADER_LENGTH_POS]);
 }
 
-uint32_t Packet::getBufferSize() const
-{
-    return m_buffer.size();
-}
-
 bool Packet::isValid() const
 {
     return getLength() == m_writePos;
@@ -155,21 +152,6 @@ std::ostream& operator <<(std::ostream& stream, const Packet& packet)
     stream.flags(flags);
 
     return stream;
-}
-
-void Packet::setPacketSender(const boost::asio::ip::udp::endpoint& sender)
-{
-    m_sender = sender;
-}
-
-boost::asio::ip::udp::endpoint Packet::getPacketSender() const
-{
-    return m_sender;
-}
-
-template <typename T> void Packet::skip()
-{
-    m_readPos += sizeof(T);
 }
 
 Packet& Packet::operator<<(const int8_t& data)
