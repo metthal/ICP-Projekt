@@ -48,7 +48,7 @@ int main(int argc, char** argv)
     sLog.out("Welcome to the bludiste2014-server for ICP 2013/2014");
     sLog.out("Starting TCP service on port ", port);
 
-    TcpServerPtr server = std::shared_ptr<TcpServer>(new TcpServer(11337));
+    TcpServerPtr server = std::shared_ptr<TcpServer>(new TcpServer(port));
     ServerHandler handler(server);
 
     try
