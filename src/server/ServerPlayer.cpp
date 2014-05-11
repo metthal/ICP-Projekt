@@ -52,6 +52,37 @@ void ServerPlayer::update(uint32_t diffTime)
     }
 }
 
+void ServerPlayer::buildCreatePacket(PacketPtr& packet)
+{
+    *packet << (uint8_t)OBJECT_TYPE_PLAYER
+        << (uint8_t)getPosition().x
+        << (uint8_t)getPosition().y
+        << (uint8_t)getDirection()
+        << (uint8_t)getId()
+        << (bool)isAlive()
+        << (uint32_t)getDeaths()
+        << (uint32_t)getStepsCount()
+        << (uint32_t)getJoinTime();
+}
+
+void ServerPlayer::buildDeletePacket(PacketPtr& packet)
+{
+    *packet << (uint8_t)OBJECT_TYPE_PLAYER
+        << (uint8_t)getId();
+}
+
+void ServerPlayer::buildUpdatePacket(PacketPtr& packet)
+{
+    *packet << (uint8_t)OBJECT_TYPE_PLAYER
+        << (uint8_t)getId()
+        << (uint8_t)getPosition().x
+        << (uint8_t)getPosition().y
+        << (uint8_t)getDirection()
+        << (bool)isAlive()
+        << (uint32_t)getDeaths()
+        << (uint32_t)getStepsCount();
+}
+
 void ServerPlayer::setMoving(bool set)
 {
     _moving = set;

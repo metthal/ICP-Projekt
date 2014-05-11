@@ -21,6 +21,7 @@ Player::Player(uint8_t id)
     _id = id;
     _deaths = 0;
     _hasPlank = false;
+    _stepsCount = 0;
 }
 
 uint8_t Player::getId() const
@@ -58,6 +59,11 @@ bool Player::isAlive() const
     return _isAlive;
 }
 
+uint32_t Player::getStepsCount() const
+{
+    return _stepsCount;
+}
+
 void Player::hasPlank(bool has)
 {
     _hasPlank = has;
@@ -86,4 +92,9 @@ void Player::setDeaths(uint32_t deaths)
 void Player::setJoinTime(uint32_t joinTime)
 {
     _joinTime = joinTime;
+}
+
+void Player::setStepsCount(uint32_t count)
+{
+    _stepsCount = count;
 }

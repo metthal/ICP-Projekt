@@ -41,6 +41,10 @@ public:
     Position getPositionAfterMove();
     void kill();
 
+    void buildCreatePacket(PacketPtr& packet);
+    void buildDeletePacket(PacketPtr& packet);
+    void buildUpdatePacket(PacketPtr& packet);
+
     void setMoving(bool set);
     void setMoveTime(uint32_t time);
     void setRespawnTime(uint32_t time);

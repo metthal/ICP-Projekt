@@ -57,8 +57,9 @@ public:
      * @param id Id of the player.
      * @param alive Tells if the player is alive or not.
      * @param deaths Number of deaths for statistics.
+     * @param stepsCount Number of steps for statistics.
      */
-    void setPlayerState(uint8_t id, bool alive, uint32_t deaths);
+    void setPlayerState(uint8_t id, bool alive, uint32_t deaths, uint32_t stepsCount);
 
     /**
      * Sets player join time to the game.

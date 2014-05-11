@@ -56,7 +56,7 @@ void ClientGame::moveSentry(uint8_t id, Position pos, Direction dir)
     }
 }
 
-void ClientGame::setPlayerState(uint8_t id, bool alive, uint32_t deaths)
+void ClientGame::setPlayerState(uint8_t id, bool alive, uint32_t deaths, uint32_t stepsCount)
 {
     for (auto it = _players.begin(); it != _players.end(); it++)
     {
@@ -64,6 +64,7 @@ void ClientGame::setPlayerState(uint8_t id, bool alive, uint32_t deaths)
         {
             it->setAlive(alive);
             it->setDeaths(deaths);
+            it->setStepsCount(stepsCount);
             break;
         }
     }

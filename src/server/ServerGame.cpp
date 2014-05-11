@@ -72,7 +72,7 @@ void ServerGame::update(uint32_t diffTime)
 
     // make the current game create-snapshot
     uint32_t snapObjCount = _players.size() + _sentries.size() + _bridgePosList.size();
-    uint32_t snapObjLen = 4 + (14 * _players.size()) + (5 * _sentries.size()) + (3 * _bridgePosList.size());
+    uint32_t snapObjLen = 4 + (18 * _players.size()) + (5 * _sentries.size()) + (3 * _bridgePosList.size());
     if (!_plankPicked)
     {
         snapObjCount++;
@@ -91,39 +91,21 @@ void ServerGame::update(uint32_t diffTime)
         else if (!player->getSession()->isConnected() || player->getState() == PLAYER_STATE_LEFT_GAME) // don't include people which are about to leave to snapshot
             continue;
 
-        *snapshotPacket << (uint8_t)OBJECT_TYPE_PLAYER
-            << (uint8_t)player->getPosition().x
-            << (uint8_t)player->getPosition().y
-            << (uint8_t)player->getDirection()
-            << (uint8_t)player->getId()
-            << (bool)player->isAlive()
-            << (uint32_t)player->getDeaths()
-            << (uint32_t)player->getJoinTime();
+        player->buildCreatePacket(snapshotPacket);
     }
 
     for (auto itr = _sentries.begin(); itr != _sentries.end(); ++itr)
     {
         ServerSentryPtr& sentry = itr->second;
-
-        *snapshotPacket << (uint8_t)OBJECT_TYPE_SENTRY
-            << (uint8_t)sentry->getPosition().x
-            << (uint8_t)sentry->getPosition().y
-            << (uint8_t)sentry->getDirection()
-            << (uint8_t)sentry->getId();
+        sentry->buildCreatePacket(snapshotPacket);
     }
 
     if (!_plankPicked)
-    {
-        *snapshotPacket << (uint8_t)OBJECT_TYPE_PLANK
-            << (uint8_t)_plankPos.x
-            << (uint8_t)_plankPos.y;
-    }
+        buildPlankPacket(snapshotPacket);
 
     for (auto itr = _bridgePosList.begin(); itr != _bridgePosList.end(); ++itr)
     {
-        *snapshotPacket << (uint8_t)OBJECT_TYPE_BRIDGE
-            << (uint8_t)itr->x
-            << (uint8_t)itr->y;
+        buildCreateBridgePacket(snapshotPacket);
     }
 
     // count the length for CREATE, DELETE and UPDATE packets
@@ -139,11 +121,11 @@ void ServerGame::update(uint32_t diffTime)
         else if (player->getState() == PLAYER_STATE_JUST_JOINED)
         {
             crObjCount++;
-            crObjLen += 14;
+            crObjLen += 18;
         }
 
         upObjCount++;
-        upObjLen += 10;
+        upObjLen += 14;
     }
 
     upObjCount += _sentries.size();
@@ -182,22 +164,13 @@ void ServerGame::update(uint32_t diffTime)
         ServerPlayerPtr& player = itr->second;
         if (!player->getSession()->isConnected() || player->getState() == PLAYER_STATE_LEFT_GAME)
         {
-            *deletePacket << (uint8_t)OBJECT_TYPE_PLAYER
-                << (uint8_t)player->getId();
-
+            player->buildDeletePacket(deletePacket);
             itr = _players.erase(itr);
             continue;
         }
         else if (player->getState() == PLAYER_STATE_JUST_JOINED)
         {
-            *createPacket << (uint8_t)OBJECT_TYPE_PLAYER
-                << (uint8_t)player->getPosition().x
-                << (uint8_t)player->getPosition().y
-                << (uint8_t)player->getDirection()
-                << (uint8_t)player->getId()
-                << (bool)player->isAlive()
-                << (uint32_t)player->getDeaths()
-                << (uint32_t)player->getJoinTime();
+            player->buildCreatePacket(createPacket);
         }
 
         ++itr;
@@ -206,27 +179,16 @@ void ServerGame::update(uint32_t diffTime)
     if (_plankChanged)
     {
         if (_plankPicked)
-        {
-            *deletePacket << (uint8_t)OBJECT_TYPE_PLANK
-                << (uint8_t)_plankPos.x
-                << (uint8_t)_plankPos.y;
-        }
+            buildPlankPacket(deletePacket);
         else
-        {
-            *createPacket << (uint8_t)OBJECT_TYPE_PLANK
-                << (uint8_t)_plankPos.x
-                << (uint8_t)_plankPos.y;
-        }
+            buildPlankPacket(createPacket);
 
         _plankChanged = false;
     }
 
     if (_newBridge)
     {
-        *createPacket << (uint8_t)OBJECT_TYPE_BRIDGE
-            << (uint8_t)_bridgePosList.back().x
-            << (uint8_t)_bridgePosList.back().y;
-
+        buildCreateBridgePacket(createPacket);
         _newBridge = false;
     }
 
@@ -256,13 +218,7 @@ void ServerGame::update(uint32_t diffTime)
 
         player->update(diffTime);
         movePlayer(player, diffTime);
-        *updatePacket << (uint8_t)OBJECT_TYPE_PLAYER
-            << (uint8_t)player->getId()
-            << (uint8_t)player->getPosition().x
-            << (uint8_t)player->getPosition().y
-            << (uint8_t)player->getDirection()
-            << (bool)player->isAlive()
-            << (uint32_t)player->getDeaths();
+        player->buildUpdatePacket(updatePacket);
     }
 
     for (auto itr = _sentries.begin(); itr != _sentries.end(); ++itr)
@@ -270,11 +226,7 @@ void ServerGame::update(uint32_t diffTime)
         ServerSentryPtr& sentry = itr->second;
 
         moveSentry(sentry, diffTime);
-        *updatePacket << (uint8_t)OBJECT_TYPE_SENTRY
-            << (uint8_t)sentry->getId()
-            << (uint8_t)sentry->getPosition().x
-            << (uint8_t)sentry->getPosition().y
-            << (uint8_t)sentry->getDirection();
+        sentry->buildUpdatePacket(updatePacket);
     }
 
     // build heartbeat
@@ -612,6 +564,7 @@ void ServerGame::movePlayer(ServerPlayerPtr& player, uint32_t diffTime)
 
             player->setPosition(newPos);
             player->setMoveTime(0);
+            player->setStepsCount(player->getStepsCount() + 1);
 
             if (_map.getTileAt(newPos) == LevelMap::Tile::Finish)
             {
@@ -787,4 +740,18 @@ bool ServerGame::playerBuildBridge(ServerPlayerPtr& player)
     }
 
     return false;
+}
+
+void ServerGame::buildPlankPacket(PacketPtr& packet)
+{
+    *packet << (uint8_t)OBJECT_TYPE_PLANK
+        << (uint8_t)_plankPos.x
+        << (uint8_t)_plankPos.y;
+}
+
+void ServerGame::buildCreateBridgePacket(PacketPtr& packet)
+{
+    *packet << (uint8_t)OBJECT_TYPE_BRIDGE
+        << (uint8_t)_bridgePosList.back().x
+        << (uint8_t)_bridgePosList.back().y;
 }

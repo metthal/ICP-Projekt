@@ -88,6 +88,12 @@ public:
     bool isAlive() const;
 
     /**
+     * Tells the number of steps player perfmored.
+     * @return Number of steps.
+     */
+    uint32_t getStepsCount() const;
+
+    /**
      * Sets whether player has a plank or not.
      * @param has True if player should have plank.
      */
@@ -123,6 +129,12 @@ public:
      */
     void setJoinTime(uint32_t joinTime);
 
+    /**
+     * Sets the number of steps player did in the game.
+     * @param count Number of steps
+     */
+    void setStepsCount(uint32_t count);
+
 protected:
     uint8_t _id;
     Direction _faceDir;
@@ -131,6 +143,7 @@ protected:
     uint32_t _deaths;
     bool _isAlive;
     bool _hasPlank;
+    uint32_t _stepsCount;
 };
 
 #endif /* PLAYER_H_ */

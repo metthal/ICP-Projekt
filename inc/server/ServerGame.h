@@ -83,6 +83,9 @@ private:
     void moveSentry(ServerSentryPtr& sentry, uint32_t diffTime);
     bool sentryCanMoveTo(ServerSentryPtr& player, const Position& pos);
 
+    void buildPlankPacket(PacketPtr& packet);
+    void buildCreateBridgePacket(PacketPtr& paket);
+
     uint32_t _id;
     std::string _name;
     LevelMap _map;
