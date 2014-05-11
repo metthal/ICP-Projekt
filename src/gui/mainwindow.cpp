@@ -667,7 +667,7 @@ void MainWindow::update()
                     {
                         *response >> objId;
                         game->removePlayer(objId);
-                        setGameMsg("Player " + QString::number(objId) + " has disconnected.");
+                        setGameMsg("Player " + QString::number(objId + 1) + " has disconnected.");
                     }
                     else if (objType == OBJECT_TYPE_PLANK)
                     {
