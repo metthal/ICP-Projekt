@@ -45,6 +45,7 @@ public:
     bool hasPlank() const;
     bool isAlive() const;
 
+    void hasPlank(bool has);
     void setDirection(Direction dir);
     void setPosition(Position pos);
     void setAlive(bool alive);

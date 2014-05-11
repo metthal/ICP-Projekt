@@ -297,8 +297,7 @@ void ServerHandler::HandlePerformActionRequest(SessionPtr session, PacketPtr pac
     uint8_t action;
     *packet >> action;
 
-    ServerPlayerPtr player = game->getPlayer(session->getPlayerId());
-    bool success = player->doAction(action);
+    bool success = game->playerAction(session->getPlayerId(), (PlayerAction)action);
 
     PacketPtr response = PacketPtr(new Packet(SMSG_PERFORM_ACTION_RESPONSE, 1));
     *response << success;

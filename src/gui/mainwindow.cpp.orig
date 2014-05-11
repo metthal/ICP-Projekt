@@ -574,9 +574,10 @@ void MainWindow::update()
                     *response >> objType >> posX >> posY;
                     if (objType == OBJECT_TYPE_PLAYER)
                     {
+<<<<<<< Updated upstream
                         bool alive;
                         uint32_t deaths;
-                        *response >> rotation >> objId >> alive >> deaths;
+                        *response >> objId >> alive >> deaths;
                         game->addPlayer(objId);
                         game->movePlayer(objId, Position(posX, posY), (Direction)rotation);
                         game->setPlayerState(objId, alive, deaths);
@@ -584,6 +585,12 @@ void MainWindow::update()
                             setGameMsg("You have connected into game.");
                         else
                             setGameMsg("Player " + QString::number(objId + 1) + " connected into game.");
+=======
+                        *response >> rotation >> objId;
+                        game->addPlayer(objId);
+                        game->movePlayer(objId, Position(posX, posY), (Direction)rotation);
+                        setGameMsg("Player " + QString::number(objId) + " connected into game.");
+>>>>>>> Stashed changes
                     }
                     else if (objType == OBJECT_TYPE_SENTRY)
                     {

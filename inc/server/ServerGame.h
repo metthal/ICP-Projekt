@@ -58,6 +58,7 @@ public:
     ServerPlayerPtr addPlayer(SessionPtr& session);
     void spawnPlayer(uint8_t playerId);
     void removePlayer(uint8_t playerId);
+    bool playerAction(uint8_t playerId, PlayerAction action);
 
 private:
     ServerGame& operator =(const ServerGame&);
@@ -70,6 +71,7 @@ private:
     // For spawning players and plank (sentries are spawning at random places path / grass / bridge)
     Position getAvailablePos();
 
+    void killPlayer(ServerPlayerPtr& player);
     void movePlayer(ServerPlayerPtr& player, uint32_t diffTime);
     bool playerCanMoveTo(ServerPlayerPtr& player, const Position& pos);
 
@@ -86,6 +88,9 @@ private:
     int8_t _winnerId;
     std::mt19937 _rng;
     Position _firstSpawnPos;
+
+    bool _plankPicked, _plankChanged;
+    Position _plankPos;
 };
 
 typedef std::shared_ptr<ServerGame> ServerGamePtr;
