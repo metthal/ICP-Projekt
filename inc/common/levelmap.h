@@ -25,6 +25,9 @@
 class LevelMap
 {
 public:
+    LevelMap();
+    LevelMap(const LevelMap& levelmap);
+
     /**
      * Loads map from file.
      * @param filename File with map data.

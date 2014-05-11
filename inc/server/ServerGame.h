@@ -32,6 +32,7 @@
 
 typedef std::unordered_map<uint8_t, ServerPlayerPtr> PlayerMap;
 typedef std::unordered_map<uint8_t, ServerSentryPtr> SentryMap;
+typedef std::vector<Position> PositionList;
 
 class ServerGame
 {
@@ -49,7 +50,7 @@ public:
 
     uint32_t getId() const;
     const std::string& getName() const;
-    LevelMapPtr& getMap();
+    LevelMap& getMap();
     uint8_t getPlayerCount() const;
     uint16_t getStepTime() const;
     bool hasFinished() const;
@@ -71,6 +72,9 @@ private:
     // For spawning players and plank (sentries are spawning at random places path / grass / bridge)
     Position getAvailablePos();
 
+    bool playerPickPlank(ServerPlayerPtr& player);
+    bool playerBuildBridge(ServerPlayerPtr& player);
+
     void killPlayer(ServerPlayerPtr& player);
     void movePlayer(ServerPlayerPtr& player, uint32_t diffTime);
     bool playerCanMoveTo(ServerPlayerPtr& player, const Position& pos);
@@ -80,7 +84,7 @@ private:
 
     uint32_t _id;
     std::string _name;
-    LevelMapPtr _map;
+    LevelMap _map;
     PlayerMap _players;
     SentryMap _sentries;
     uint16_t _stepTime;
@@ -91,6 +95,9 @@ private:
 
     bool _plankPicked, _plankChanged;
     Position _plankPos;
+
+    bool _newBridge;
+    PositionList _bridgePosList;
 };
 
 typedef std::shared_ptr<ServerGame> ServerGamePtr;

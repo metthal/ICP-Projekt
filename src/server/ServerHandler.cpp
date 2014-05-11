@@ -133,8 +133,8 @@ void ServerHandler::HandleGameListRequest(SessionPtr session, PacketPtr /*packet
     for (auto& itr : sGameMgr.getGames())
     {
         ServerGamePtr& game = itr.second;
-        LevelMapPtr& map = game->getMap();
-        length += game->getName().length() + map->getFilename().length() + 2;
+        LevelMap& map = game->getMap();
+        length += game->getName().length() + map.getFilename().length() + 2;
     }
 
     PacketPtr response = PacketPtr(new Packet(SMSG_GAME_LIST_RESPONSE, length));
@@ -142,8 +142,8 @@ void ServerHandler::HandleGameListRequest(SessionPtr session, PacketPtr /*packet
     for (auto& itr : sGameMgr.getGames())
     {
         ServerGamePtr& game = itr.second;
-        LevelMapPtr& map = game->getMap();
-        *response << game->getId() << game->getName() << game->getPlayerCount() << game->getStepTime() << map->getFilename() << map->getWidth() << map->getHeight();
+        LevelMap& map = game->getMap();
+        *response << game->getId() << game->getName() << game->getPlayerCount() << game->getStepTime() << map.getFilename() << map.getWidth() << map.getHeight();
     }
 
     session->send(response);
@@ -162,22 +162,19 @@ void ServerHandler::HandleGameJoinRequest(SessionPtr session, PacketPtr packet)
     *packet >> gameId;
 
     ServerGamePtr game = sGameMgr.getGame(gameId);
-    LevelMapPtr map = nullptr;
     ServerPlayerPtr player = nullptr;
     if (game)
-    {
         player = game->addPlayer(session);
-        map = game->getMap();
-    }
 
     bool success = false;
     uint32_t length = 1 + 1;
     std::string mapData = "";
 
-    if (player && map)
+    if (player)
     {
+        LevelMap& map = game->getMap();
         success = true;
-        mapData = map->serialize();
+        mapData = map.serialize();
         length += mapData.length() + 1;
     }
     else
@@ -185,7 +182,7 @@ void ServerHandler::HandleGameJoinRequest(SessionPtr session, PacketPtr packet)
 
     PacketPtr response = PacketPtr(new Packet(SMSG_GAME_JOIN_RESPONSE, length));
     *response << success;
-    if (map && player)
+    if (player)
     {
         *response << player->getId();
         *response << mapData;

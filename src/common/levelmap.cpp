@@ -21,6 +21,25 @@
 
 #include "common/msgexception.h"
 
+LevelMap::LevelMap()
+{
+    _id = 0;
+    _filename = "";
+    _data.clear();
+    _finishPos = Position();
+    _width = 0;
+    _height = 0;
+}
+
+LevelMap::LevelMap(const LevelMap& levelmap)
+{
+    _id = levelmap._id;
+    _filename = levelmap._filename;
+    _data = levelmap._data;
+    _finishPos = levelmap._finishPos;
+    _width = levelmap._width;
+    _height = levelmap._height;
+}
 
 void LevelMap::load(std::string filename)
 {

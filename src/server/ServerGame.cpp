@@ -22,7 +22,7 @@
 #include <chrono>
 #include <cmath>
 
-ServerGame::ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map, uint8_t sentryCount) : _id(id), _name(name), _map(map), _players(), _sentries(),
+ServerGame::ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map, uint8_t sentryCount) : _id(id), _name(name), _map(*map), _players(), _sentries(),
     _stepTime(0), _finished(false), _winnerId(-1)
 {
     _rng.seed(std::chrono::system_clock::now().time_since_epoch().count());
@@ -38,6 +38,9 @@ ServerGame::ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map, u
 
     _plankPicked = false;
     _plankChanged = false;
+
+    _newBridge = false;
+    _bridgePosList.clear();
 }
 
 ServerGame::~ServerGame()
@@ -66,8 +69,8 @@ void ServerGame::update(uint32_t diffTime)
     uint32_t upObjLen = 4;
 
     // make the current game create-snapshot
-    uint32_t snapObjCount = _players.size() + _sentries.size();
-    uint32_t snapObjLen = 4 + (10 * _players.size()) + (5 * _sentries.size());
+    uint32_t snapObjCount = _players.size() + _sentries.size() + _bridgePosList.size();
+    uint32_t snapObjLen = 4 + (10 * _players.size()) + (5 * _sentries.size()) + (3 * _bridgePosList.size());
     if (!_plankPicked)
     {
         snapObjCount++;
@@ -113,6 +116,13 @@ void ServerGame::update(uint32_t diffTime)
             << (uint8_t)_plankPos.y;
     }
 
+    for (auto itr = _bridgePosList.begin(); itr != _bridgePosList.end(); ++itr)
+    {
+        *snapshotPacket << (uint8_t)OBJECT_TYPE_BRIDGE
+            << (uint8_t)itr->x
+            << (uint8_t)itr->y;
+    }
+
     // count the length for CREATE, DELETE and UPDATE packets
     for (auto itr = _players.begin(); itr != _players.end(); ++itr)
     {
@@ -148,6 +158,12 @@ void ServerGame::update(uint32_t diffTime)
             crObjCount++;
             crObjLen += 3;
         }
+    }
+
+    if (_newBridge)
+    {
+        crObjCount++;
+        crObjLen += 3;
     }
 
     PacketPtr deletePacket = PacketPtr(new Packet(SMSG_GAME_DELETE_OBJECT, delObjLen));
@@ -199,6 +215,15 @@ void ServerGame::update(uint32_t diffTime)
         }
 
         _plankChanged = false;
+    }
+
+    if (_newBridge)
+    {
+        *createPacket << (uint8_t)OBJECT_TYPE_BRIDGE
+            << (uint8_t)_bridgePosList.back().x
+            << (uint8_t)_bridgePosList.back().y;
+
+        _newBridge = false;
     }
 
     // send CREATE and DELETE packets
@@ -296,7 +321,7 @@ const std::string& ServerGame::getName() const
     return _name;
 }
 
-LevelMapPtr& ServerGame::getMap()
+LevelMap& ServerGame::getMap()
 {
     return _map;
 }
@@ -369,7 +394,7 @@ void ServerGame::removePlayer(uint8_t playerId)
 void ServerGame::seedFill(std::vector<bool>& output, Position start, std::function<bool (const LevelMap::Tile&)> predicate)
 {
     output.clear();
-    uint8_t height = _map->getHeight(), width = _map->getWidth();
+    uint8_t height = _map.getHeight(), width = _map.getWidth();
     output.resize((int)height * (int)width);
     std::stack<Position> workingStack;
     workingStack.push(start);
@@ -385,7 +410,7 @@ void ServerGame::seedFill(std::vector<bool>& output, Position start, std::functi
         currentPos = workingStack.top();
         workingStack.pop();
 
-        if (predicate(_map->getTileAt(currentPos)))
+        if (predicate(_map.getTileAt(currentPos)))
             output[currentPos.linear(width)] = true;
         else
             continue;
@@ -421,10 +446,10 @@ void ServerGame::seedFill(std::vector<bool>& output, Position start, std::functi
 Position ServerGame::getFirstSpawnPos()
 {
     std::vector<bool> available;
-    Position finishPos = _map->getFinishPos();
+    Position finishPos = _map.getFinishPos();
     seedFill(available, finishPos, [](const LevelMap::Tile& x){return x != LevelMap::Tile::Forest;});
 
-    uint8_t height = _map->getHeight(), width = _map->getWidth();
+    uint8_t height = _map.getHeight(), width = _map.getWidth();
     int size = (int)height * (int)width;
     for (int i = 0; i < 1000000; i++)
     {
@@ -432,7 +457,7 @@ Position ServerGame::getFirstSpawnPos()
         Position pos = Position::fromLinear(linearPos, width);
 
         // Test if accessible from finish even over water but not on water!
-        if (available[linearPos] && _map->getTileAt(pos) != LevelMap::Tile::Water)
+        if (available[linearPos] && _map.getTileAt(pos) != LevelMap::Tile::Water)
         {
             // Test if far enough
             if (std::abs(finishPos.x - pos.x) + std::abs(finishPos.y - pos.y) > (height + width) / 4)
@@ -459,10 +484,10 @@ Position ServerGame::getFirstSpawnPos()
 Position ServerGame::getSentrySpawn()
 {
     std::vector<bool> available;
-    Position finishPos = _map->getFinishPos();
+    Position finishPos = _map.getFinishPos();
     seedFill(available, finishPos, [](const LevelMap::Tile& x){return x != LevelMap::Tile::Forest;});
 
-    uint8_t height = _map->getHeight(), width = _map->getWidth();
+    uint8_t height = _map.getHeight(), width = _map.getWidth();
     int size = (int)height * (int)width;
     for (int i = 0; i < 1000000; i++)
     {
@@ -470,7 +495,7 @@ Position ServerGame::getSentrySpawn()
         Position pos = Position::fromLinear(linearPos, width);
 
         // Test if accessible from finish even over water but not on water!
-        if (available[linearPos] && _map->getTileAt(pos) != LevelMap::Tile::Water)
+        if (available[linearPos] && _map.getTileAt(pos) != LevelMap::Tile::Water)
         {
             // Test if not already occupied
             bool occupied = false;
@@ -492,10 +517,10 @@ Position ServerGame::getSentrySpawn()
 Position ServerGame::getAvailablePos()
 {
     std::vector<bool> available;
-    Position finishPos = _map->getFinishPos();
+    Position finishPos = _map.getFinishPos();
     seedFill(available, _firstSpawnPos, [](const LevelMap::Tile& x){return x != LevelMap::Tile::Forest && x != LevelMap::Tile::Water && x != LevelMap::Tile::Finish;});
 
-    uint8_t height = _map->getHeight(), width = _map->getWidth();
+    uint8_t height = _map.getHeight(), width = _map.getWidth();
     int size = (int)height * (int)width;
     for (int i = 0; i < 1000000; i++)
     {
@@ -528,13 +553,13 @@ Position ServerGame::getAvailablePos()
 
 bool ServerGame::playerCanMoveTo(ServerPlayerPtr& player, const Position& pos)
 {
-    if (!_map->checkBounds(pos))
+    if (!_map.checkBounds(pos))
         return false;
 
     if (!_plankPicked && pos == _plankPos)
         return false;
 
-    if (!_map->canWalkOnTile(_map->getTileAt(pos)))
+    if (!_map.canWalkOnTile(_map.getTileAt(pos)))
         return false;
 
     for (auto itr = _players.begin(); itr != _players.end(); ++itr)
@@ -572,7 +597,7 @@ void ServerGame::movePlayer(ServerPlayerPtr& player, uint32_t diffTime)
             player->setPosition(newPos);
             player->setMoveTime(0);
 
-            if (_map->getTileAt(newPos) == LevelMap::Tile::Finish)
+            if (_map.getTileAt(newPos) == LevelMap::Tile::Finish)
             {
                 _finished = true;
                 _winnerId = player->getId();
@@ -585,13 +610,13 @@ void ServerGame::movePlayer(ServerPlayerPtr& player, uint32_t diffTime)
 
 bool ServerGame::sentryCanMoveTo(ServerSentryPtr& sentry, const Position& pos)
 {
-    if (!_map->checkBounds(pos))
+    if (!_map.checkBounds(pos))
         return false;
 
     if (!_plankPicked && pos == _plankPos)
         return false;
 
-    if (!_map->canWalkOnTile(_map->getTileAt(pos)))
+    if (!_map.canWalkOnTile(_map.getTileAt(pos)))
         return false;
 
     for (auto itr = _sentries.begin(); itr != _sentries.end(); ++itr)
@@ -673,19 +698,17 @@ bool ServerGame::playerAction(uint8_t playerId, PlayerAction action)
             player->setMoving(false);
             break;
         case PLAYER_ACTION_TAKE:
-        {
-            Position nextPos = player->getPositionAfterMove();
-            if (!_plankPicked && nextPos == _plankPos)
-            {
-                player->hasPlank(true);
-                _plankPicked = true;
-                _plankChanged = true;
-            }
-            else
-                return false;
-            break;
-        }
+            return playerPickPlank(player);
         case PLAYER_ACTION_OPEN:
+            return playerBuildBridge(player);
+        case PLAYER_ACTION_ACTION:
+        {
+            bool success = playerPickPlank(player);
+            if (!success)
+                success = playerBuildBridge(player);
+
+            return success;
+        }
         default:
             return false;
     }
@@ -707,4 +730,45 @@ void ServerGame::killPlayer(ServerPlayerPtr& player)
     }
 
     player->kill();
+}
+
+bool ServerGame::playerPickPlank(ServerPlayerPtr& player)
+{
+    if (!player->isAlive())
+        return false;
+
+    Position nextPos = player->getPositionAfterMove();
+    if (!_plankPicked && nextPos == _plankPos)
+    {
+        player->hasPlank(true);
+        _plankPicked = true;
+        _plankChanged = true;
+        return true;
+    }
+
+    return false;
+}
+
+bool ServerGame::playerBuildBridge(ServerPlayerPtr& player)
+{
+    if (!player->isAlive())
+        return false;
+
+    if (!player->hasPlank())
+        return false;
+
+    Position nextPos = player->getPositionAfterMove();
+    if (_map.getTileAt(nextPos) == LevelMap::Tile::Water)
+    {
+        player->hasPlank(false);
+        _plankPicked = false;
+        _plankChanged = true;
+        _map.setTileAt(nextPos, LevelMap::Tile::Bridge);
+        _plankPos = getAvailablePos();
+        _newBridge = true;
+        _bridgePosList.push_back(nextPos);
+        return true;
+    }
+
+    return false;
 }
