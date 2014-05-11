@@ -23,7 +23,7 @@
 #include <mutex>
 #include <condition_variable>
 
-typedef std::lock_guard<std::mutex> ScopedLock;
+typedef std::unique_lock<std::mutex> ScopedLock;
 
 template <typename T> class TsQueue
 {

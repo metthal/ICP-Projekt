@@ -92,11 +92,6 @@ uint32_t Packet::getDataLength() const
     return *((uint32_t*)&m_buffer[PACKET_HEADER_LENGTH_POS]);
 }
 
-uint32_t Packet::getBufferSize() const
-{
-    return m_buffer.size();
-}
-
 bool Packet::isValid() const
 {
     return getLength() == m_writePos;
@@ -157,21 +152,6 @@ std::ostream& operator <<(std::ostream& stream, const Packet& packet)
     stream.flags(flags);
 
     return stream;
-}
-
-void Packet::setPacketSender(const boost::asio::ip::udp::endpoint& sender)
-{
-    m_sender = sender;
-}
-
-boost::asio::ip::udp::endpoint Packet::getPacketSender() const
-{
-    return m_sender;
-}
-
-template <typename T> void Packet::skip()
-{
-    m_readPos += sizeof(T);
 }
 
 Packet& Packet::operator<<(const int8_t& data)

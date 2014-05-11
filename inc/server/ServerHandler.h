@@ -50,6 +50,11 @@ public:
      */
     void stop();
 
+    /**
+     * Waits until handler exits.
+     */
+    void wait();
+
 protected:
     void HandleUnknown(SessionPtr session, PacketPtr packet);
     void HandleHandshakeRequest(SessionPtr session, PacketPtr packet);

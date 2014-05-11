@@ -435,7 +435,7 @@ void MainWindow::handleServerDisconnected()
     displayMsg("Server closed unexpectedly.");
 }
 
-void MainWindow::()
+void MainWindow::update()
 {
     if (tcpClient == nullptr)
         return;
@@ -1070,7 +1070,7 @@ void MainWindow::on_ButtonChangeServer_clicked()
     changePage(ui->PageServerSelect);
 }
 
-void MainWindow::on_TableViewServers_doubleClicked(const QModelIndex &index)
+void MainWindow::on_TableViewServers_doubleClicked(const QModelIndex &/*index*/)
 {
     //TODO: get ip from data loaded
     ui->LabelServerIP->setText("127.0.0.1");

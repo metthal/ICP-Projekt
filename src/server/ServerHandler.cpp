@@ -53,6 +53,11 @@ void ServerHandler::stop()
     _thread.join();
 }
 
+void ServerHandler::wait()
+{
+    _thread.join();
+}
+
 void ServerHandler::startImpl()
 {
     uint64_t currentTime = 0;

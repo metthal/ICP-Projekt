@@ -582,7 +582,7 @@ void ServerGame::movePlayer(ServerPlayerPtr& player, uint32_t diffTime)
     }
 }
 
-bool ServerGame::sentryCanMoveTo(ServerSentryPtr& sentry, const Position& pos)
+bool ServerGame::sentryCanMoveTo(ServerSentryPtr& /*sentry*/, const Position& pos)
 {
     if (!_map.checkBounds(pos))
         return false;

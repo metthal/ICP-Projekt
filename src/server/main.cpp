@@ -33,7 +33,6 @@ int main()
 
     try
     {
-
         server->start();
         handler.start();
 
@@ -42,15 +41,7 @@ int main()
         sLevelMapMgr.loadMaps("../examples");
         sLog.out("Server running...");
 
-        std::string command;
-        while (std::cin.good())
-        {
-            std::getline(std::cin, command);
-            if (command == "exit")
-                break;
-            else
-                sLog.out("Unknown command '", command, "'");
-        }
+        handler.wait();
 
         sLog.out("Stopping TCP service");
         handler.stop();
