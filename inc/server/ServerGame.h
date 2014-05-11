@@ -55,6 +55,7 @@ public:
     uint16_t getStepTime() const;
     bool hasFinished() const;
     ServerPlayerPtr getPlayer(uint8_t playerId);
+    uint32_t getGameTime() const;
 
     ServerPlayerPtr addPlayer(SessionPtr& session);
     void spawnPlayer(uint8_t playerId);
@@ -98,6 +99,8 @@ private:
 
     bool _newBridge;
     PositionList _bridgePosList;
+
+    uint64_t _gameTime;
 };
 
 typedef std::shared_ptr<ServerGame> ServerGamePtr;

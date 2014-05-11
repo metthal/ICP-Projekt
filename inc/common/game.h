@@ -71,7 +71,7 @@ public:
      * Returns time for which the game has been running.
      * @return Game time.
      */
-    int getTime() const;
+    uint32_t getTime() const;
 
     /**
      * Tells if plank is dropped.
@@ -102,12 +102,18 @@ public:
      */
     void end();
 
+    /**
+     * Sets the current game time in seconds
+     * @param gameTime Time in seconds
+     */
+    void setTime(uint32_t gameTime);
+
 protected:
-	LevelMap _map;
-	Position _plankPos;
-	bool _plankDropped;
-    int _time;
-	std::list<Player> _players;
+    LevelMap _map;
+    Position _plankPos;
+    bool _plankDropped;
+    uint32_t _time;
+    std::list<Player> _players;
     std::list<Sentry> _sentries;
     bool _running;
 };

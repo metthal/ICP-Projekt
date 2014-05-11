@@ -69,6 +69,18 @@ void ClientGame::setPlayerState(uint8_t id, bool alive, uint32_t deaths)
     }
 }
 
+void ClientGame::setPlayerJoinTime(uint8_t id, uint32_t joinTime)
+{
+    for (auto it = _players.begin(); it != _players.end(); it++)
+    {
+        if (it->getId() == id)
+        {
+            it->setJoinTime(joinTime);
+            break;
+        }
+    }
+}
+
 void ClientGame::removePlayer(uint8_t id)
 {
     _players.remove_if([id](const Player& x){return x.getId() == id;});

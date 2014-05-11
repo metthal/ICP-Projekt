@@ -117,6 +117,12 @@ public:
      */
     void setDeaths(uint32_t deaths);
 
+    /**
+     * Sets the time when player joined the game.
+     * @param joinTime Time in seconds.
+     */
+    void setJoinTime(uint32_t joinTime);
+
 protected:
     uint8_t _id;
     Direction _faceDir;

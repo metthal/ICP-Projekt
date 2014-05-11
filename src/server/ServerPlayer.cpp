@@ -18,12 +18,13 @@
 #include "server/ServerGame.h"
 #include "common/Log.h"
 
-ServerPlayer::ServerPlayer(uint8_t id, SessionPtr& session) : Player(id), _session(session)
+ServerPlayer::ServerPlayer(uint8_t id, SessionPtr& session, uint32_t joinTime) : Player(id), _session(session)
 {
     _state = PLAYER_STATE_JUST_JOINED;
     _moving = false;
     _moveTime = 0;
     _respawnTime = 0;
+    _joinTime = joinTime;
 }
 
 void ServerPlayer::update(uint32_t diffTime)

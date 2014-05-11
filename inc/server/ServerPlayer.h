@@ -35,7 +35,7 @@ enum PlayerState
 class ServerPlayer : public Player
 {
 public:
-    ServerPlayer(uint8_t id, SessionPtr& _session);
+    ServerPlayer(uint8_t id, SessionPtr& _session, uint32_t joinTime);
 
     void update(uint32_t diffTime);
     Position getPositionAfterMove();

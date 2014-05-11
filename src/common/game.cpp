@@ -59,7 +59,7 @@ const Sentry* Game::getSentry(int id) const
     return nullptr;
 }
 
-int Game::getTime() const
+uint32_t Game::getTime() const
 {
     return _time;
 }
@@ -88,4 +88,9 @@ void Game::loadMap(const std::string &mapData)
 void Game::end()
 {
     _running = false;
+}
+
+void Game::setTime(uint32_t gameTime)
+{
+    _time = gameTime;
 }

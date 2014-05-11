@@ -54,10 +54,18 @@ public:
 
     /**
      * Sets player game state, namely if he's alive.
+     * @param id Id of the player.
      * @param alive Tells if the player is alive or not.
      * @param deaths Number of deaths for statistics.
      */
     void setPlayerState(uint8_t id, bool alive, uint32_t deaths);
+
+    /**
+     * Sets player join time to the game.
+     * @param id Id of the player.
+     * @param joinTime Join time in seconds.
+     */
+    void setPlayerJoinTime(uint8_t id, uint32_t joinTime);
 
     /**
      * Removes player from game.

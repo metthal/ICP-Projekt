@@ -150,6 +150,7 @@ SMSG_GAME_CREATE_OBJECT
     (this information filled only for player)
     - bool alive - TRUE if player is alive, FALSE if he is dead
     - uint32_t deaths - number of deaths of player
+    - uint32_t joinTime - time in seconds from the start of the game when player joined
 
 SMSG_GAME_DELETE_OBJECT
     - uint32_t objectCount - number of objects to delete from the scene
@@ -184,6 +185,9 @@ SMSG_GAME_END
 
 CMSG_PLAYER_LEFT_GAME
     - no data
+
+SMSG_HEARTBEAT
+    - uint32_t gameTime - current game time of server in seconds
 
 6. COMMUNICATION
 

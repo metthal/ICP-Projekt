@@ -82,3 +82,8 @@ void Player::setDeaths(uint32_t deaths)
 {
     _deaths = deaths;
 }
+
+void Player::setJoinTime(uint32_t joinTime)
+{
+    _joinTime = joinTime;
+}

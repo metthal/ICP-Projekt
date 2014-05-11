@@ -31,7 +31,7 @@
 #include <QValidator>
 #include <QGraphicsSimpleTextItem>
 
-QString formatTime(int seconds)
+QString formatTime(uint32_t seconds)
 {
     int hours = seconds / 3600;
     seconds -= hours * 3600;
@@ -576,10 +576,12 @@ void MainWindow::update()
                     {
                         bool alive;
                         uint32_t deaths;
-                        *response >> rotation >> objId >> alive >> deaths;
+                        uint32_t joinTime;
+                        *response >> rotation >> objId >> alive >> deaths >> joinTime;
                         game->addPlayer(objId);
                         game->movePlayer(objId, Position(posX, posY), (Direction)rotation);
                         game->setPlayerState(objId, alive, deaths);
+                        game->setPlayerJoinTime(objId, joinTime);
                         if (objId == myPlayerId)
                             setGameMsg("You have connected into game.");
                         else
@@ -690,6 +692,12 @@ void MainWindow::update()
                     ui->LabelCommandStatus->setStyleSheet("QLabel { background-color : red; color : white; font-weight:bold;}");
                     failedCommands++;
                 }
+            }
+            else if (response->getOpcode() == SMSG_HEARTBEAT)
+            {
+                uint32_t gameTime;
+                *response >> gameTime;
+                game->setTime(gameTime);
             }
         }
 
@@ -905,7 +913,7 @@ bool PlayerLabel::eventFilter(QObject *object, QEvent *event)
                 text.append("Not connected");
             else
             {
-                int gameTime = labelPlayer->getJoinTime() - _game->getTime();
+                uint32_t gameTime = _game->getTime() - labelPlayer->getJoinTime();
                 text.append("Game time: " + formatTime(gameTime) + "\n");
                 text.append(QString("Alive: ") + (labelPlayer->isAlive() ? "Yes" : "No") + "\n");
                 text.append("Deaths: " + QString::number(labelPlayer->getDeaths()));

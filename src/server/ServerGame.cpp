@@ -41,6 +41,8 @@ ServerGame::ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map, u
 
     _newBridge = false;
     _bridgePosList.clear();
+
+    _gameTime = 0;
 }
 
 ServerGame::~ServerGame()
@@ -70,7 +72,7 @@ void ServerGame::update(uint32_t diffTime)
 
     // make the current game create-snapshot
     uint32_t snapObjCount = _players.size() + _sentries.size() + _bridgePosList.size();
-    uint32_t snapObjLen = 4 + (10 * _players.size()) + (5 * _sentries.size()) + (3 * _bridgePosList.size());
+    uint32_t snapObjLen = 4 + (14 * _players.size()) + (5 * _sentries.size()) + (3 * _bridgePosList.size());
     if (!_plankPicked)
     {
         snapObjCount++;
@@ -95,7 +97,8 @@ void ServerGame::update(uint32_t diffTime)
             << (uint8_t)player->getDirection()
             << (uint8_t)player->getId()
             << (bool)player->isAlive()
-            << (uint32_t)player->getDeaths();
+            << (uint32_t)player->getDeaths()
+            << (uint32_t)player->getJoinTime();
     }
 
     for (auto itr = _sentries.begin(); itr != _sentries.end(); ++itr)
@@ -136,7 +139,7 @@ void ServerGame::update(uint32_t diffTime)
         else if (player->getState() == PLAYER_STATE_JUST_JOINED)
         {
             crObjCount++;
-            crObjLen += 10;
+            crObjLen += 14;
         }
 
         upObjCount++;
@@ -193,7 +196,8 @@ void ServerGame::update(uint32_t diffTime)
                 << (uint8_t)player->getDirection()
                 << (uint8_t)player->getId()
                 << (bool)player->isAlive()
-                << (uint32_t)player->getDeaths();
+                << (uint32_t)player->getDeaths()
+                << (uint32_t)player->getJoinTime();
         }
 
         ++itr;
@@ -273,18 +277,25 @@ void ServerGame::update(uint32_t diffTime)
             << (uint8_t)sentry->getDirection();
     }
 
+    // build heartbeat
+    _gameTime += diffTime;
+    PacketPtr heartbeat = PacketPtr(new Packet(SMSG_HEARTBEAT, 4));
+    *heartbeat << (uint32_t)getGameTime();
+
     // after update, send UPDATE packets
     for (auto itr = _players.begin(); itr != _players.end(); ++itr)
     {
         try
         {
             itr->second->getSession()->send(updatePacket);
+            itr->second->getSession()->send(heartbeat);
         }
         catch (...)
         {
             removePlayer(itr->second->getId());
         }
     }
+
 }
 
 void ServerGame::endGame()
@@ -350,6 +361,11 @@ ServerPlayerPtr ServerGame::getPlayer(uint8_t playerId)
     return itr->second;
 }
 
+uint32_t ServerGame::getGameTime() const
+{
+    return _gameTime / 1000;
+}
+
 ServerPlayerPtr ServerGame::addPlayer(SessionPtr& session)
 {
     if (getPlayerCount() == MAX_PLAYER_COUNT)
@@ -363,7 +379,7 @@ ServerPlayerPtr ServerGame::addPlayer(SessionPtr& session)
     }
 
     session->setState(SESSION_STATE_IN_GAME);
-    auto itr = _players.insert( { newPlayerId, ServerPlayerPtr(new ServerPlayer(newPlayerId, session)) } );
+    auto itr = _players.insert( { newPlayerId, ServerPlayerPtr(new ServerPlayer(newPlayerId, session, getGameTime())) } );
     sLog.out("Player ID ", (uint16_t)itr.first->second->getId(), " (", *(itr.first->second->getSession()), ") joined the game ID ", (uint16_t)getId());
     spawnPlayer(newPlayerId);
     itr.first->second->setState(PLAYER_STATE_JUST_JOINED);
