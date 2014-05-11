@@ -433,7 +433,7 @@ void MainWindow::handleServerDisconnected()
     displayMsg("Server closed unexpectedly.");
 }
 
-void MainWindow::()
+void MainWindow::update()
 {
     if (tcpClient == nullptr)
         return;
@@ -664,7 +664,7 @@ void MainWindow::()
                     {
                         *response >> objId;
                         game->removePlayer(objId);
-                        setGameMsg("Player " + QString::number(objId) + " has disconnected.");
+                        setGameMsg("Player " + QString::number(objId + 1) + " has disconnected.");
                     }
                     else if (objType == OBJECT_TYPE_PLANK)
                     {

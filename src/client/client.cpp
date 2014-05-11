@@ -47,137 +47,237 @@ void Client::start()
             continue;
         }
 
-        PacketPtr response = _tcpClient->getReceivedPacket();
-        if (!response)
-        { // Waiting for server response
-            std::this_thread::sleep_for(std::chrono::milliseconds(interval));
-            continue;
-        }
+        PacketPtr response;
 
         auto t0 = std::chrono::high_resolution_clock::now();
 
-        if (response->getOpcode() == SMSG_GAME_LIST_RESPONSE)
+        try { response = _tcpClient->getReceivedPacket(); }
+        catch (...) { handleServerDisconnected(); continue; }
+
+        while (response)
         {
-            uint32_t gamesCount;
-            *response >> gamesCount;
-            sLog.out("Number of running games: ", gamesCount);
-            for (uint32_t i = 0; i < gamesCount; ++i)
+            if (_game == nullptr)
             {
-                uint32_t gameId;
-                std::string gameName;
-                uint8_t playerCount;
-                std::string mapName;
-                uint8_t width, height;
-                uint16_t stepTime;
-                *response >> gameId >> gameName >> playerCount >> stepTime >> mapName >> width >> height;
-
-                sLog.out(gameId, "\t", gameName, "\t", (uint16_t)playerCount, "\t", mapName, "\t", (uint16_t)width, "x", (uint16_t)height, "\t", stepTime);
-            }
-        }
-        else if (response->getOpcode() == SMSG_MAP_LIST_RESPONSE)
-        {
-            uint32_t mapsCount;
-            *response >> mapsCount;
-            sLog.out("Number of available maps: ", mapsCount);
-            for (uint32_t i = 0; i < mapsCount; ++i)
-            {
-                uint32_t mapId;
-                std::string mapName;
-                uint8_t width, height;
-                *response >> mapId >> mapName >> width >> height;
-
-                sLog.out(mapId, "\t", mapName, "\t", (uint16_t)width, "x", (uint16_t)height);
-            }
-        }
-        else if (response->getOpcode() == SMSG_GAME_CREATE_RESPONSE)
-        {
-            bool success;
-            *response >> success;
-            if (!success)
-            {
-                sLog.out("Join to the game failed");
-                continue;
-            }
-
-            std::string mapData;
-            *response >> _myPlayerId >> mapData;
-            sLog.out("Succesfully connected as player ", (uint16_t)_myPlayerId + 1);
-            sLog.out(mapData);
-
-            _game = new ClientGame();
-            _game->loadMap(mapData);
-        }
-        else if (response->getOpcode() == SMSG_GAME_JOIN_RESPONSE)
-        {
-            bool success;
-            *response >> success;
-            if (!success)
-            {
-                sLog.out("Join to the game failed");
-                continue;
-            }
-
-            uint8_t playerId;
-            std::string mapData;
-            *response >> playerId >> mapData;
-            sLog.out("Succesfully connected as player ", (uint16_t)_myPlayerId + 1);
-            sLog.out(mapData);
-
-            _game = new ClientGame();
-            _game->loadMap(mapData);
-        }
-        else if (response->getOpcode() == SMSG_GAME_UPDATE_OBJECT)
-        {
-            uint32_t count;
-            *response >> count;
-
-            uint8_t objType;
-            uint8_t posX, posY;
-            uint8_t rotation;
-            uint8_t objId;
-
-            for (uint32_t i = 0; i < count; i++)
-            {
-                *response >> objType >> objId >> posX >> posY >> rotation;
-                if (objType == OBJECT_TYPE_PLAYER)
+                if (response->getOpcode() == SMSG_GAME_LIST_RESPONSE)
                 {
-                    bool alive, wasAlive;
-                    uint32_t deaths, stepsCount;
-                    *response >> alive >> deaths >> stepsCount;
-                    Position newPos(posX, posY);
-
-                    if (objId == _myPlayerId && (_game->getPlayer(objId)->getPosition() != newPos))
+                    uint32_t gamesCount;
+                    *response >> gamesCount;
+                    sLog.out("Number of running games: ", gamesCount);
+                    for (uint32_t i = 0; i < gamesCount; ++i)
                     {
-                        sLog.out("You have moved into [", posX, " ,", posY, "]");
+                        uint32_t gameId;
+                        std::string gameName;
+                        uint8_t playerCount;
+                        std::string mapName;
+                        uint8_t width, height;
+                        uint16_t stepTime;
+                        *response >> gameId >> gameName >> playerCount >> stepTime >> mapName >> width >> height;
+
+                        sLog.out(gameId, "\t", gameName, "\t", (uint16_t)playerCount, "\t", mapName, "\t", (uint16_t)width, "x", (uint16_t)height, "\t", stepTime);
+                    }
+                }
+                else if (response->getOpcode() == SMSG_MAP_LIST_RESPONSE)
+                {
+                    uint32_t mapsCount;
+                    *response >> mapsCount;
+                    sLog.out("Number of available maps: ", mapsCount);
+                    for (uint32_t i = 0; i < mapsCount; ++i)
+                    {
+                        uint32_t mapId;
+                        std::string mapName;
+                        uint8_t width, height;
+                        *response >> mapId >> mapName >> width >> height;
+
+                        sLog.out(mapId, "\t", mapName, "\t", (uint16_t)width, "x", (uint16_t)height);
+                    }
+                }
+                else if (response->getOpcode() == SMSG_GAME_CREATE_RESPONSE)
+                {
+                    bool success;
+                    *response >> success;
+                    if (!success)
+                    {
+                        sLog.out("Join to the game failed");
+                        break;
                     }
 
-                    _game->movePlayer(objId, Position(posX, posY), (Direction)rotation);
-                    wasAlive = _game->getPlayer(objId)->isAlive();
-                    if (alive != wasAlive)
+                    std::string mapData;
+                    *response >> _myPlayerId >> mapData;
+                    sLog.out("Succesfully connected as player ", (uint16_t)_myPlayerId + 1);
+                    sLog.out(mapData);
+
+                    _game = new ClientGame();
+                    _game->loadMap(mapData);
+                }
+                else if (response->getOpcode() == SMSG_GAME_JOIN_RESPONSE)
+                {
+                    bool success;
+                    *response >> success;
+                    if (!success)
                     {
-                        if (_myPlayerId == objId)
-                        {
-                            if (alive)
-                                sLog.out("You have respawned.");
-                            else
-                                sLog.out("You have been killed.");
-                        }
-                        else
-                        {
-                            if (alive)
-                                sLog.out("Player ", (objId + 1), " has respawned,");
-                            else
-                                sLog.out("Player ", (objId + 1), " has been killed.");
-                        }
+                        sLog.out("Join to the game failed");
+                        break;
                     }
 
-                    _game->setPlayerState(objId, alive, deaths, stepsCount);
-                }
-                else if (objType == OBJECT_TYPE_SENTRY)
-                {
-                    _game->moveSentry(objId, Position(posX, posY), (Direction)rotation);
+                    uint8_t playerId;
+                    std::string mapData;
+                    *response >> playerId >> mapData;
+                    sLog.out("Succesfully connected as player ", (uint16_t)_myPlayerId + 1);
+                    sLog.out(mapData);
+
+                    _game = new ClientGame();
+                    _game->loadMap(mapData);
                 }
             }
+            else
+            { // In game
+                if (response->getOpcode() == SMSG_GAME_CREATE_OBJECT)
+                {
+                    uint32_t count;
+                    *response >> count;
+
+                    uint8_t objType;
+                    uint8_t posX, posY;
+                    uint8_t rotation;
+                    uint8_t objId;
+
+                    for (uint32_t i = 0; i < count; i++)
+                    {
+                        *response >> objType >> posX >> posY;
+                        if (objType == OBJECT_TYPE_PLAYER)
+                        {
+                            bool alive;
+                            uint32_t deaths, stepsCount, joinTime;
+                            *response >> rotation >> objId >> alive >> deaths >> stepsCount >> joinTime;
+                            _game->addPlayer(objId);
+                            _game->movePlayer(objId, Position(posX, posY), (Direction)rotation);
+                            _game->setPlayerState(objId, alive, deaths, stepsCount);
+                            _game->setPlayerJoinTime(objId, joinTime);
+                            if (objId == _myPlayerId)
+                                sLog.out("You have connected into game.");
+                            else
+                                sLog.out("Player ", (objId + 1), " connected into game.");
+                        }
+                        else if (objType == OBJECT_TYPE_SENTRY)
+                        {
+                            *response >> rotation >> objId;
+                            _game->addSentry(objId);
+                            _game->moveSentry(objId, Position(posX, posY), (Direction)rotation);
+                        }
+                        else if (objType == OBJECT_TYPE_PLANK)
+                        {
+                            _game->placePlank(Position(posX, posY));
+                            sLog.out("Plank has been dropped.");
+                        }
+                        else if (objType == OBJECT_TYPE_BRIDGE)
+                        {
+                            _game->placeBridge(Position(posX, posY));
+                            sLog.out("Bridge has been built.");
+                        }
+                    }
+                }
+                else if (response->getOpcode() == SMSG_GAME_UPDATE_OBJECT)
+                {
+                    uint32_t count;
+                    *response >> count;
+
+                    uint8_t objType;
+                    uint8_t posX, posY;
+                    uint8_t rotation;
+                    uint8_t objId;
+
+                    for (uint32_t i = 0; i < count; i++)
+                    {
+                        *response >> objType >> objId >> posX >> posY >> rotation;
+                        if (objType == OBJECT_TYPE_PLAYER)
+                        {
+                            bool alive, wasAlive;
+                            uint32_t deaths, stepsCount;
+                            *response >> alive >> deaths >> stepsCount;
+                            Position newPos(posX, posY);
+
+                            if (objId == _myPlayerId && (_game->getPlayer(objId)->getPosition() != newPos))
+                            {
+                                sLog.out("You have moved into [", (uint16_t)posX, " ,", (uint16_t)posY, "]");
+                            }
+
+                            _game->movePlayer(objId, Position(posX, posY), (Direction)rotation);
+                            wasAlive = _game->getPlayer(objId)->isAlive();
+                            if (alive != wasAlive)
+                            {
+                                if (_myPlayerId == objId)
+                                {
+                                    if (alive)
+                                        sLog.out("You have respawned.");
+                                    else
+                                        sLog.out("You have been killed.");
+                                }
+                                else
+                                {
+                                    if (alive)
+                                        sLog.out("Player ", (objId + 1), " has respawned,");
+                                    else
+                                        sLog.out("Player ", (objId + 1), " has been killed.");
+                                }
+                            }
+
+                            _game->setPlayerState(objId, alive, deaths, stepsCount);
+                        }
+                        else if (objType == OBJECT_TYPE_SENTRY)
+                        {
+                            _game->moveSentry(objId, Position(posX, posY), (Direction)rotation);
+                        }
+                    }
+                }
+                else if (response->getOpcode() == SMSG_GAME_DELETE_OBJECT)
+                {
+                    uint32_t count;
+                    *response >> count;
+
+                    uint8_t objType;
+                    uint8_t objId;
+
+                    for (uint32_t i = 0; i < count; i++)
+                    {
+                        *response >> objType;
+                        if (objType == OBJECT_TYPE_PLAYER)
+                        {
+                            *response >> objId;
+                            _game->removePlayer(objId);
+                            sLog.out("Player ", objId + 1, " has disconnected.");
+                        }
+                        else if (objType == OBJECT_TYPE_PLANK)
+                        {
+                            _game->removePlank();
+                            sLog.out("Plank has been picked up.");
+                        }
+                    }
+                }
+                else if (response->getOpcode() == SMSG_PERFORM_ACTION_RESPONSE)
+                {
+                    bool success;
+                    *response >> success;
+
+                    if (success)
+                    {
+                        sLog.out("Command successful.");
+                    }
+                    else
+                    {
+                        sLog.out("Failed to execute command.");
+                        failedCommands++;
+                    }
+                }
+                else if (response->getOpcode() == SMSG_HEARTBEAT)
+                {
+                    uint32_t gameTime;
+                    *response >> gameTime;
+                    _game->setTime(gameTime);
+                }
+            }
+
+            try { response = _tcpClient->getReceivedPacket(); }
+            catch (...) { handleServerDisconnected(); break; }
         }
 
         auto t1 = std::chrono::high_resolution_clock::now();
@@ -188,14 +288,13 @@ void Client::start()
             std::this_thread::sleep_for(sleepTime);
     }
 
-    if (_tcpClient != nullptr)
-    {
-        _tcpClient->stop();
-        delete _tcpClient; _tcpClient = nullptr;
-    }
-
     if (_game != nullptr)
         leaveGame();
+
+    if (_tcpClient != nullptr)
+        leaveServer();
+
+
 }
 
 bool stringToNum(const std::string &str, int &num)
@@ -337,6 +436,7 @@ void Client::controlLoop()
         }
         else
         { // In game
+            totalCommands++;
             if (command == "u" || command == "up")
             {
                 *packet << (uint8_t)PLAYER_ACTION_ROTATE_UP;
@@ -386,9 +486,11 @@ void Client::controlLoop()
             {
                 sLog.out("Command leave recognized.");
                 leaveGame();
+                continue;
             }
             else
             {
+                failedCommands++;
                 sLog.out("Unknown command.", true);
                 continue;
             }
@@ -408,6 +510,8 @@ void Client::createGame(int id)
 
     try { _tcpClient->send(packet); }
     catch (...) { handleServerDisconnected(); return; }
+
+    failedCommands = totalCommands = 0;
 }
 
 void Client::joinGame(int id)
@@ -418,6 +522,8 @@ void Client::joinGame(int id)
     *packet << (uint32_t)id;
     try { _tcpClient->send(packet); }
     catch (...) { handleServerDisconnected(); return; }
+
+    failedCommands = totalCommands = 0;
 }
 
 void Client::leaveGame()
