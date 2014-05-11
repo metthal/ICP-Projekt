@@ -575,12 +575,11 @@ void MainWindow::update()
                     if (objType == OBJECT_TYPE_PLAYER)
                     {
                         bool alive;
-                        uint32_t deaths;
-                        uint32_t joinTime;
-                        *response >> rotation >> objId >> alive >> deaths >> joinTime;
+                        uint32_t deaths, stepsCount, joinTime;
+                        *response >> rotation >> objId >> alive >> deaths >> stepsCount >> joinTime;
                         game->addPlayer(objId);
                         game->movePlayer(objId, Position(posX, posY), (Direction)rotation);
-                        game->setPlayerState(objId, alive, deaths);
+                        game->setPlayerState(objId, alive, deaths, stepsCount);
                         game->setPlayerJoinTime(objId, joinTime);
                         if (objId == myPlayerId)
                             setGameMsg("You have connected into game.");
@@ -621,8 +620,8 @@ void MainWindow::update()
                     if (objType == OBJECT_TYPE_PLAYER)
                     {
                         bool alive, wasAlive;
-                        uint32_t deaths;
-                        *response >> alive >> deaths;
+                        uint32_t deaths, stepsCount;
+                        *response >> alive >> deaths >> stepsCount;
                         game->movePlayer(objId, Position(posX, posY), (Direction)rotation);
                         wasAlive = game->getPlayer(objId)->isAlive();
                         if (alive != wasAlive)
@@ -642,7 +641,7 @@ void MainWindow::update()
                                     setGameMsg("Player " + QString::number(objId + 1) + " has been killed.");
                             }
                         }
-                        game->setPlayerState(objId, alive, deaths);
+                        game->setPlayerState(objId, alive, deaths, stepsCount);
                     }
                     else if (objType == OBJECT_TYPE_SENTRY)
                     {
@@ -916,7 +915,8 @@ bool PlayerLabel::eventFilter(QObject *object, QEvent *event)
                 uint32_t gameTime = _game->getTime() - labelPlayer->getJoinTime();
                 text.append("Game time: " + formatTime(gameTime) + "\n");
                 text.append(QString("Alive: ") + (labelPlayer->isAlive() ? "Yes" : "No") + "\n");
-                text.append("Deaths: " + QString::number(labelPlayer->getDeaths()));
+                text.append("Deaths: " + QString::number(labelPlayer->getDeaths()) + "\n");
+                text.append("Steps: " + QString::number(labelPlayer->getStepsCount()));
             }
             QToolTip::showText(label->mapToGlobal(QPoint( 0, 10 ) ), text);
             return true;

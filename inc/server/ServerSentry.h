@@ -3,6 +3,7 @@
 
 #include <memory>
 #include "common/sentry.h"
+#include "common/Packet.h"
 
 class ServerSentry : public Sentry
 {
@@ -13,6 +14,9 @@ public:
     void randomizeDirection();
     void randomizeStop();
     Position getPositionAfterMove();
+
+    void buildCreatePacket(PacketPtr& packet);
+    void buildUpdatePacket(PacketPtr& packet);
 
     void setMoving(bool set);
     void setMoveTime(uint32_t time);

@@ -1,6 +1,7 @@
 #include <chrono>
 #include <random>
 #include "server/ServerSentry.h"
+#include "common/game.h"
 
 ServerSentry::ServerSentry(uint8_t id) : Sentry(id), _moving(false), _moveTime(0)
 {
@@ -31,6 +32,24 @@ void ServerSentry::randomizeStop()
         _moving = true;
     else
         _moving = false;
+}
+
+void ServerSentry::buildCreatePacket(PacketPtr& packet)
+{
+    *packet << (uint8_t)OBJECT_TYPE_SENTRY
+        << (uint8_t)getPosition().x
+        << (uint8_t)getPosition().y
+        << (uint8_t)getDirection()
+        << (uint8_t)getId();
+}
+
+void ServerSentry::buildUpdatePacket(PacketPtr& packet)
+{
+    *packet << (uint8_t)OBJECT_TYPE_SENTRY
+        << (uint8_t)getId()
+        << (uint8_t)getPosition().x
+        << (uint8_t)getPosition().y
+        << (uint8_t)getDirection();
 }
 
 Position ServerSentry::getPositionAfterMove()
