@@ -257,7 +257,10 @@ void ServerGame::endGame()
     *packet << _winnerId;
 
     for (auto itr = _players.begin(); itr != _players.end(); ++itr)
+    {
         itr->second->getSession()->send(packet);
+        removePlayer(itr->second->getId());
+    }
 
     if (_winnerId == -1)
         sLog.out("Game ID ", getId(), " finished with no winner");
