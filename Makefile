@@ -23,7 +23,7 @@ GUI_FOLDER = gui
 GUI_WORK_FOLDER = gui-work
 
 ZIP_FILE = xmilko01.zip
-PACKED_FILES = src/* inc/* art/* gui/* examples/* Makefile README.txt
+PACKED_FILES = src/* inc/* art/* gui/* examples/* Makefile README.txt protocol.txt doxyconfig
 DOXYFILE = doxyconfig
 DOXY_DIR = doc
 
