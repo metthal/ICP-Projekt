@@ -104,6 +104,7 @@ SMSG_GAME_LIST_RESPONSE
     - string(31) gameName - name of the game which the player who created the game specified
     - uint8_t gamePlayerCount - number of players in the game
     - uint16_t stepTime - speed of the step in the game (in milliseconds)
+    - uint8_t sentryCount - number of sentries in the game
     - string(11) mapName - name of the map running in the game
     - uint8_t mapWidth - width of the map
     - uint8_t mapHeight - height of the map

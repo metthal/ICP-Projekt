@@ -49,6 +49,11 @@ public:
     void stop();
 
     /**
+     * Waits until the server stop
+     */
+    void wait();
+
+    /**
      * Returns the list of active sessions.
      * @return List of sessions.
      */

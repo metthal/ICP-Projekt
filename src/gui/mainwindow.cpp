@@ -77,7 +77,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ModelRunningGames->setHorizontalHeaderItem(0, new QStandardItem(QString("Game name")));
     ModelRunningGames->setHorizontalHeaderItem(1, new QStandardItem(QString("Map name")));
     ModelRunningGames->setHorizontalHeaderItem(2, new QStandardItem(QString("Size")));
-    ModelRunningGames->setHorizontalHeaderItem(3, new QStandardItem(QString("Stage")));
+    ModelRunningGames->setHorizontalHeaderItem(3, new QStandardItem(QString("Sentries")));
     ModelRunningGames->setHorizontalHeaderItem(4, new QStandardItem(QString("Speed")));
     ModelRunningGames->setHorizontalHeaderItem(5, new QStandardItem(QString("Players connected")));
 
@@ -465,10 +465,11 @@ void MainWindow::update()
                         std::string gameName;
                         uint8_t playerCount;
                         uint16_t stepTime;
+                        uint8_t sentryCount;
                         std::string mapName;
                         uint8_t width, height;
 
-                        *response >> gameId >> gameName >> playerCount >> stepTime >> mapName >> width >> height;
+                        *response >> gameId >> gameName >> playerCount >> stepTime >> sentryCount >> mapName >> width >> height;
 
                         if (playerCount < maxPlayers)
                         {
@@ -477,9 +478,9 @@ void MainWindow::update()
                                 new QStandardItem(QString::fromStdString(gameName)),
                                 new QStandardItem(QString::fromStdString(mapName)),
                                 new QStandardItem(QString::number(width) + "x" + QString::number(height)),
-                                new QStandardItem(QString("Very running.")),
+                                new QStandardItem(QString::number(sentryCount)),
                                 new QStandardItem(QString::number((float)stepTime / 1000)),
-                                new QStandardItem(QString::number(playerCount))
+                                new QStandardItem(QString::number(playerCount) + "/4")
                             }));
                         }
                     }

@@ -71,7 +71,8 @@ void Client::start()
                 std::string mapName;
                 uint8_t width, height;
                 uint16_t stepTime;
-                *response >> gameId >> gameName >> playerCount >> stepTime >> mapName >> width >> height;
+                uint8_t sentryCount;
+                *response >> gameId >> gameName >> playerCount >> stepTime >> sentryCount >> mapName >> width >> height;
 
                 sLog.out(gameId, "\t", gameName, "\t", (uint16_t)playerCount, "\t", mapName, "\t", (uint16_t)width, "x", (uint16_t)height, "\t", stepTime);
             }

@@ -88,6 +88,12 @@ public:
     uint8_t getPlayerCount() const;
 
     /**
+     * Return number of sentries in the game.
+     * @return Number of sentries.
+     */
+    uint8_t getSentryCount() const;
+
+    /**
      * Returns period between steps in the game.
      * @return Period between steps in milliseconds.
      */

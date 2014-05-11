@@ -135,7 +135,7 @@ void ServerHandler::HandleGameListRequest(SessionPtr session, PacketPtr /*packet
         return;
     }
 
-    uint32_t length = 4 + sGameMgr.getGamesCount() * (4 + 1 + 2 + 1 + 1);
+    uint32_t length = 4 + sGameMgr.getGamesCount() * (4 + 1 + 2 + 1 + 1 + 1);
 
     for (auto& itr : sGameMgr.getGames())
     {
@@ -150,7 +150,7 @@ void ServerHandler::HandleGameListRequest(SessionPtr session, PacketPtr /*packet
     {
         ServerGamePtr& game = itr.second;
         LevelMap& map = game->getMap();
-        *response << game->getId() << game->getName() << game->getPlayerCount() << game->getStepTime() << map.getFilename() << map.getWidth() << map.getHeight();
+        *response << game->getId() << game->getName() << game->getPlayerCount() << game->getStepTime() << game->getSentryCount() << map.getFilename() << map.getWidth() << map.getHeight();
     }
 
     session->send(response);

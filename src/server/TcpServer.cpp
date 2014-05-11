@@ -39,10 +39,22 @@ void TcpServer::stop()
     _thread.join();
 }
 
+void TcpServer::wait()
+{
+    _thread.join();
+}
+
 void TcpServer::startImpl()
 {
-    startAccept();
-    _ioService.run();
+    try
+    {
+        startAccept();
+        _ioService.run();
+    }
+    catch (...)
+    {
+        _ioService.stop();
+    }
 }
 
 void TcpServer::startAccept()

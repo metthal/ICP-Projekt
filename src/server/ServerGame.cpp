@@ -299,6 +299,11 @@ uint8_t ServerGame::getPlayerCount() const
     return _players.size();
 }
 
+uint8_t ServerGame::getSentryCount() const
+{
+    return _sentries.size();
+}
+
 uint16_t ServerGame::getStepTime() const
 {
     return _stepTime;

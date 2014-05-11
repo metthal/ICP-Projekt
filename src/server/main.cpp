@@ -41,6 +41,7 @@ int main()
         sLevelMapMgr.loadMaps("../examples");
         sLog.out("Server running...");
 
+        server->wait();
         handler.wait();
 
         sLog.out("Stopping TCP service");
