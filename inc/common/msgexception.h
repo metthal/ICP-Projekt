@@ -22,8 +22,20 @@
 class MsgException : public std::exception
 {
 public:
+    /**
+     * Creates new instance for exception with message.
+     */
     MsgException(const std::string message) noexcept;
+
+    /**
+     * Returns string that was associated with exception
+     * during throw.
+     */
 	const char* what() const noexcept;
+
+	/**
+	 * Reports exception on standard error output.
+	 */
 	void report() noexcept;
 
 private:

@@ -31,6 +31,10 @@ public:
     explicit DialogGameHistory(QWidget *parent = 0);
     ~DialogGameHistory();
 
+    /**
+     * Adds new line of text into history.
+     * @param str Text that will be added to history.
+     */
     void addToHistory(QString str);
 
 private:

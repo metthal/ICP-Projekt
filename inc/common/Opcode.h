@@ -17,6 +17,10 @@
 #ifndef OPCODE_H
 #define OPCODE_H
 
+/**
+ * Operation codes that are used for
+ * server-client communication.
+ */
 enum Opcode
 {
     FIRST_OPCODE                = 0,

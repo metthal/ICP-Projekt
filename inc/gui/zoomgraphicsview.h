@@ -24,11 +24,18 @@ class ZoomGraphicsView : public QGraphicsView
     Q_OBJECT
 
 public:
+    /**
+     * Creates instance of ZoomGraphicsView that is extending
+     * graphics view with zoom support (mouse wheel)
+     */
     ZoomGraphicsView(QWidget* parent = NULL);
 
 protected:
 
-    //Take over the interaction
+    /**
+     * Takes over interaction with mouse wheel and uses it to
+     * zoom in / out.
+     */
     virtual void wheelEvent(QWheelEvent* event);
 
     const int maxZoom = 5;
