@@ -22,18 +22,22 @@
 #include <chrono>
 #include <cmath>
 
-ServerGame::ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map) : _id(id), _name(name), _map(map), _players(), _sentries(),
+ServerGame::ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map, uint8_t sentryCount) : _id(id), _name(name), _map(map), _players(), _sentries(),
     _stepTime(0), _finished(false), _winnerId(-1)
 {
     _rng.seed(std::chrono::system_clock::now().time_since_epoch().count());
     _firstSpawnPos = getFirstSpawnPos();
+    _plankPos = getAvailablePos();
 
-    for (uint8_t i = 0; i < 2; ++i)
+    for (uint8_t i = 0; i < sentryCount; ++i)
     {
         _sentries[i] = ServerSentryPtr(new ServerSentry(i));
         _sentries[i]->setPosition(getSentrySpawn());
         _sentries[i]->randomizeDirection();
     }
+
+    _plankPicked = false;
+    _plankChanged = false;
 }
 
 ServerGame::~ServerGame()
@@ -64,6 +68,12 @@ void ServerGame::update(uint32_t diffTime)
     // make the current game create-snapshot
     uint32_t snapObjCount = _players.size() + _sentries.size();
     uint32_t snapObjLen = 4 + (10 * _players.size()) + (5 * _sentries.size());
+    if (!_plankPicked)
+    {
+        snapObjCount++;
+        snapObjLen += 3;
+    }
+
     PacketPtr snapshotPacket = PacketPtr(new Packet(SMSG_GAME_CREATE_OBJECT, snapObjLen));
     *snapshotPacket << snapObjCount;
     for (auto itr = _players.begin(); itr != _players.end(); ++itr)
@@ -96,6 +106,13 @@ void ServerGame::update(uint32_t diffTime)
             << (uint8_t)sentry->getId();
     }
 
+    if (!_plankPicked)
+    {
+        *snapshotPacket << (uint8_t)OBJECT_TYPE_PLANK
+            << (uint8_t)_plankPos.x
+            << (uint8_t)_plankPos.y;
+    }
+
     // count the length for CREATE, DELETE and UPDATE packets
     for (auto itr = _players.begin(); itr != _players.end(); ++itr)
     {
@@ -118,6 +135,20 @@ void ServerGame::update(uint32_t diffTime)
 
     upObjCount += _sentries.size();
     upObjLen += (_sentries.size() * 5);
+
+    if (_plankChanged)
+    {
+        if (_plankPicked)
+        {
+            delObjCount++;
+            delObjLen += 3;
+        }
+        else
+        {
+            crObjCount++;
+            crObjLen += 3;
+        }
+    }
 
     PacketPtr deletePacket = PacketPtr(new Packet(SMSG_GAME_DELETE_OBJECT, delObjLen));
     *deletePacket << delObjCount;
@@ -150,6 +181,24 @@ void ServerGame::update(uint32_t diffTime)
         }
 
         ++itr;
+    }
+
+    if (_plankChanged)
+    {
+        if (_plankPicked)
+        {
+            *deletePacket << (uint8_t)OBJECT_TYPE_PLANK
+                << (uint8_t)_plankPos.x
+                << (uint8_t)_plankPos.y;
+        }
+        else
+        {
+            *createPacket << (uint8_t)OBJECT_TYPE_PLANK
+                << (uint8_t)_plankPos.x
+                << (uint8_t)_plankPos.y;
+        }
+
+        _plankChanged = false;
     }
 
     // send CREATE and DELETE packets
@@ -428,10 +477,9 @@ Position ServerGame::getSentrySpawn()
             for (auto it = _players.begin(); it != _players.end() && !occupied; it++)
                 occupied = pos == it->second->getPosition();
 
-            //TODO enable these
-            /*for (auto it = _sentries.begin(); it != _sentries.end() && !occupied; it++)
-                occupied = pos == it->getPos();
-            occupied |= pos == _plankPos;*/
+            for (auto it = _sentries.begin(); it != _sentries.end() && !occupied; it++)
+                occupied = pos == it->second->getPosition();
+            occupied |= pos == _plankPos;
 
             if (!occupied)
                 return pos;
@@ -465,10 +513,9 @@ Position ServerGame::getAvailablePos()
                 for (auto it = _players.begin(); it != _players.end() && !occupied; it++)
                     occupied = pos == it->second->getPosition();
 
-                //TODO enable these
-                /*for (auto it = _sentries.begin(); it != _sentries.end() && !occupied; it++)
-                    occupied = pos == it->getPos();
-                occupied |= pos == _plankPos;*/
+                for (auto it = _sentries.begin(); it != _sentries.end() && !occupied; it++)
+                    occupied = pos == it->second->getPosition();
+                occupied |= pos == _plankPos;
 
                 if (!occupied)
                     return pos;
@@ -484,6 +531,9 @@ bool ServerGame::playerCanMoveTo(ServerPlayerPtr& player, const Position& pos)
     if (!_map->checkBounds(pos))
         return false;
 
+    if (!_plankPicked && pos == _plankPos)
+        return false;
+
     if (!_map->canWalkOnTile(_map->getTileAt(pos)))
         return false;
 
@@ -496,7 +546,7 @@ bool ServerGame::playerCanMoveTo(ServerPlayerPtr& player, const Position& pos)
     for (auto itr = _sentries.begin(); itr != _sentries.end(); ++itr)
     {
         if (itr->second->getPosition() == pos)
-            player->kill();
+            killPlayer(player);
     }
 
     return true;
@@ -538,6 +588,9 @@ bool ServerGame::sentryCanMoveTo(ServerSentryPtr& sentry, const Position& pos)
     if (!_map->checkBounds(pos))
         return false;
 
+    if (!_plankPicked && pos == _plankPos)
+        return false;
+
     if (!_map->canWalkOnTile(_map->getTileAt(pos)))
         return false;
 
@@ -551,7 +604,7 @@ bool ServerGame::sentryCanMoveTo(ServerSentryPtr& sentry, const Position& pos)
     {
         if (itr->second->getPosition() == pos)
         {
-            itr->second->kill();
+            killPlayer(itr->second);
             return true;
         }
     }
@@ -582,4 +635,76 @@ void ServerGame::moveSentry(ServerSentryPtr& sentry, uint32_t diffTime)
     }
     else
         sentry->randomizeMovement();
+}
+
+bool ServerGame::playerAction(uint8_t playerId, PlayerAction action)
+{
+    ServerPlayerPtr player = getPlayer(playerId);
+    if (!player || player->getState() != PLAYER_STATE_ALIVE)
+        return false;
+
+    switch (action)
+    {
+        case PLAYER_ACTION_ROTATE_LEFT:
+            player->setDirection(Direction::Left);
+            player->setMoving(true);
+            player->setMoveTime(0);
+            break;
+        case PLAYER_ACTION_ROTATE_RIGHT:
+            player->setDirection(Direction::Right);
+            player->setMoving(true);
+            player->setMoveTime(0);
+            break;
+        case PLAYER_ACTION_ROTATE_UP:
+            player->setDirection(Direction::Up);
+            player->setMoving(true);
+            player->setMoveTime(0);
+            break;
+        case PLAYER_ACTION_ROTATE_DOWN:
+            player->setDirection(Direction::Down);
+            player->setMoving(true);
+            player->setMoveTime(0);
+            break;
+        case PLAYER_ACTION_GO:
+            player->setMoving(true);
+            player->setMoveTime(0);
+            break;
+        case PLAYER_ACTION_STOP:
+            player->setMoving(false);
+            break;
+        case PLAYER_ACTION_TAKE:
+        {
+            Position nextPos = player->getPositionAfterMove();
+            if (!_plankPicked && nextPos == _plankPos)
+            {
+                player->hasPlank(true);
+                _plankPicked = true;
+                _plankChanged = true;
+            }
+            else
+                return false;
+            break;
+        }
+        case PLAYER_ACTION_OPEN:
+        default:
+            return false;
+    }
+
+    return true;
+}
+
+void ServerGame::killPlayer(ServerPlayerPtr& player)
+{
+    if (!player->isAlive())
+        return;
+
+    if (player->hasPlank())
+    {
+        player->hasPlank(false);
+        _plankPos = player->getPosition();
+        _plankPicked = false;
+        _plankChanged = true;
+    }
+
+    player->kill();
 }

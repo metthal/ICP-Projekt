@@ -88,6 +88,12 @@ public:
     bool isAlive() const;
 
     /**
+     * Sets whether player has a plank or not.
+     * @param has True if player should have plank.
+     */
+    void hasPlank(bool has);
+
+    /**
      * Sets the direction in which player is turned.
      * @param dir New direction for player.
      */

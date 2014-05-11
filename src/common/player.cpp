@@ -20,6 +20,7 @@ Player::Player(uint8_t id)
 {
     _id = id;
     _deaths = 0;
+    _hasPlank = false;
 }
 
 uint8_t Player::getId() const
@@ -55,6 +56,11 @@ bool Player::hasPlank() const
 bool Player::isAlive() const
 {
     return _isAlive;
+}
+
+void Player::hasPlank(bool has)
+{
+    _hasPlank = has;
 }
 
 void Player::setDirection(Direction dir)

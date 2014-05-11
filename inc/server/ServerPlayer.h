@@ -38,7 +38,6 @@ public:
     ServerPlayer(uint8_t id, SessionPtr& _session);
 
     void update(uint32_t diffTime);
-    bool doAction(uint8_t action);
     Position getPositionAfterMove();
     void kill();
 
@@ -64,8 +63,6 @@ private:
 
     SessionWptr _session;
     PlayerState _state;
-
-    uint32_t _deaths;
 };
 
 typedef std::shared_ptr<ServerPlayer>   ServerPlayerPtr;

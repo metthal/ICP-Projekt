@@ -15,6 +15,7 @@
 */
 
 #include "server/ServerPlayer.h"
+#include "server/ServerGame.h"
 #include "common/Log.h"
 
 ServerPlayer::ServerPlayer(uint8_t id, SessionPtr& session) : Player(id), _session(session)
@@ -23,7 +24,6 @@ ServerPlayer::ServerPlayer(uint8_t id, SessionPtr& session) : Player(id), _sessi
     _moving = false;
     _moveTime = 0;
     _respawnTime = 0;
-    _deaths = 0;
 }
 
 void ServerPlayer::update(uint32_t diffTime)
@@ -104,50 +104,6 @@ SessionPtr ServerPlayer::getSession()
 Position ServerPlayer::getPositionAfterMove()
 {
     return _pos.next(_faceDir);
-}
-
-bool ServerPlayer::doAction(uint8_t action)
-{
-    if (getState() != PLAYER_STATE_ALIVE)
-        return false;
-
-    switch (action)
-    {
-        case PLAYER_ACTION_ROTATE_LEFT:
-            setDirection(Direction::Left);
-            _moving = true;
-            _moveTime = 0;
-            break;
-        case PLAYER_ACTION_ROTATE_RIGHT:
-            setDirection(Direction::Right);
-            _moving = true;
-            _moveTime = 0;
-            break;
-        case PLAYER_ACTION_ROTATE_UP:
-            setDirection(Direction::Up);
-            _moving = true;
-            _moveTime = 0;
-            break;
-        case PLAYER_ACTION_ROTATE_DOWN:
-            setDirection(Direction::Down);
-            _moving = true;
-            _moveTime = 0;
-            break;
-        case PLAYER_ACTION_GO:
-            _moving = true;
-            _moveTime = 0;
-            break;
-        case PLAYER_ACTION_STOP:
-            _moving = false;
-            break;
-        case PLAYER_ACTION_TAKE:
-        case PLAYER_ACTION_OPEN:
-            break;
-        default:
-            return false;
-    }
-
-    return true;
 }
 
 void ServerPlayer::kill()

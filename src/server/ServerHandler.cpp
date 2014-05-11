@@ -239,14 +239,15 @@ void ServerHandler::HandleGameCreateRequest(SessionPtr session, PacketPtr packet
     uint32_t mapId;
     std::string gameName;
     uint16_t stepTime;
-    *packet >> mapId >> gameName >> stepTime;
+    uint8_t sentryCount;
+    *packet >> mapId >> gameName >> stepTime >> sentryCount;
 
     LevelMapPtr map = sLevelMapMgr.getMapId(mapId);
     ServerGamePtr game = nullptr;
     ServerPlayerPtr player = nullptr;
     if (map)
     {
-        game = sGameMgr.newGame(gameName, map, stepTime);
+        game = sGameMgr.newGame(gameName, map, stepTime, sentryCount);
         if (game)
             player = game->addPlayer(session);
     }
@@ -297,8 +298,7 @@ void ServerHandler::HandlePerformActionRequest(SessionPtr session, PacketPtr pac
     uint8_t action;
     *packet >> action;
 
-    ServerPlayerPtr player = game->getPlayer(session->getPlayerId());
-    bool success = player->doAction(action);
+    bool success = game->playerAction(session->getPlayerId(), (PlayerAction)action);
 
     PacketPtr response = PacketPtr(new Packet(SMSG_PERFORM_ACTION_RESPONSE, 1));
     *response << success;

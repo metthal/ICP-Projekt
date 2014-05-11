@@ -571,12 +571,12 @@ void MainWindow::update()
 
                 for (uint32_t i = 0; i < count; i++)
                 {
-                    *response >> objType >> posX >> posY >> rotation;
+                    *response >> objType >> posX >> posY;
                     if (objType == OBJECT_TYPE_PLAYER)
                     {
                         bool alive;
                         uint32_t deaths;
-                        *response >> objId >> alive >> deaths;
+                        *response >> rotation >> objId >> alive >> deaths;
                         game->addPlayer(objId);
                         game->movePlayer(objId, Position(posX, posY), (Direction)rotation);
                         game->setPlayerState(objId, alive, deaths);
@@ -587,7 +587,7 @@ void MainWindow::update()
                     }
                     else if (objType == OBJECT_TYPE_SENTRY)
                     {
-                        *response >> objId;
+                        *response >> rotation >> objId;
                         game->addSentry(objId);
                         game->moveSentry(objId, Position(posX, posY), (Direction)rotation);
                     }

@@ -144,8 +144,8 @@ SMSG_GAME_CREATE_OBJECT
     - uint8_t objectType - whether it is player/sentry/plank/bridge/finish
     - uint8_t posX - X position on the map
     - uint8_t posY - Y position on the map
-    - uint8_t rotation - rotation in which the object is oriented
     (this information filled only for player and sentry)
+    - uint8_t rotation - rotation in which the object is oriented
     - uint8_t id - playerId when it is player, sentryId for sentry otherwise missing
     (this information filled only for player)
     - bool alive - TRUE if player is alive, FALSE if he is dead
