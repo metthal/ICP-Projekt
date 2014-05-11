@@ -1,18 +1,20 @@
 /*
-* Project name:
-* Bludiste 2014
-*
-* Description:
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
-*
-* Project's GitHub repository:
-* https://github.com/metthal/ICP-Projekt
-*
-* Team:
-* Marek Milkovič (xmilko01)
-* Ivan Ševčík (xsevci50)
-*/
+ * @file TcpServer.h
+ *
+ * Project name:
+ * Bludiste 2014
+ *
+ * Description:
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
+ *
+ * Project's GitHub repository:
+ * https://github.com/metthal/ICP-Projekt
+ *
+ * Team:
+ * @author Marek Milkovič (xmilko01)
+ * @author Ivan Ševčík (xsevci50)
+ */
 
 #ifndef TCP_SERVER_H
 #define TCP_SERVER_H
@@ -36,10 +38,26 @@ public:
 
     ~TcpServer();
 
+    /**
+     * Start the server in its own thread.
+     */
     void start();
+
+    /**
+     * Stops the server
+     */
     void stop();
 
+    /**
+     * Returns the list of active sessions.
+     * @return List of sessions.
+     */
     SessionList getSessions();
+
+    /**
+     * Removes some sessions from the active sessions and disconnects them.
+     * @param sessionList List of session to remove.
+     */
     void removeSessions(SessionList& sessionList);
 
 private:

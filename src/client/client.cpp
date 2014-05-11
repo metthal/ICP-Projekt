@@ -1,18 +1,20 @@
 /*
-* Project name:
-* Bludiste 2014
-*
-* Description:
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
-*
-* Project's GitHub repository:
-* https://github.com/metthal/ICP-Projekt
-*
-* Team:
-* Marek Milkovič (xmilko01)
-* Ivan Ševčík (xsevci50)
-*/
+ * @file client.cpp
+ *
+ * Project name:
+ * Bludiste 2014
+ *
+ * Description:
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
+ *
+ * Project's GitHub repository:
+ * https://github.com/metthal/ICP-Projekt
+ *
+ * Team:
+ * @author Marek Milkovič (xmilko01)
+ * @author Ivan Ševčík (xsevci50)
+ */
 
 #include "client/client.h"
 #include "common/Opcode.h"
@@ -210,10 +212,10 @@ bool stringToNum(const std::string &str, int &num)
 
 void Client::controlLoop()
 {
-	std::string command;
+    std::string command;
 
-	while (!std::cin.eof())
-	{
+    while (!std::cin.eof())
+    {
         std::cin >> command;
 
         totalCommands++;
@@ -396,8 +398,8 @@ void Client::controlLoop()
             try { _tcpClient->send(packet); }
             catch (...) { handleServerDisconnected(); continue; }
         }
-	}
-	_close = true;
+    }
+    _close = true;
 }
 
 void Client::createGame(int id)

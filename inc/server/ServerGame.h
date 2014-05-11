@@ -1,18 +1,20 @@
 /*
-* Project name:
-* Bludiste 2014
-*
-* Description:
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
-* https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
-*
-* Project's GitHub repository:
-* https://github.com/metthal/ICP-Projekt
-*
-* Team:
-* Marek Milkovič (xmilko01)
-* Ivan Ševčík (xsevci50)
-*/
+ * @fileServerGame.h
+ *
+ * Project name:
+ * Bludiste 2014
+ *
+ * Description:
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani-2014-ija.html
+ * https://www.fit.vutbr.cz/study/courses/ICP/public/ICP-PRJ-zadani.html
+ *
+ * Project's GitHub repository:
+ * https://github.com/metthal/ICP-Projekt
+ *
+ * Team:
+ * @author Marek Milkovič (xmilko01)
+ * @author Ivan Ševčík (xsevci50)
+ */
 
 #ifndef SERVER_GAME_H
 #define SERVER_GAME_H
@@ -43,23 +45,91 @@ public:
 
     ~ServerGame();
 
+    /**
+     * Updates the game and all players in it.
+     * @param diffTime Milliseconds between the last and the current update.
+     */
     void update(uint32_t diffTime);
+
+    /**
+     * Ends the game and remove all players from it.
+     */
     void endGame();
 
+    /**
+     * Sets the period between steps in the game to the specific time.
+     * @param stepTime Time between steps in milliseconds.
+     * @return True if step time was set, false if the invalid step time was specified.
+     */
     bool setStepTime(uint16_t stepTime);
 
+    /**
+     * Returns ID of the game.
+     * @return ID of the game.
+     */
     uint32_t getId() const;
+
+    /**
+     * Returns name of the game.
+     * @return Name of the game.
+     */
     const std::string& getName() const;
+
+    /**
+     * Returns map used in the game.
+     * @return Map in the game.
+     */
     LevelMap& getMap();
+
+    /**
+     * Returns number of players in the game.
+     * @return Number of players.
+     */
     uint8_t getPlayerCount() const;
+
+    /**
+     * Returns period between steps in the game.
+     * @return Period between steps in milliseconds.
+     */
     uint16_t getStepTime() const;
+
+    /**
+     * Tells whether the game has finished.
+     * @return True if finished, otherwise false.
+     */
     bool hasFinished() const;
+
+    /**
+     * Returns player with the specified ID.
+     * @return Player with the specified ID, nullptr if not found.
+     */
     ServerPlayerPtr getPlayer(uint8_t playerId);
+
+    /**
+     * Returns the time for which the game runs.
+     * @return Time in seconds.
+     */
     uint32_t getGameTime() const;
 
+    /**
+     * Adds the player to the game and spawns him.
+     * @param session Session which will be asociated with the newly created player.
+     * @return Newly created player, nullptr if error occured.
+     */
     ServerPlayerPtr addPlayer(SessionPtr& session);
-    void spawnPlayer(uint8_t playerId);
+
+    /**
+     * Removes player from the game.
+     * @param playerId ID of the player to delete.
+     */
     void removePlayer(uint8_t playerId);
+
+    /**
+     * Performs action by the specified player.
+     * @param playerId ID of the player.
+     * @param action PlayerAction to perform.
+     * @return True if action was successful, otherwise false.
+     */
     bool playerAction(uint8_t playerId, PlayerAction action);
 
 private:
@@ -76,6 +146,7 @@ private:
     bool playerPickPlank(ServerPlayerPtr& player);
     bool playerBuildBridge(ServerPlayerPtr& player);
 
+    void spawnPlayer(uint8_t playerId);
     void killPlayer(ServerPlayerPtr& player);
     void movePlayer(ServerPlayerPtr& player, uint32_t diffTime);
     bool playerCanMoveTo(ServerPlayerPtr& player, const Position& pos);
