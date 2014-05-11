@@ -54,6 +54,10 @@ public:
     void setPacketSender(const boost::asio::ip::udp::endpoint& sender);
     boost::asio::ip::udp::endpoint getPacketSender() const;
 
+    /**
+     * Various insertion operators for adding
+     * data types into packet.
+     */
     Packet& operator<<(const int8_t& data);
     Packet& operator<<(const int16_t& data);
     Packet& operator<<(const int32_t& data);
@@ -66,6 +70,10 @@ public:
     Packet& operator<<(const char* data);
     Packet& operator<<(const std::string& data);
 
+    /**
+     * Various extraction operators for extraction
+     * of received data from packet.
+     */
     Packet& operator>>(int8_t& data);
     Packet& operator>>(int16_t& data);
     Packet& operator>>(int32_t& data);

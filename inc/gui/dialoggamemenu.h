@@ -32,8 +32,14 @@ public:
     ~DialogGameMenu();
 
 private slots:
+    /**
+     * Leaves game.
+     */
     void on_ButtonLeave_clicked();
 
+    /**
+     * Saves game.
+     */
     void on_ButtonSaveGame_clicked();
 
 private:

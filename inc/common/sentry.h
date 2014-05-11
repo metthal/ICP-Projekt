@@ -23,13 +23,40 @@
 class Sentry
 {
 public:
+    /**
+     * Creates new instance of Sentry with specified Id.
+     * @param id Identificator that will be used with player.
+     */
     Sentry(uint8_t id);
 
+    /**
+     * Returns associtated Id of sentry.
+     * @return Sentry indentification.
+     */
     uint8_t getId() const;
+
+    /**
+     * Returns direction in which the sentry is turned.
+     * @return Direction for sentry.
+     */
     Direction getDirection() const;
+
+    /**
+     * Returns position at which the sentry is.
+     * @return Position of sentry.
+     */
     Position getPosition() const;
 
+    /**
+    * Sets the direction in which sentry is turned.
+    * @param dir New direction for sentry.
+    */
     void setDirection(Direction dir);
+
+    /**
+     * Sets position at which the sentry is.
+     * @param pos New position for sentry.
+     */
     void setPosition(Position pos);
 
 protected:

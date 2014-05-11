@@ -761,6 +761,16 @@ void MainWindow::redrawScene()
         }
     }
 
+    // Draw plank
+    if (game->isPlankDropped())
+    {
+        item = new QGraphicsPixmapItem();
+        item->setPixmap(plankTexture);
+        Position pos = game->getPlankPos();
+        item->setPos(tileToPoint(pos.x, pos.y));
+        gameScene->addItem(item);
+    }
+
     // Draw players
     const std::list<Player> &players = game->getPlayers();
     for (auto it = players.begin(); it != players.end(); it++)
@@ -783,16 +793,6 @@ void MainWindow::redrawScene()
         item->setPixmap(sentryTexture[(int)it->getDirection()]);
         Position pos = it->getPosition();
         item->setPos(tileToPoint(pos.x, pos.y, tileTextureSize - sentryTextureWidth, tileTextureSize - sentryTextureHeight));
-        gameScene->addItem(item);
-    }
-
-    // Draw plank
-    if (game->isPlankDropped())
-    {
-        item = new QGraphicsPixmapItem();
-        item->setPixmap(plankTexture);
-        Position pos = game->getPlankPos();
-        item->setPos(tileToPoint(pos.x, pos.y));
         gameScene->addItem(item);
     }
 }

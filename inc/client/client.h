@@ -26,10 +26,18 @@
 class Client
 {
 public:
+
+    /**
+     * Starts client.
+     */
 	void start();
 
 private:
 	//TODO Connection _con;
+	/**
+	 * A control loop function to process commands
+	 * from standard input intended to run in separate thread.
+	 */
 	void controlLoop();
 	LevelMap _map;
 	std::list<Player> _players;
