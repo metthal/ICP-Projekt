@@ -27,7 +27,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="PageMainMenu">
        <property name="sizePolicy">
@@ -1388,6 +1388,27 @@
            <widget class="QPushButton" name="ButtonSendCommand">
             <property name="text">
              <string>Send</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line_6">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="CheckBoxAlwaysCenter">
+            <property name="text">
+             <string>Always center</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line_7">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
             </property>
            </widget>
           </item>

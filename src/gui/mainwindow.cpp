@@ -723,6 +723,13 @@ void MainWindow::update()
         // Redraw scene and update game time
         redrawScene();
         ui->LabelGameTime->setText(formatTime(game->getTime()));
+
+        // Center on player if checked
+        if (ui->CheckBoxAlwaysCenter->isChecked())
+        {
+            const Player *myPlayer = game->getPlayer(myPlayerId);
+            ui->GameView->centerOn(tileToPoint(myPlayer->getPosition().x, myPlayer->getPosition().y));
+        }
     }
 }
 
