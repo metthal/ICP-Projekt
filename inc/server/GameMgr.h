@@ -53,9 +53,9 @@ public:
         return itr->second;
     }
 
-    ServerGamePtr newGame(const std::string& gameName, LevelMapPtr& map, uint16_t stepTime)
+    ServerGamePtr newGame(const std::string& gameName, LevelMapPtr& map, uint16_t stepTime, uint8_t sentryCount)
     {
-        auto itr = _games.insert( { _nextGameId, ServerGamePtr(new ServerGame(_nextGameId, gameName, map)) } );
+        auto itr = _games.insert( { _nextGameId, ServerGamePtr(new ServerGame(_nextGameId, gameName, map, sentryCount)) } );
         if (!(itr.first->second->setStepTime(stepTime)))
             return nullptr;
 

@@ -22,14 +22,14 @@
 #include <chrono>
 #include <cmath>
 
-ServerGame::ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map) : _id(id), _name(name), _map(map), _players(), _sentries(),
+ServerGame::ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map, uint8_t sentryCount) : _id(id), _name(name), _map(map), _players(), _sentries(),
     _stepTime(0), _finished(false), _winnerId(-1)
 {
     _rng.seed(std::chrono::system_clock::now().time_since_epoch().count());
     _firstSpawnPos = getFirstSpawnPos();
     _plankPos = getAvailablePos();
 
-    for (uint8_t i = 0; i < 2; ++i)
+    for (uint8_t i = 0; i < sentryCount; ++i)
     {
         _sentries[i] = ServerSentryPtr(new ServerSentry(i));
         _sentries[i]->setPosition(getSentrySpawn());

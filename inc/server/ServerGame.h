@@ -38,7 +38,7 @@ class ServerGame
 public:
     ServerGame() = delete;
     ServerGame(const ServerGame&) = delete;
-    ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map);
+    ServerGame(uint32_t id, const std::string& name, LevelMapPtr& map, uint8_t sentryCount);
 
     ~ServerGame();
 
