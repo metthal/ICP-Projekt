@@ -972,7 +972,7 @@ void MainWindow::on_ButtonServerManual_clicked()
     QString address = ui->ServerSelectIP->text();
     int port = ui->ServerSelectPort->text().toInt();
 
-    int pos = 0;
+    //int pos = 0;
 
     // Commented to allow entering of hostname
     //if(((const QRegExpValidator*)ui->ServerSelectIP->validator())->validate(address, pos) !=
