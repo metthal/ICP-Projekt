@@ -73,7 +73,7 @@ void ServerGame::update(uint32_t diffTime)
     uint32_t upObjLen = 4;
 
     // make the current game create-snapshot
-    uint32_t snapObjCount = _players.size() + _sentries.size() + _bridgePosList.size();
+    uint32_t snapObjCount = _players.size() + _sentries.size();
     uint32_t snapObjLen = 4 + (18 * _players.size()) + (5 * _sentries.size()) + (3 * _bridgePosList.size());
     if (!_plankPicked)
     {
@@ -105,10 +105,7 @@ void ServerGame::update(uint32_t diffTime)
     if (!_plankPicked)
         buildPlankPacket(snapshotPacket);
 
-    for (auto itr = _bridgePosList.begin(); itr != _bridgePosList.end(); ++itr)
-    {
-        buildCreateBridgePacket(snapshotPacket);
-    }
+    // Bridges sent in map info in SMSG_GAME_JOIN_RESPONSE
 
     // count the length for CREATE, DELETE and UPDATE packets
     for (auto itr = _players.begin(); itr != _players.end(); ++itr)
@@ -445,10 +442,9 @@ Position ServerGame::getFirstSpawnPos()
                 for (auto it = _players.begin(); it != _players.end() && !occupied; it++)
                     occupied = pos == it->second->getPosition();
 
-                //TODO enable these
-                /*for (auto it = _sentries.begin(); it != _sentries.end() && !occupied; it++)
-                    occupied = pos == it->getPos();
-                occupied |= pos == _plankPos;*/
+                for (auto it = _sentries.begin(); it != _sentries.end() && !occupied; it++)
+                    occupied = pos == it->second->getPosition();
+                occupied |= pos == _plankPos;
 
                 if (!occupied)
                     return pos;
