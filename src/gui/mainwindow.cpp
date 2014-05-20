@@ -90,7 +90,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->StepTimeValue->setValidator(new QRegExpValidator(QRegExp("(0\\.|[1-9]\\d*\\.?)\\d*"), this));
     ui->StepTimeValue->setValidator(new QRegExpValidator(QRegExp("(0\\.|[1-9]\\d*\\.?)\\d*"), this));
-    ui->ServerSelectIP->setValidator(new QRegExpValidator(QRegExp("(\\d{1,3}\\.){3}\\d{1,3}"), this));
+    // Commented to allow entering of hostname
+    //ui->ServerSelectIP->setValidator(new QRegExpValidator(QRegExp("(\\d{1,3}\\.){3}\\d{1,3}"), this));
     ui->ServerSelectPort->setValidator(new QRegExpValidator(QRegExp("\\d{1,5}"), this));
     ui->EditSentriesCount->setValidator(new QRegExpValidator(QRegExp("\\d{1,2}"), this));
 
@@ -114,6 +115,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->PageServerSelect->addAction(ui->actionMenuEsc);
     ui->PageTableView->addAction(ui->actionMenuEsc);
     ui->PageLobby->addAction(ui->actionMenuEsc);
+
+    ui->ButtonLoadGame->hide();
 
     tileTextures[(int)LevelMap::Tile::Forest] = QPixmap(QString("../art/forest1.png"));
     tileTextures[(int)LevelMap::Tile::Water] = QPixmap(QString("../art/water2.png"));
@@ -970,12 +973,14 @@ void MainWindow::on_ButtonServerManual_clicked()
     int port = ui->ServerSelectPort->text().toInt();
 
     int pos = 0;
-    if(((const QRegExpValidator*)ui->ServerSelectIP->validator())->validate(address, pos) !=
-            QValidator::State::Acceptable)
-    {
-        displayMsg("Incorrect server IP.");
-        return;
-    }
+
+    // Commented to allow entering of hostname
+    //if(((const QRegExpValidator*)ui->ServerSelectIP->validator())->validate(address, pos) !=
+    //        QValidator::State::Acceptable)
+    //{
+    //    displayMsg("Incorrect server IP.");
+    //    return;
+    //}
 
     if (port < 10000 || port > 65535)
     {

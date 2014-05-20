@@ -25,6 +25,9 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QPushButton" name="ButtonSaveGame">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="font">
       <font>
        <pointsize>20</pointsize>
