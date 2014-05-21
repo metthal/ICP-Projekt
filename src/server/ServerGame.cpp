@@ -681,6 +681,8 @@ bool ServerGame::playerAction(uint8_t playerId, PlayerAction action)
             bool success = playerPickPlank(player);
             if (!success)
                 success = playerBuildBridge(player);
+            if (!success)
+                player->setMoving(false);
 
             return success;
         }

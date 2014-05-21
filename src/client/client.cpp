@@ -125,6 +125,7 @@ void Client::start()
                     uint8_t playerId;
                     std::string mapData;
                     *response >> playerId >> mapData;
+                    _myPlayerId = playerId;
                     sLog.out("Succesfully connected as player ", (uint16_t)_myPlayerId + 1);
                     sLog.out(mapData);
 
